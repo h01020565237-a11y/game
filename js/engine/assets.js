@@ -1,0 +1,38 @@
+// 캔버스와 이미지 로딩
+
+const c = document.querySelector("canvas"), g = c.getContext("2d"), img = new Image();
+img.src = "assets/characters/summoner-hd.webp";
+const bearImg = new Image();
+bearImg.src = "assets/characters/bear.webp";
+const runnerImg = new Image();
+runnerImg.src = "assets/characters/runner-dir.webp";
+const extraImages = {};
+extraImages.suit = new Image();
+extraImages.suit.src = "assets/portraits/suit.webp";
+extraImages.octo = new Image();
+extraImages.octo.src = "assets/portraits/octo.webp";
+extraImages.stripe = new Image();
+extraImages.stripe.src = "assets/portraits/stripe.webp";
+extraImages.soccer = new Image();
+extraImages.soccer.src = "assets/portraits/soccer.webp";
+extraImages.support = new Image();
+extraImages.support.src = "assets/portraits/support.webp";
+const sheets = {};
+sheets.suit = new Image();
+sheets.suit.src = "assets/characters/suit-sheet.webp";
+sheets.octo = new Image();
+sheets.octo.src = "assets/characters/octo-sheet.webp";
+sheets.stripe = new Image();
+sheets.stripe.src = "assets/characters/stripe-sheet.png";
+sheets.soccer = new Image();
+sheets.soccer.src = "assets/characters/soccer-sheet.webp";
+sheets.support = new Image();
+sheets.support.src = "assets/characters/support-sheet.webp";
+sheets.summoner = new Image();
+sheets.summoner.src = "assets/characters/summoner-sheet.webp";
+sheets.runner = new Image();
+sheets.runner.src = "assets/characters/runner-sheet.webp";
+const crateArt = new Image();
+crateArt.src = "assets/props/crate.webp";
+const jungle = new Image();
+jungle.src = MAP_JUNGLE.background;

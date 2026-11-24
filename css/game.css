@@ -1,0 +1,260 @@
+body {
+  background: #17232b;
+  color: #eee;
+  font: 16px system-ui;
+  margin: 16px;
+  text-align: center;
+}
+canvas {
+  background: #789b65;
+  max-width: 100%;
+  border: 3px solid #b6c5a1;
+  cursor: crosshair;
+}
+button {
+  padding: 8px;
+  margin: 4px;
+}
+#hud {
+  margin: 8px;
+}
+#arena {
+  position: relative;
+  width: min(100%, 1000px);
+  margin: auto;
+  line-height: 0;
+}
+#arena canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  box-sizing: border-box;
+}
+#touch {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  touch-action: none;
+}
+body.mobile #touch {
+  display: block;
+}
+#touch button,
+.stick {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stick {
+  position: absolute;
+  width: clamp(64px, 13vw, 120px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #173a6888;
+  border: 2px solid #ffffffaa;
+  bottom: 9%;
+  display: grid;
+  place-items: center;
+}
+.stick i {
+  width: 40%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffffff99;
+  pointer-events: none;
+}
+.stick span {
+  position: absolute;
+  bottom: 7px;
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+#mv {
+  left: 3%;
+}
+#atk {
+  right: 3%;
+  background: #a22b3688;
+}
+#touch button {
+  position: absolute;
+  border: 1px solid #fff9;
+  border-radius: 50%;
+  background: #254c75dd;
+  color: white;
+  width: clamp(44px, 8vw, 72px);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+#dashBtn {
+  right: 19%;
+  bottom: 12%;
+}
+#summonBtn {
+  right: 8%;
+  bottom: 43%;
+}
+#pickBtn {
+  left: 19%;
+  bottom: 12%;
+}
+#slots {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+#slots button {
+  position: static;
+  border-radius: 8px;
+  width: clamp(48px, 9vw, 80px);
+  aspect-ratio: auto;
+  min-height: 42px;
+}
+#slots button.sel {
+  border: 2px solid #ffdf56;
+}
+#slots button.active {
+  background: #287c49;
+}
+body.mobile {
+  margin: 4px;
+  font-size: 12px;
+}
+body.mobile h2 {
+  display: none;
+}
+body.mobile #arena {
+  width: min(100%, calc((100dvh - 115px)*1.538));
+}
+body.mobile #petHUD {
+  display: none;
+}
+body.mobile #hud {
+  margin: 3px;
+}
+body.mobile button,
+body.mobile select {
+  font-size: 12px;
+}
+body.mobile #msg {
+  display: none;
+}
+@media (orientation: portrait) {
+  body.mobile #arena {
+    width: 100%;
+  }
+}
+#slots {
+  display: none;
+}
+#summonMenu {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+#summonMenu.open {
+  display: block;
+}
+#summonMenu .choice {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: clamp(48px, 8vw, 72px);
+  height: clamp(48px, 8vw, 72px);
+  border-radius: 50%;
+  background: #20334eee;
+  border: 2px solid #a9c5e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  font-size: 10px;
+  color: white;
+  box-sizing: border-box;
+}
+#summonMenu .choice strong {
+  font-size: 20px;
+}
+#summonMenu .choice.focus {
+  border: 3px solid #ffdf56;
+  background: #456c9b;
+}
+#summonMenu .choice.lock {
+  opacity: .55;
+}
+#summonMenu .choice.live {
+  border-color: #63e99b;
+}
+#summonBtn {
+  z-index: 3;
+}
+#summonMenu {
+  z-index: 4;
+}
+body.mobile #msg {
+  display: block;
+  min-height: 15px;
+  font-size: 11px;
+}
+#touch #atk {
+  right: 3%;
+  bottom: 7%;
+  width: clamp(65px, 12vw, 105px);
+  background: #b63d39df;
+  font-size: 16px;
+  font-weight: bold;
+}
+#touch #dashBtn {
+  right: 17%;
+  bottom: 8%;
+}
+#touch #summonBtn {
+  right: 4%;
+  bottom: 45%;
+}
+#touch #bearHeal {
+  right: 19% !important;
+  bottom: 40% !important;
+}
+body.mobile {
+  overflow: hidden;
+  touch-action: none;
+}
+body.mobile #arena {
+  width: min(100%, calc((100dvh - 78px)*1.538));
+}
+body.mobile > div:first-of-type {
+  display: none;
+}
+body.mobile #deckUI {
+  max-height: 32px;
+  overflow: auto;
+}
+body.mobile #msg {
+  display: none;
+}
+#rotateHint {
+  display: none;
+}
+@media (orientation: portrait) {
+  body.mobile #rotateHint {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #17232b;
+    z-index: 99;
+    align-content: center;
+    font-size: 22px;
+  }
+}
