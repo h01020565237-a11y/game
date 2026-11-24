@@ -27,6 +27,9 @@ function hit(a, b, d) {
   }
   if (a === p && character === "soccer" && ++p.combo % 4 === 0) d *= 1.3;
   d *= a.weak > 0 ? 0.8 : 1;
+  // 싱글 강화 카드 (이번 미션의 p 에만 있는 값. 배틀로얄에서는 없음 → 1)
+  if (a === p && p.dmgMul) d *= p.dmgMul;
+  if (b === p && p.takeMul) d *= p.takeMul;
   d *= hasGear(b, 1) ? 0.9 : 1;
   if (b === p && character === "bear") d *= 1 - 0.08 * Math.min(3, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < 120).length);
   // 집계: 플레이어(와 내 포켓몬)가 적에게 입힌 피해·처치
@@ -155,7 +158,7 @@ function clearLine(a, b) {
 }
 // 탄창 1발이 충전되는 시간 = 무기 쿨타임 (손목시계 -10%)
 function reloadTime(a) {
-  return weapons[a.w][2] * (hasGear(a, 4) ? 0.9 : 1);
+  return weapons[a.w][2] * (hasGear(a, 4) ? 0.9 : 1) * (a.reloadMul || 1);
 }
 function updateAmmo(a, dt) {
   if (a.ammo >= AMMO.max) {

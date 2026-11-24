@@ -54,6 +54,9 @@
       <div class="pill timer" id="timeHud">0:00</div>
       <div class="pill zone" id="zoneHud">자기장 25초 후</div>
     </div>
+    <!-- 싱글 웨이브 HUD -->
+    <div id="bossHud" hidden><span id="bossName">정글 거목</span><div class="boss-bar"><i id="bossFill"></i></div></div>
+    <div id="waveBanner" hidden></div>
     <div id="weaponHud">
       <span id="weaponIcon" aria-hidden="true"></span>
       <span class="wtext"><b id="weaponName">맨손</b><span id="ammoPips">●●●</span></span>
@@ -72,6 +75,7 @@
           <div id="lobbyDeck"></div>
           <p id="lobbyErr" role="alert"></p>
           <div class="lobby-actions">
+            <button id="lobbySingle" class="btn btn-blue">싱글 미션</button>
             <button id="lobbyDetail" class="btn btn-ghost">상세 보기</button>
             <button id="lobbyStart" class="btn btn-gold">선택</button>
           </div>
@@ -96,6 +100,37 @@
           <button id="detailClose" class="btn btn-blue">닫기</button>
         </div>
       </div>
+    </section>
+
+    <!-- 싱글 미션 선택 + 스토리 극장 -->
+    <section id="singlePanel" class="screen" hidden aria-label="싱글 미션">
+      <div class="panel single-card">
+        <div class="single-head"><h3>싱글 미션</h3><button id="singleClose" class="btn btn-ghost">닫기</button></div>
+        <div id="missionList" class="mission-list"></div>
+        <h4>스토리 극장</h4>
+        <div id="theaterList" class="theater-list"></div>
+      </div>
+    </section>
+
+    <!-- 강화 카드 (웨이브 사이) -->
+    <section id="waveCards" class="screen" hidden aria-label="강화 카드 선택">
+      <div class="cards-wrap">
+        <div class="cards-title" id="cardsTitle">강화 카드를 1장 고르세요</div>
+        <div class="cards-row" id="cardsRow"></div>
+      </div>
+    </section>
+
+    <!-- 영입 컷신 -->
+    <section id="cutscene" class="screen" hidden aria-label="영입 컷신">
+      <div class="cs-stage" id="csStage">
+        <div class="cs-bg" id="csBg"></div>
+        <img class="cs-actor" id="csLeft" alt="">
+        <img class="cs-actor" id="csRight" alt="">
+        <div class="cs-bush" id="csBush"></div>
+        <div class="cs-bubble" id="csBubble" hidden></div>
+        <div class="cs-recruit" id="csRecruit" hidden><b id="csRecruitName"></b><span id="csRecruitRole"></span><em>영입 완료!</em></div>
+      </div>
+      <button id="csSkip" class="btn btn-ghost">건너뛰기 ▶▶</button>
     </section>
 
     <!-- 결과 화면 -->
@@ -131,6 +166,7 @@
   <script src="js/data/combat.js"></script>
   <script src="js/data/pets.js"></script>
   <script src="js/data/characters.js"></script>
+  <script src="js/data/waves.js"></script>
   <script src="js/data/sounds.js"></script>
   <script src="js/engine/assets.js"></script>
   <script src="js/engine/world.js"></script>
@@ -140,6 +176,7 @@
   <script src="js/game/pets.js"></script>
   <script src="js/ui/deck.js"></script>
   <script src="js/game/state.js"></script>
+  <script src="js/game/wave.js"></script>
   <script src="js/engine/input.js"></script>
   <script src="js/game/combat.js"></script>
   <script src="js/game/skills.js"></script>
@@ -147,9 +184,11 @@
   <script src="js/game/update.js"></script>
   <script src="js/render/effects.js"></script>
   <script src="js/render/background.js"></script>
+  <script src="js/render/mobs.js"></script>
   <script src="js/render/renderer.js"></script>
   <script src="js/ui/touch.js"></script>
   <script src="js/ui/lobby.js"></script>
+  <script src="js/ui/single.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

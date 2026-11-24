@@ -386,3 +386,73 @@ body.lobbyOpen #lobby { display: flex; }
   .mon-name { font-size: 9px; }
   #lobbyStart { padding: 6px 20px; font-size: 18px; }
 }
+
+/* ---------- 싱글 미션 ---------- */
+#singlePanel, #waveCards { z-index: 12; }
+.single-card { width: min(92cqw, 720px); max-height: 88cqh; overflow-y: auto; padding: clamp(10px, 2.4cqh, 18px); display: flex; flex-direction: column; gap: clamp(6px, 1.6cqh, 10px); }
+.single-head { display: flex; align-items: center; justify-content: space-between; }
+.single-head h3, .single-card h4 { margin: 0; color: #fff; font-weight: normal; }
+.single-card h4 { color: #9fd0ff; font-size: clamp(12px, 3.4cqh, 16px); }
+.mission-list { display: grid; gap: clamp(4px, 1.2cqh, 8px); }
+.mission { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; background: #0f183899; border: 2px solid #2b4a8c; border-radius: 12px; padding: 6px 10px; color: #fff; }
+.mission img { width: clamp(40px, 12cqh, 60px); aspect-ratio: 256 / 225; object-fit: contain; border-radius: 8px; }
+.mission b { display: block; font-weight: normal; font-size: clamp(13px, 3.8cqh, 17px); }
+.mission span, .mission small { display: block; color: #cfe1ff; font-size: clamp(10px, 3cqh, 13px); }
+.mission small { color: #ffd27a; }
+.mission.done small { color: #63e99b; }
+.mission.locked { opacity: .55; }
+.mission.locked img { filter: brightness(.45) saturate(.5); }
+.mission .btn { padding: 4px 14px; }
+.theater-list { display: flex; flex-wrap: wrap; gap: 6px; color: #9fb4dc; font-size: 13px; }
+
+/* 웨이브 HUD */
+#bossHud { position: absolute; top: 13%; left: 50%; transform: translateX(-50%); width: min(46%, 380px); z-index: 6; text-align: center; color: #fff; font-size: 13px; text-shadow: 0 1px 2px #000; pointer-events: none; }
+.boss-bar { height: 12px; margin-top: 2px; border: 2px solid #1b2550; border-radius: 8px; background: #2a1a1a; overflow: hidden; }
+.boss-bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff6b3d, #ffd23f); transition: width .15s; }
+#waveBanner { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 22px; border-radius: 999px; background: #0f1838cc; border: 2px solid var(--bl-gold); color: var(--bl-gold); font-size: clamp(16px, 3.4vw, 26px); white-space: nowrap; pointer-events: none; animation: bl-pop .3s ease-out; }
+
+/* 강화 카드 */
+#waveCards { background: #0d1636b3; }
+.cards-wrap { display: flex; flex-direction: column; align-items: center; gap: 2.5cqh; }
+.cards-title { color: #fff; font-size: clamp(15px, 5cqh, 24px); }
+.cards-row { display: flex; gap: clamp(8px, 2.5cqw, 20px); }
+.wave-card { font-family: var(--bl-font); width: clamp(110px, 24cqw, 170px); aspect-ratio: 3 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 3px solid var(--bl-edge); border-radius: 16px; background: linear-gradient(180deg, #2f5bc4, #1b2f74); color: #fff; cursor: pointer; animation: bl-pop .3s ease-out; padding: 8px; }
+.wave-card i { font-style: normal; font-size: clamp(28px, 9cqh, 44px); }
+.wave-card b { font-weight: normal; font-size: clamp(14px, 4.4cqh, 19px); color: var(--bl-gold); }
+.wave-card span { font-size: clamp(11px, 3.2cqh, 14px); color: #cfe1ff; }
+.wave-card:hover, .wave-card:focus-visible { border-color: var(--bl-gold); transform: translateY(-3px); }
+
+/* 영입 컷신 */
+#cutscene { z-index: 20; background: #000; }
+.cs-stage { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.cs-bg { position: absolute; inset: 0; transition: background .5s; }
+.cs-bg.street { background: linear-gradient(180deg, #2a3b6e 0%, #4f6fb0 55%, #6f6a6a 56%, #4a4646 100%); }
+.cs-bg.bush { background: linear-gradient(180deg, #74c6ff 0%, #a5e3ff 50%, #6fbf5a 51%, #3f8a3a 100%); }
+.cs-bg.gold { background: radial-gradient(ellipse at 50% 50%, #fff3b0 0%, #ffcf3f 35%, #b46b00 100%); }
+.cs-actor { position: absolute; bottom: 4%; height: 82%; transition: transform .6s ease-out, left .6s, right .6s; }
+.cs-actor.left { left: 10%; }
+.cs-actor.right { right: 10%; }
+.cs-actor.walk-in { animation: cs-walk 1.2s ease-out; }
+.cs-actor.point { transform: rotate(-3deg); }
+.cs-actor.flustered { animation: cs-shake .25s 6; filter: saturate(.8); }
+.cs-actor.pop { animation: cs-pop .5s ease-out; }
+.cs-actor.zoom { transform: scale(1.18); transform-origin: 50% 20%; transition-delay: .9s; }
+.cs-actor.center { right: 50%; transform: translateX(50%) scale(1.05); filter: drop-shadow(0 0 24px #fff6b0); }
+.cs-bush { position: absolute; right: 4%; bottom: 0; width: 40%; height: 38%; display: none; background: radial-gradient(ellipse at 30% 60%, #2f8a34 0 38%, transparent 40%), radial-gradient(ellipse at 65% 55%, #3aa23e 0 40%, transparent 42%), radial-gradient(ellipse at 50% 80%, #27772c 0 50%, transparent 52%); z-index: 2; }
+.cs-bush.on { display: block; }
+.cs-bush.shake { animation: cs-rustle .18s infinite; }
+.cs-bubble { position: absolute; top: 8%; max-width: 46%; padding: 10px 18px; border-radius: 18px; background: #fff; color: #1b2550; font-size: clamp(16px, 4vw, 30px); z-index: 3; animation: bl-pop .3s ease-out; }
+.cs-bubble.left { left: 6%; }
+.cs-bubble.right { right: 6%; }
+.cs-recruit { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; color: #fff; text-shadow: 0 2px 6px #6b3d00; z-index: 3; animation: bl-pop .5s ease-out; }
+.cs-recruit b { font-weight: normal; font-size: clamp(30px, 7vw, 60px); }
+.cs-recruit span { font-size: clamp(14px, 2.6vw, 22px); }
+.cs-recruit em { font-style: normal; font-size: clamp(18px, 3.6vw, 32px); color: #fff; background: #c96f00; border-radius: 10px; padding: 2px 12px; align-self: flex-start; }
+#csSkip { position: absolute; right: 2%; top: 3%; z-index: 4; }
+@keyframes cs-walk { from { transform: translateX(-60%); opacity: 0; } }
+@keyframes cs-shake { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-8px) rotate(-2deg); } }
+@keyframes cs-pop { from { transform: translateY(40%) scale(.8); opacity: 0; } }
+@keyframes cs-rustle { 0%, 100% { transform: translateX(0) rotate(0); } 50% { transform: translateX(4px) rotate(1deg); } }
+.cs-recruit[hidden], .cs-bubble[hidden], .cs-actor[hidden] { display: none; }
+.mission > div { text-align: left; }
+#waveBanner { background: #0f1838e6; color: #fff; text-shadow: 0 1px 2px #000; }

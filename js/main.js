@@ -37,7 +37,7 @@ function loop(t) {
   let n = 0;
   // 모바일 메뉴가 열려 있으면 게임 일시정지
   // 로비·메뉴가 열려 있으면 게임 일시정지
-  if (document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen")) acc = 0;
+  if (document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("csOpen")) acc = 0;
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
     updateMouseWorld();
     update(STEP);

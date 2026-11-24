@@ -8,8 +8,9 @@ function compact(arr, keep) {
 
 function update(dt) {
   if (over) return;
+  if (singleRun && singleRun.phase === "cards") return; // 강화 카드 고르는 동안 전투 정지
   elapsed += dt;
-  zone = Math.max(115, 1450 - Math.max(0, elapsed - 25) * 8);
+  zone = singleRun?.m && !singleRun.m.zone ? 1e9 : Math.max(115, 1450 - Math.max(0, elapsed - 25) * 8);
   for (let a of [p, ...bots]) {
     a.reveal = Math.max(0, (a.reveal || 0) - dt);
     if (a.hp > 0 && Math.hypot(a.x - W / 2, a.y - H / 2) > zone && !(a === p && god)) a.hp -= dt * (80 + elapsed * 0.7);
@@ -28,17 +29,17 @@ function update(dt) {
     b.prevY = b.y;
     b._anim = false;
   }
-  for (let k of ["s1", "s2", "focus", "guard", "stealth"]) p[k] = Math.max(0, p[k] - dt);
+  for (let k of ["s1", "s2", "focus", "guard", "stealth"]) p[k] = Math.max(0, p[k] - dt * (k[0] === "s" && k.length === 2 ? p.cdRate || 1 : 1));
   if (character === "support") p.hp = Math.min(p.max, p.hp + p.max * 3e-3 * dt);
   if (character === "runner") {
     p.run = Math.max(0, p.run - dt);
-    p.runCD = Math.max(0, p.runCD - dt);
-    p.tackleCD = Math.max(0, p.tackleCD - dt);
+    p.runCD = Math.max(0, p.runCD - dt * (p.cdRate || 1));
+    p.tackleCD = Math.max(0, p.tackleCD - dt * (p.cdRate || 1));
   }
   if (character === "bear") {
     p.run = Math.max(0, p.run - dt);
-    p.runCD = Math.max(0, p.runCD - dt);
-    p.healCD = Math.max(0, p.healCD - dt);
+    p.runCD = Math.max(0, p.runCD - dt * (p.cdRate || 1));
+    p.healCD = Math.max(0, p.healCD - dt * (p.cdRate || 1));
     if (p.heal > 0) {
       let t = Math.min(dt, p.heal);
       p.hp = Math.min(p.max, p.hp + p.max * 0.1 * t);
@@ -55,7 +56,7 @@ function update(dt) {
     }
   }
   nt -= dt;
-  summonCD = summonCD.map((v) => Math.max(0, v - dt));
+  summonCD = summonCD.map((v) => Math.max(0, v - dt * (p.cdRate || 1)));
   swapCD = Math.max(0, swapCD - dt);
   skillCD = Math.max(0, skillCD - dt);
   for (let b of [p, ...bots]) {
@@ -105,8 +106,8 @@ function update(dt) {
     if (a.swing && (a.swing.t += dt) >= a.swing.dur) a.swing = null;
   }
   // 자기장 경고음: 축소 시작, 그리고 내가 자기장 밖에 있으면 3초마다
-  if (elapsed - dt < 25 && elapsed >= 25) sfx("zone_warning");
-  if (p.hp > 0 && Math.hypot(p.x - W / 2, p.y - H / 2) > zone && (p.zoneWarnT || 0) <= elapsed) {
+  if (!singleRun && elapsed - dt < 25 && elapsed >= 25) sfx("zone_warning");
+  if (!singleRun && p.hp > 0 && Math.hypot(p.x - W / 2, p.y - H / 2) > zone && (p.zoneWarnT || 0) <= elapsed) {
     p.zoneWarnT = elapsed + 3;
     sfx("zone_warning");
   }
@@ -152,7 +153,8 @@ function update(dt) {
   // 자동 획득: 지나가기만 하면 손해 없는 아이템은 바로 먹음 (교체는 버튼/F 키)
   if (p.hp > 0) pickup(p, isFreeLoot);
   if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(100, p.energy + Math.hypot(p.x - ox, p.y - oy) / 6);
-  if (!freeze) for (let a of bots.filter((a2) => a2.hp > 0 && !(a2.stun > 0))) {
+  if (singleRun?.m) updateWave(dt); // 싱글: 웨이브 적은 전용 AI
+  if (!freeze) for (let a of bots.filter((a2) => a2.hp > 0 && !(a2.stun > 0) && !a2.mob)) {
     let l = a.w ? undefined : minBy(loot.filter((l2) => l2.type === 0), (x) => dist(a, x));
     let b = minBy(targets(a), (x) => dist(a, x) + (x.max && !a.w ? 150 : 0));
     if (Math.hypot(a.x - W / 2, a.y - H / 2) > zone - 40) {
@@ -283,7 +285,9 @@ function update(dt) {
   compact(shots, (s) => !s.dead);
   compact(fx, (f) => (f.t -= dt) > 0);
   if (p.hp <= 0) over = "패배";
-  else if (!bots.some((a) => a.hp > 0)) over = "승리!";
+  else if (singleRun) {
+    if (singleRun.phase === "clear") over = "미션 성공";
+  } else if (!bots.some((a) => a.hp > 0)) over = "승리!";
   if (over) {
     sfx(over === "패배" ? "defeat" : "victory");
     stats.rank = over === "패배" ? bots.filter((a) => a.hp > 0).length + 1 : 1;

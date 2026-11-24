@@ -8,8 +8,15 @@ function isLobbyOpen() {
   return document.body.classList.contains("lobbyOpen");
 }
 function openLobby() {
+  if (singleRun) { // 싱글 미션 중 로비로 나가면 미션 종료 (강화·상태 초기화)
+    endSingle();
+    resetSingleHUD();
+    restoreResultLabels();
+    reset();
+  }
   lobbySel = character;
   lobbyDeck = deck.slice();
+  if (lobbyReady) buildLobby(); // 영입 상태가 바뀌었을 수 있으므로 타일 다시 그림
   document.body.classList.add("lobbyOpen");
   el("results").hidden = true;
   mvX = mvY = 0;
@@ -158,6 +165,7 @@ el("lobbyStart").onclick = () => {
     return;
   }
   sfx("ui_click");
+  endSingle(); // 배틀로얄 시작: 싱글 상태와 분리
   // 기존 선택 상자에 반영한 뒤 기존 시작 버튼 로직 실행
   document.querySelector("#character").value = lobbySel;
   deck = lobbyDeck.slice();
@@ -233,10 +241,15 @@ bindAudioUI();
 const fmtTime = (s) => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
 let hudWeapon = -1;
 function updateHUD() {
-  const alive = bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0);
-  setText("aliveNum", String(alive));
   setText("timeHud", fmtTime(elapsed));
-  setText("zoneHud", elapsed < 25 ? "자기장 " + Math.ceil(25 - elapsed) + "초 후" : "자기장 축소 중");
+  const sm = el("aliveHud").querySelector("small");
+  if (sm.hidden !== !!singleRun) sm.hidden = !!singleRun;
+  if (singleRun?.m) updateSingleHUD();
+  else {
+    const alive = bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0);
+    setText("aliveNum", String(alive));
+    setText("zoneHud", elapsed < 25 ? "자기장 " + Math.ceil(25 - elapsed) + "초 후" : "자기장 축소 중");
+  }
   const zoneHud = el("zoneHud"), outside = Math.hypot(p.x - W / 2, p.y - H / 2) > zone;
   if (zoneHud._out !== outside) {
     zoneHud._out = outside;
@@ -271,7 +284,7 @@ function syncResults() {
     return;
   }
   // 쓰러지는 순간을 잠깐 보여 준 뒤 결과 표시
-  setTimeout(() => {
+  const show = () => {
     if (!over) return;
     el("resTitle").textContent = over === "패배" ? "패배" : "승리!";
     el("resTitle").classList.toggle("lose", over === "패배");
@@ -281,8 +294,13 @@ function syncResults() {
     el("resTime").textContent = fmtTime(stats.time);
     el("resChar").src = lobbyArt[character].face.src;
     el("resName").textContent = DISPLAY_NAMES[character];
+    if (singleRun?.m) showSingleResult();
+    else restoreResultLabels();
     r.hidden = false;
-  }, 700);
+  };
+  // 싱글 미션 성공: 영입 저장 → 컷신 → 결과
+  if (singleRun?.m && over === "미션 성공") setTimeout(() => over === "미션 성공" && onMissionClear(show), 900);
+  else setTimeout(show, 700);
 }
 
 // 메인 루프에서 매 프레임 호출

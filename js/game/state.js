@@ -36,4 +36,6 @@ function reset() {
   fx = [];
   over = "";
   notice = "";
+  if (singleRun) setupWaveRun(); // 싱글 웨이브 미션: 봇 대신 웨이브 적
+  else mobShots = [];
 }
