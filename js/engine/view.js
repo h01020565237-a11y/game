@@ -12,8 +12,11 @@ let viewScale = 1;
 function fitCanvas() {
   const mobile = document.body.classList.contains("mobile");
   let vw = 1000, vh = 650, k = 1;
+  // 세로로 든 폰: 게임 화면을 90도 돌려서 가로로 표시 (CSS body.rot)
+  const rot = mobile && window.innerHeight > window.innerWidth;
+  document.body.classList.toggle("rot", rot);
   if (mobile) {
-    const sw = window.innerWidth, sh = window.innerHeight;
+    const sw = rot ? window.innerHeight : window.innerWidth, sh = rot ? window.innerWidth : window.innerHeight;
     vh = MOBILE_VIEW_H;
     vw = Math.round(clamp(vh * sw / Math.max(1, sh), 480, W));
     k = clamp(sh * (window.devicePixelRatio || 1) / vh, 1, 2);

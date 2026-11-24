@@ -365,3 +365,26 @@ body.mobile.menuOpen #deckUI {
 body.mobile #overBtn {
   z-index: 7;
 }
+/* ===== 세로로 든 폰: 게임을 90도 돌려 바로 가로로 표시 ("가로로 돌려 주세요" 안내 대신) ===== */
+body.mobile #rotateHint {
+  display: none !important;
+}
+body.mobile.rot #arena {
+  width: 100dvh;
+  height: 100vw;
+  transform-origin: top left;
+  transform: rotate(90deg) translateY(-100%);
+}
+body.mobile.rot #hud {
+  top: 50%;
+  left: calc(100vw - 14px - env(safe-area-inset-right));
+  max-width: 70dvh;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+body.mobile.rot.menuOpen #menuPanel {
+  top: 50%;
+  bottom: auto;
+  width: min(560px, 84dvh);
+  max-height: 84vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+}

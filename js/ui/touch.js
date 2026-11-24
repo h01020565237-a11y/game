@@ -10,7 +10,13 @@ for (let i = 0; i < 3; i++) {
   el.className = "choice";
   menu.append(el);
 }
+// 화면 회전 모드(세로로 든 폰에서 게임을 90도 돌려 가로로 표시)일 때
+// 화면 좌표의 이동량을 게임 화면 기준으로 바꿈
+function toLocal(dx, dy) {
+  return document.body.classList.contains("rot") ? [dy, -dx] : [dx, dy];
+}
 function swipeChoice(dx, dy) {
+  [dx, dy] = toLocal(dx, dy);
   let angle = Math.atan2(dx, -dy) * 180 / Math.PI;
   return Math.hypot(dx, dy) < 22 || Math.abs(angle) > 67.5 ? -1 : angle < -22.5 ? 0 : angle > 22.5 ? 2 : 1;
 }
@@ -28,11 +34,12 @@ sb.onpointerdown = (e) => {
   sb.setPointerCapture(e.pointerId);
   swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, choice: -1 };
   menu.classList.add("open");
-  let r = sb.getBoundingClientRect(), a = menu.getBoundingClientRect(), x = r.left + r.width / 2 - a.left, y = r.top + r.height / 2 - a.top, d = r.width * 0.98 + 8;
+  // 레이아웃 좌표(offset*) 사용: 화면이 회전돼 있어도 정확함
+  let bw = sb.offsetWidth, x = sb.offsetLeft + bw / 2, y = sb.offsetTop + sb.offsetHeight / 2, d = bw * 0.98 + 8, aw = menu.offsetWidth, ah = menu.offsetHeight;
   [[x - d * 0.9, y - d * 0.9], [x, y - d * 1.45], [x + d * 0.9, y - d * 0.9]].forEach(([xx, yy], i) => {
-    let el = menu.children[i], half = r.width / 2;
-    el.style.left = clamp(xx, half, a.width - half) + "px";
-    el.style.top = clamp(yy, half, a.height - half) + "px";
+    let el = menu.children[i], half = bw / 2;
+    el.style.left = clamp(xx, half, aw - half) + "px";
+    el.style.top = clamp(yy, half, ah - half) + "px";
   });
   menu.classList.add("open");
   touchHUD();
@@ -67,7 +74,7 @@ function aimSummon() {
 function stick(id, fn) {
   let el = document.getElementById(id), pid = null;
   function set(e) {
-    let r = el.getBoundingClientRect(), x = (e.clientX - r.left - r.width / 2) / (r.width / 2), y = (e.clientY - r.top - r.height / 2) / (r.height / 2), n = Math.max(1, Math.hypot(x, y));
+    let r = el.getBoundingClientRect(), [x, y] = toLocal((e.clientX - r.left - r.width / 2) / (r.width / 2), (e.clientY - r.top - r.height / 2) / (r.height / 2)), n = Math.max(1, Math.hypot(x, y));
     x /= n;
     y /= n;
     el.querySelector("i").style.transform = `translate(${x * r.width * 0.3}px,${y * r.height * 0.3}px)`;
