@@ -197,6 +197,9 @@ async () => {
   ok("3마리 고르면 그 덱으로 시작", !isLobbyOpen() && deck.length === 3 && new Set(deck).size === 3, deck);
 
   // 12) 표시 이름 (CHARACTER_NAMES.md)
+  ok("선택창 순서 고정 (동기·현곤·은숙·기섭 / 상훈·경수·재한·정용)", [...document.querySelectorAll(".char-tile")].map((t) => CHARACTER_INFO[t.dataset.k].name).join() === "동기,현곤,은숙,기섭,상훈,경수,재한,정용");
+  ok("미영입 잠금 표시 + 출시 예정 2명", document.querySelectorAll(".char-tile.locked .char-lock").length === 7 && document.querySelectorAll(".char-soon").length === 2 && !document.querySelector(".char-tile[data-k=suit]").classList.contains("locked"));
+  ok("얼굴 이미지와 이름 분리 + contain", [...document.querySelectorAll(".char-tile")].every((t) => t.querySelector(".char-face img") && t.querySelector(".char-name") && getComputedStyle(t.querySelector("img")).objectFit === "contain"));
   ok("표시 이름 적용", CHARACTER_ORDER.map((k) => CHARACTER_INFO[k].name).join() === "현곤,정용,기섭,동기,상훈,경수,재한,은숙");
   return R;
 }

@@ -49,15 +49,24 @@ const HAND_OFFSET = {};
 const DISPLAY_NAMES = { stripe: "경수", soccer: "재한", support: "은숙", summoner: "현곤", suit: "동기", octo: "상훈", bear: "정용", runner: "기섭" };
 for (const [k, v] of Object.entries(DISPLAY_NAMES)) if (CHARACTER_INFO[k]) CHARACTER_INFO[k].name = v;
 
-// ===== 로비 그림: ChatGPT 전신 그림(512px)의 구멍을 메우고 얼굴을 잘라 만듦 (tools/make_lobby_art.py) =====
-// face: 얼굴 아이콘(로비 목록·결과), full: 전신(캐릭터 상세에서만 사용)
-const LOBBY_ART = {
-  summoner: { face: "assets/lobby/summoner-face.webp", full: "assets/lobby/summoner-full.webp" },
-  bear: { face: "assets/lobby/bear-face.webp", full: "assets/lobby/bear-full.webp" },
-  runner: { face: "assets/lobby/runner-face.webp", full: "assets/lobby/runner-full.webp" },
-  suit: { face: "assets/lobby/suit-face.webp", full: "assets/lobby/suit-full.webp" },
-  octo: { face: "assets/lobby/octo-face.webp", full: "assets/lobby/octo-full.webp" },
-  stripe: { face: "assets/lobby/stripe-face.webp", full: "assets/lobby/stripe-full.webp" },
-  soccer: { face: "assets/lobby/soccer-face.webp", full: "assets/lobby/soccer-full.webp" },
-  support: { face: "assets/lobby/support-face.webp", full: "assets/lobby/support-full.webp" },
+// ===== 로비 그림 =====
+// face: 캐릭터 선택창·결과 화면 얼굴 아이콘 (ChatGPT Portraits V2, tools/clean_portraits.py 로 바깥 액자만 잘라냄)
+// full: 전신 (캐릭터 상세에서만 사용, tools/make_lobby_art.py)
+const LOBBY_ART = {};
+for (const k of ["summoner", "bear", "runner", "suit", "octo", "stripe", "soccer", "support"])
+  LOBBY_ART[k] = { face: `assets/portraits/${k}.png`, full: `assets/lobby/${k}-full.webp` };
+
+// ===== 캐릭터 선택창 배치·영입 상태 (Portraits V2 README) =====
+// 배치 순서는 영입 여부와 관계없이 고정: 윗줄 동기·현곤·은숙·기섭 / 아랫줄 상훈·경수·재한·정용
+const LOBBY_ORDER = ["suit", "summoner", "support", "runner", "octo", "stripe", "soccer", "bear"];
+const ROSTER = {
+  unlocked: ["suit"],            // 싱글 플레이 처음부터 영입된 캐릭터
+  comingSoon: ["soccer", "bear"], // 출시 예정 표시
+  testMode: true,                // 테스트 모드: 미영입 캐릭터도 선택·플레이 가능 (어둡게 + 자물쇠 표시는 유지)
 };
+function isRecruited(k) {
+  return ROSTER.unlocked.includes(k);
+}
+function canPlay(k) {
+  return ROSTER.testMode || isRecruited(k);
+}

@@ -24,19 +24,36 @@ function closeLobby() {
 function buildLobby() {
   const grid = el("charGrid");
   grid.innerHTML = "";
-  for (const k of CHARACTER_ORDER) {
+  for (const k of LOBBY_ORDER) {
     const b = document.createElement("button");
-    b.className = "char-tile";
+    const locked = !isRecruited(k), soon = ROSTER.comingSoon.includes(k);
+    b.className = "char-tile" + (locked ? " locked" : "");
     b.dataset.k = k;
-    b.setAttribute("aria-label", CHARACTER_INFO[k].name);
+    b.setAttribute("aria-label", CHARACTER_INFO[k].name + (locked ? (soon ? " (출시 예정)" : " (미영입)") : ""));
+    // 이미지 영역과 이름 영역을 분리: [얼굴 칸] 아래에 [이름 칸]
+    const face = document.createElement("span");
+    face.className = "char-face";
     const im = document.createElement("img");
     im.src = lobbyArt[k].face.src;
     im.alt = "";
     im.draggable = false;
-    b.append(im);
+    face.append(im);
+    if (locked) {
+      const lock = document.createElement("i");
+      lock.className = "char-lock";
+      lock.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#1b2550"/></svg>';
+      face.append(lock);
+      if (soon) {
+        const tag = document.createElement("em");
+        tag.className = "char-soon";
+        tag.textContent = "출시 예정";
+        face.append(tag);
+      }
+    }
     const n = document.createElement("span");
+    n.className = "char-name";
     n.textContent = CHARACTER_INFO[k].name;
-    b.append(n);
+    b.append(face, n);
     b.onclick = () => {
       lobbySel = k;
       el("lobbyErr").textContent = "";
@@ -68,6 +85,13 @@ function renderLobbyInfo() {
     ul.append(li);
   });
   el("ciPassive").textContent = "패시브 · " + info.passive;
+  const st = el("ciStatus");
+  if (st) {
+    const soon = ROSTER.comingSoon.includes(lobbySel);
+    st.hidden = isRecruited(lobbySel);
+    st.textContent = (soon ? "출시 예정" : "미영입") + (ROSTER.testMode ? " · 테스트 모드로 플레이 가능" : "");
+  }
+  el("lobbyStart").disabled = !canPlay(lobbySel);
   renderDeckPicker();
 }
 
@@ -125,6 +149,10 @@ function renderDeckPicker() {
 }
 
 el("lobbyStart").onclick = () => {
+  if (!canPlay(lobbySel)) {
+    el("lobbyErr").textContent = "아직 영입하지 않은 캐릭터예요.";
+    return;
+  }
   if (lobbySel === "summoner" && (lobbyDeck.length !== 3 || new Set(lobbyDeck).size !== 3)) {
     el("lobbyErr").textContent = "서로 다른 포켓몬 3마리를 골라 주세요.";
     return;

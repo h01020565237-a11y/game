@@ -164,32 +164,63 @@ body.lobbyOpen #lobby { display: flex; }
   background: #0f183866;
   border-radius: 14px;
 }
+/* 캐릭터 타일: [얼굴 칸] + [이름 칸] 분리. 선택 테두리는 타일 바깥(이미지 위가 아님) */
 .char-tile {
   position: relative;
   width: 100%;
-  max-width: min(110px, 30cqh);
-  aspect-ratio: 1;
+  max-width: min(104px, 24cqh);
+  display: flex;
+  flex-direction: column;
   padding: 0;
   margin: 0;
   border: 3px solid #13204d;
   border-radius: 12px;
-  background: linear-gradient(180deg, #5d8ae8, #2c4aa8);
+  background: #13204d;
   overflow: hidden;
   cursor: pointer;
 }
-.char-tile img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
-.char-tile span {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
+.char-face {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  padding: 6%;                 /* 이미지 영역 여백 (요청 5~8%) */
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #5d8ae8, #2c4aa8);
+}
+.char-face img {
+  width: 100%; height: 100%; display: block;
+  object-fit: contain;         /* cover → contain: 턱·입이 잘리지 않게 */
+  pointer-events: none;
+}
+.char-name {
+  display: block;
   font-family: var(--bl-font);
   font-size: clamp(9px, 2.6cqh, 12px);
+  line-height: 1.5;
   color: #fff;
-  background: #0f1838b0;
-  line-height: 1.4;
+  background: #0f1838;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 .char-tile.sel { border-color: var(--bl-gold); box-shadow: 0 0 0 2px var(--bl-gold), 0 0 14px #ffd23f99; }
+.char-tile.sel .char-name { background: #3a3110; color: var(--bl-gold); }
+/* 미영입: 어둡게 + 자물쇠 */
+.char-tile.locked .char-face img { filter: brightness(.38) saturate(.55); }
+.char-tile.locked .char-name { color: #8a96b8; }
+.char-lock {
+  position: absolute; left: 50%; top: 50%;
+  width: 28%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  color: #e8eefc; filter: drop-shadow(0 2px 3px #000a); pointer-events: none;
+}
+.char-lock svg { width: 100%; height: 100%; display: block; }
+.char-soon {
+  position: absolute; left: 6%; right: 6%; bottom: 6%;
+  font-style: normal; font-size: clamp(8px, 2.2cqh, 10px); line-height: 1.5;
+  color: #1b2550; background: var(--bl-gold); border-radius: 6px; pointer-events: none;
+}
+#ciStatus { font-size: 12px; color: #ffd27a; border: 1px solid #ffd27a88; border-radius: 999px; padding: 1px 8px; }
+#lobbyStart:disabled { filter: grayscale(.8) brightness(.7); }
 .lobby-stage {
   position: relative;
   display: flex;
