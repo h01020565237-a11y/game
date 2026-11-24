@@ -21,14 +21,6 @@ function drawLoading() {
   g.fillRect(VW / 2 - 160, VH / 2, 320 * assetsProgress(), 14);
 }
 
-let overShown = "";
-function syncOverButton() {
-  // 게임이 끝나면 캔버스 위에 "다시 하기" 버튼 표시 (모바일에서 R 키 없이 재시작)
-  if (overShown === over) return;
-  overShown = over;
-  el("overBtn").hidden = !over;
-}
-
 fitCanvas();
 reset();
 function loop(t) {
@@ -43,7 +35,8 @@ function loop(t) {
   last = t;
   let n = 0;
   // 모바일 메뉴가 열려 있으면 게임 일시정지
-  if (document.body.classList.contains("menuOpen")) acc = 0;
+  // 로비·메뉴가 열려 있으면 게임 일시정지
+  if (document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen")) acc = 0;
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
     updateMouseWorld();
     update(STEP);
@@ -53,7 +46,7 @@ function loop(t) {
   if (n === MAX_STEPS) acc = 0;
   draw();
   touchHUD();
-  syncOverButton();
+  uiFrame();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

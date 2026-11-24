@@ -24,7 +24,7 @@ button {
   margin: auto;
   line-height: 0;
 }
-#arena canvas {
+#arena #c {
   width: 100%;
   height: auto;
   display: block;
@@ -259,25 +259,7 @@ body.mobile #msg {
     font-size: 22px;
   }
 }
-/* 게임 종료 시 다시 하기 버튼 (기능용 기본 스타일, 디자인은 UI 담당이 조정) */
-#overBtn {
-  position: absolute;
-  left: 50%;
-  top: 62%;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  margin: 0;
-  padding: 10px 24px;
-  line-height: 1.2;
-  font-size: 20px;
-  color: white;
-  background: #287c49;
-  border: 2px solid #ffffffaa;
-  border-radius: 10px;
-}
-#overBtn[hidden] {
-  display: none;
-}
+/* 다시 하기 버튼(#overBtn)은 결과 화면(css/ui.css)으로 이동 */
 /* ===== 모바일 전체 화면 (게임 화면이 폰 화면을 꽉 채움) ===== */
 #menuBtn {
   display: none;
@@ -294,7 +276,7 @@ body.mobile #arena {
   margin: 0;
   background: #17232b;
 }
-body.mobile #arena canvas {
+body.mobile #arena #c {
   width: 100%;
   height: 100%;
   border: 0;
@@ -361,9 +343,6 @@ body.mobile.menuOpen #menuPanel #help {
 }
 body.mobile.menuOpen #deckUI {
   max-height: none;
-}
-body.mobile #overBtn {
-  z-index: 7;
 }
 /* ===== 세로로 든 폰: 게임을 90도 돌려 바로 가로로 표시 ("가로로 돌려 주세요" 안내 대신) ===== */
 body.mobile #rotateHint {

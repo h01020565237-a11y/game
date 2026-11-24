@@ -18,6 +18,7 @@ function summon(swap = false) {
     swapCD = 2;
   }
   flight = { x: p.x, y: p.y, tx: x, ty: y, id, t: 0 };
+  sfx("summon", p);
   summonCD[id] = 15;
   skillCD = 0;
 }
@@ -28,6 +29,7 @@ function command() {
   if (!enemies.length) return;
   if ((id === 0 || id === 7) && enemies.length < 2 && pet.life > 7) return;
   skillCD = 5;
+  sfx("skill", pet);
   fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: ["10만 볼트", "화염방사", "하이드로펌프", "씨폭탄", "섀도볼", "헤비봄버", "냉동빔", "노래하기"][id] });
   for (let b of enemies.slice(0, id === 0 ? 3 : id === 5 || id === 7 ? 7 : 1)) {
     if (id === 0) fx.push({ x: b.x, y: b.y, sx: pet.x, sy: pet.y, t: 0.48, bolt: true, strong: true });

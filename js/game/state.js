@@ -1,6 +1,9 @@
 // 라운드 초기화
 
+// 결과 화면용 집계 (실제로 일어난 일만 기록, 게임 규칙에는 영향 없음)
+let stats = { kills: 0, damage: 0, rank: 0, time: 0 };
 function reset() {
+  stats = { kills: 0, damage: 0, rank: 0, time: 0 };
   elapsed = 0;
   zone = 1450;
   flight = null;

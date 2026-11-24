@@ -35,10 +35,28 @@ const runnerImg = loadImage("assets/characters/runner-dir.webp");
 const sheets = {};
 sheets.suit = loadImage("assets/characters/suit-sheet.webp");
 sheets.octo = loadImage("assets/characters/octo-sheet.webp");
-sheets.stripe = loadImage("assets/characters/stripe-sheet.png");
+// 줄무늬: ChatGPT 인계 후보(stripe_run) 적용. 같은 그림에서 발 위치만 90px 기준선으로 정렬됨 (기존 파일 stripe-sheet.png 는 보관)
+sheets.stripe = loadImage("assets/characters/stripe-run-sheet.webp");
 sheets.soccer = loadImage("assets/characters/soccer-sheet.webp");
 sheets.support = loadImage("assets/characters/support-sheet.webp");
 sheets.summoner = loadImage("assets/characters/summoner-sheet.webp");
 sheets.runner = loadImage("assets/characters/runner-sheet.webp");
-const crateArt = loadImage("assets/props/crate.webp");
+const crateArt = loadImage("assets/props/crate.webp"); // 새 상자 그림을 못 불러올 때 대체용
+// 상자 상태별 그림 (96×90, 잔디 받침 중심 = (48, 84))
+const chestArt = {
+  intact: loadImage("assets/props/chest-intact.webp"),
+  hit: loadImage("assets/props/chest-hit.webp"),
+  cracked: loadImage("assets/props/chest-cracked.webp"),
+  heavy: loadImage("assets/props/chest-heavy-damage.webp"),
+  burst1: loadImage("assets/props/chest-burst-1.webp"),
+  burst2: loadImage("assets/props/chest-burst-2.webp"),
+  debris: loadImage("assets/props/chest-debris.webp"),
+};
+// 무기 아이콘 (96×96), weapons 순서와 같음. 0번 맨손은 그림 없음
+const weaponIcons = WEAPON_ART.map((w) => w && loadImage(w.src));
+// 공격 모션 시트 (있을 때만)
+const attackSheets = {};
+for (const [k, v] of Object.entries(ATTACK_SPRITES)) attackSheets[k] = loadImage(v.src);
+// 곰 Q 질주 전용 시트 (ChatGPT 인계 후보). CHARACTER_ART.bearSprint 가 true 일 때만 사용
+const bearSprintImg = loadImage("assets/characters/bear-sprint-sheet.webp");
 const jungle = loadImage(MAP_JUNGLE.background);

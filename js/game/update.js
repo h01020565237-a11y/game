@@ -96,7 +96,18 @@ function update(dt) {
   }
   for (let a of [p, ...bots]) {
     a.cd = Math.max(0, a.cd - dt);
+    a.grenCD = Math.max(0, (a.grenCD || 0) - dt);
     updateAmmo(a, dt);
+    // 타격감 타이머 (그림용)
+    a.aimT = Math.max(0, (a.aimT || 0) - dt);
+    a.hitT = Math.max(0, (a.hitT || 0) - dt);
+    if (a.swing && (a.swing.t += dt) >= a.swing.dur) a.swing = null;
+  }
+  // 자기장 경고음: 축소 시작, 그리고 내가 자기장 밖에 있으면 3초마다
+  if (elapsed - dt < 25 && elapsed >= 25) sfx("zone_warning");
+  if (p.hp > 0 && Math.hypot(p.x - W / 2, p.y - H / 2) > zone && (p.zoneWarnT || 0) <= elapsed) {
+    p.zoneWarnT = elapsed + 3;
+    sfx("zone_warning");
   }
   p.dashCD = Math.max(0, p.dashCD - dt);
   let ox = p.x, oy = p.y;
@@ -167,6 +178,10 @@ function update(dt) {
         fx.push({ x: b.x, y: b.y, t: 0.4, ring: 35 });
       }
     }
+    // 수류탄: 대상이 벽 뒤에 있거나 가끔, 투척 거리 안이면 던짐 (플레이어와 같은 규칙: 최대 3개, 자동 충전 없음)
+    if (a.grenades > 0 && b && b.max && (a.grenT || 0) <= elapsed && dist(a, b) > 90 && dist(a, b) < weapons[GRENADE.weaponId][3] && (!clearLine(a, b) || Math.random() < 0.02)) {
+      if (throwGrenade(a, b.x, b.y)) a.grenT = elapsed + 3 + Math.random() * 2;
+    }
     if (l && dist(a, l) < 250) {
       steer(a, l.x, l.y, dt);
       pickup(a);
@@ -228,6 +243,8 @@ function update(dt) {
       if (s.t <= 0) {
         for (let b of [p, ...bots, ...boxes, ...pet ? [pet] : []]) if (b !== s.a && b.hp > 0 && !(s.a === p && b === pet) && !(s.a === pet && b === p) && dist({ x: s.tx, y: s.ty }, b) <= 90) hit(s.a, b, s.d);
         fx.push({ x: s.tx, y: s.ty, t: 0.45, explosion: true });
+        sfx("grenade_explode", { x: s.tx, y: s.ty });
+        if (Math.hypot(p.x - s.tx, p.y - s.ty) < 300) shake(8);
         s.dead = true;
       }
       continue;
@@ -262,4 +279,9 @@ function update(dt) {
   compact(fx, (f) => (f.t -= dt) > 0);
   if (p.hp <= 0) over = "패배";
   else if (!bots.some((a) => a.hp > 0)) over = "승리!";
+  if (over) {
+    sfx(over === "패배" ? "defeat" : "victory");
+    stats.rank = over === "패배" ? bots.filter((a) => a.hp > 0).length + 1 : 1;
+    stats.time = elapsed;
+  }
 }

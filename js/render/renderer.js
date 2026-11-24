@@ -14,6 +14,11 @@ function setText(id, s) {
 }
 
 function renderActor(a, k) {
+  // 곰 Q 질주 전용 시트 (설정에서 켰을 때만)
+  if (k === "bear" && a === p && p.run > 0 && CHARACTER_ART.bearSprint && bearSprintImg.naturalWidth) {
+    g.drawImage(bearSprintImg, Math.floor(a.frame || 0) % 8 * 96, (a.dir || 0) * 96, 96, 96, a.x - 34, a.y - 56, 68, 68);
+    return true;
+  }
   let im = sheets[k];
   if (im && im.naturalWidth) {
     g.drawImage(im, (a.moving ? Math.floor(a.frame || 0) % 8 : 0) * 96, (a.dir || 0) * 96, 96, 96, a.x - 34, a.y - 56, 68, 68);
@@ -45,6 +50,32 @@ function ammoBar(x, y, a) {
     }
   }
 }
+// 체력 회복 아이템 (개별 그림이 없어 캔버스로 그림. 그림이 오면 교체)
+function drawMedkit(x, y) {
+  g.fillStyle = "#1a24164d";
+  g.beginPath();
+  g.ellipse(x, y + 10, 13, 5, 0, 0, 7);
+  g.fill();
+  g.fillStyle = "#ffffff";
+  g.strokeStyle = "#2b6b3a";
+  g.lineWidth = 2;
+  g.beginPath();
+  g.roundRect(x - 13, y - 20, 26, 24, 6);
+  g.fill();
+  g.stroke();
+  g.fillStyle = "#3fcf5a";
+  g.fillRect(x - 3.5, y - 16, 7, 16);
+  g.fillRect(x - 9, y - 11.5, 18, 7);
+}
+// 상자 그림(96×90, 받침 중심 48,84)을 받침이 (x, y+22) 에 오도록 0.8배로 그림
+function drawChest(im, x, y, alpha = 1) {
+  if (alpha < 1) {
+    g.save();
+    g.globalAlpha = alpha;
+  }
+  g.drawImage(im, x - 38.4, y - 45.2, 76.8, 72);
+  if (alpha < 1) g.restore();
+}
 function coneDraw(x, y, ang, r, half, alpha = 0.22) {
   g.save();
   g.fillStyle = `rgba(255,240,170,${alpha})`;
@@ -61,7 +92,8 @@ function draw() {
   camX = clamp(p.x - VW / 2, 0, W - VW);
   camY = clamp(p.y - VH / 2, 0, H - VH);
   g.save();
-  g.translate(-camX, -camY);
+  const [shx, shy] = shakeOffset();
+  g.translate(-camX + shx, -camY + shy);
   // 성능: 맵 전체(2472×1392) 대신 카메라에 보이는 영역만 그림
   g.fillStyle = "#789b65";
   g.fillRect(camX, camY, VW, VH);
@@ -69,32 +101,34 @@ function draw() {
     const sx = jungle.naturalWidth / W, sy = jungle.naturalHeight / H;
     g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
   } else scenery();
-  if (manualAim && !manualAim.cancel) {
-    // 직접 조준 미리보기
+  if (grenAim && !grenAim.cancel) {
+    // 수류탄 조준 미리보기: 던질 지점과 폭발 범위
+    const d = weapons[GRENADE.weaponId][3] * grenAim.mag, tx = clamp(p.x + grenAim.x * d, 0, W), ty = clamp(p.y + grenAim.y * d, 0, H);
+    g.save();
+    g.strokeStyle = "#ffe07c";
+    g.fillStyle = "rgba(255,90,60,0.18)";
+    g.lineWidth = 2;
+    g.setLineDash([6, 4]);
+    g.beginPath();
+    g.moveTo(p.x, p.y - 20);
+    g.quadraticCurveTo((p.x + tx) / 2, Math.min(p.y, ty) - 70, tx, ty);
+    g.stroke();
+    g.beginPath();
+    g.arc(tx, ty, GRENADE.radius, 0, 7);
+    g.fill();
+    g.stroke();
+    g.restore();
+  } else if (manualAim && !manualAim.cancel) {
+    // 주무기 직접 조준 미리보기
     const ang = Math.atan2(manualAim.y, manualAim.x), r = weapons[p.w][3];
-    if (p.w === 6) {
-      const d = r * manualAim.mag, tx = clamp(p.x + manualAim.x * d, 0, W), ty = clamp(p.y + manualAim.y * d, 0, H);
-      g.save();
-      g.strokeStyle = "#fff0aa";
-      g.fillStyle = "rgba(255,240,170,0.18)";
-      g.lineWidth = 2;
-      g.setLineDash([6, 4]);
-      g.beginPath();
-      g.moveTo(p.x, p.y);
-      g.lineTo(tx, ty);
-      g.stroke();
-      g.beginPath();
-      g.arc(tx, ty, 90, 0, 7);
-      g.fill();
-      g.stroke();
-      g.restore();
-    } else coneDraw(p.x, p.y, ang, r, Math.max(angles[p.w], 6) * Math.PI / 360, 0.3);
+    coneDraw(p.x, p.y, ang, r, Math.max(angles[p.w], 6) * Math.PI / 360, 0.3);
   } else if (aiming && p.w !== 6) {
     let b = aimTarget();
     let ang = b ? Math.atan2(b.y - p.y, b.x - p.x) : p.dir * Math.PI / 4 - Math.PI / 2;
     coneDraw(p.x, p.y, ang, weapons[p.w][3], angles[p.w] * Math.PI / 360);
   }
   for (let f of fx) {
+    if (f.debris && f.t < 1.55 && chestArt.debris.naturalWidth) drawChest(chestArt.debris, f.x, f.y, Math.min(1, f.t / 0.6));
     if (f.cone) coneDraw(f.x, f.y, f.ang, f.r, f.half, f.t);
     if (f.explosion) {
       g.save();
@@ -116,29 +150,46 @@ function draw() {
   for (let b of boxes) {
     g.save();
     g.globalAlpha = 1;
-    g.fillStyle = "#30281955";
-    g.beginPath();
-    g.ellipse(b.x, b.y + 12, 30, 12, 0, 0, 7);
-    g.fill();
-    if (crateArt.naturalWidth) g.drawImage(crateArt, b.x - 32, b.y - 39, 64, 64);
-    else {
+    // 새 상자 그림: HP 에 따라 멀쩡함 → 금 감 → 크게 부서짐, 맞는 순간은 피격 그림
+    const art = b.flash > elapsed ? chestArt.hit : b.hp > 700 ? chestArt.intact : b.hp > 350 ? chestArt.cracked : chestArt.heavy;
+    if (art.naturalWidth) drawChest(art, b.x, b.y);
+    else if (crateArt.naturalWidth) {
+      g.fillStyle = "#30281955";
+      g.beginPath();
+      g.ellipse(b.x, b.y + 12, 30, 12, 0, 0, 7);
+      g.fill();
+      g.drawImage(crateArt, b.x - 32, b.y - 39, 64, 64);
+    } else {
       g.fillStyle = "#b87b36";
       g.fillRect(b.x - 20, b.y - 20, 40, 40);
     }
-    if (b.flash > elapsed) {
+    if (b.flash > elapsed && !art.naturalWidth) {
       g.fillStyle = "#ffffff55";
       g.fillRect(b.x - 24, b.y - 28, 48, 48);
     }
     g.restore();
-    bar(b.x, b.y - 45, b.hp, 1e3);
+    bar(b.x, b.y - 50, b.hp, 1e3);
   }
   for (let l of loot) {
-    g.fillStyle = l.type ? "#b8e9ff" : "#ffe07c";
-    g.fillRect(l.x - 7, l.y - 7, 14, 14);
+    const icon = l.type === LOOT.weapon ? weaponIcons[l.id] : l.type === LOOT.grenade ? weaponIcons[GRENADE.weaponId] : null;
+    if (l.type === LOOT.heal) drawMedkit(l.x, l.y + Math.sin(elapsed * 3 + l.x) * 2);
+    else if (icon && icon.naturalWidth) {
+      // 무기 아이콘: 바닥 그림자 + 살짝 떠 있는 움직임
+      const bob = Math.sin(elapsed * 3 + l.x) * 2;
+      g.fillStyle = "#1a24164d";
+      g.beginPath();
+      g.ellipse(l.x, l.y + 9, 14, 5, 0, 0, 7);
+      g.fill();
+      g.drawImage(icon, l.x - 18, l.y - 24 + bob, 36, 36);
+    } else {
+      // 장비: 개별 그림이 아직 없어 기존 표시 유지
+      g.fillStyle = l.type ? "#b8e9ff" : "#ffe07c";
+      g.fillRect(l.x - 7, l.y - 7, 14, 14);
+    }
     g.fillStyle = "#fff";
     g.font = "12px sans-serif";
     g.textAlign = "center";
-    g.fillText(l.type ? gear[l.id] : weapons[l.id][0], l.x, l.y - 12);
+    g.fillText(lootName(l), l.x, (icon && icon.naturalWidth) || l.type === LOOT.heal ? l.y - 26 : l.y - 12);
   }
   for (let f of fx.filter((f2) => f2.trail)) {
     if (character === "runner" && runnerImg.naturalWidth) {
@@ -166,7 +217,7 @@ function draw() {
     g.fill();
     g.save();
     if (a === p && (p.stealth > 0 || inBush(p))) g.globalAlpha = 0.5;
-    renderActor(a, a === p ? character : a.visual);
+    drawActorWithFeel(a, a === p ? character : a.visual);
     g.restore();
     if (a === p && character === "runner") {
       g.fillStyle = "#ffd35b";
@@ -255,7 +306,24 @@ function draw() {
   g.font = "12px sans-serif";
   g.textAlign = "center";
   for (let f of fx) {
-    if (f.trail) continue;
+    if (f.trail || f.debris) continue;
+    if (f.impact) {
+      drawImpact(f);
+      continue;
+    }
+    if (f.muzzle) {
+      drawMuzzle(f);
+      continue;
+    }
+    if (f.healRing) {
+      drawHealRing(f);
+      continue;
+    }
+    if (f.heal) {
+      g.fillStyle = "#7dff8a";
+      g.fillText(f.text, f.x, f.y - 30 - (0.8 - f.t) * 30);
+      continue;
+    }
     if (f.inkBurst) {
       g.save();
       g.globalAlpha = f.t / 0.7;
@@ -264,6 +332,11 @@ function draw() {
       g.arc(f.x, f.y, 85 * (1 - f.t / 0.9), 0, 7);
       g.fill();
       g.restore();
+      continue;
+    }
+    if (f.crateBurst && chestArt.burst1.naturalWidth) {
+      // 파괴 연출: 터짐 1 → 터짐 2 → 잔해 (잔해는 바닥 층에서 따로 서서히 사라짐)
+      drawChest(f.t > 0.3 ? chestArt.burst1 : chestArt.burst2, f.x, f.y, f.t > 0.12 ? 1 : f.t / 0.12);
       continue;
     }
     if (f.crateBurst) {
@@ -298,7 +371,7 @@ function draw() {
       g.beginPath();
       g.arc(f.x, f.y, f.ring, 0, 7);
       g.stroke();
-    } else g.fillText(f.text, f.x, f.y - 30 - (0.65 - f.t) * 25);
+    } else if (f.text !== undefined) g.fillText(f.text, f.x, f.y - 30 - (0.65 - f.t) * 25); // 수정: 글자 없는 이펙트(부채꼴 등)에 "undefined" 가 찍히던 문제
   }
   g.fillStyle = "#a72d4944";
   g.beginPath();
@@ -311,20 +384,12 @@ function draw() {
   g.arc(W / 2, H / 2, zone, 0, 7);
   g.stroke();
   g.restore();
-  g.fillStyle = "#172b24cc";
-  g.fillRect(VW - 150, 8, 142, 40);
-  g.fillStyle = "white";
-  g.font = "13px sans-serif";
-  g.textAlign = "center";
-  g.fillText("자기장 " + (elapsed < 25 ? Math.ceil(25 - elapsed) + "초 후" : "축소 중"), VW - 79, 32);
+  // 자기장 남은 시간은 HTML 전투 HUD(#topHud)에 표시
   if (over) {
-    g.fillStyle = "#0009";
+    // 결과 화면 뒤 배경만 어둡게 (문구는 결과 화면이 표시)
+    g.fillStyle = "#0007";
     g.fillRect(0, 0, VW, VH);
-    g.fillStyle = "white";
-    g.font = "36px sans-serif";
-    g.textAlign = "center";
-    g.fillText(over, VW / 2, VH / 2);
   }
-  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} | 장비 ${p.gear.map((i) => gear[i]).join(", ") || "없음"} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
+  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} ${FEATURES.accessories ? "| 장비 " + (p.gear.map((i) => gear[i]).join(", ") || "없음") + " " : ""}| 수류탄 ${p.grenades}/${GRENADE.max} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
   setText("msg", extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택");
 }

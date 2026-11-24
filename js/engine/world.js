@@ -33,7 +33,7 @@ const visible = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && (!(b.ste
 const terrain = (x, y, r = 16) => wet(x, y) || wet(x + r, y) || wet(x - r, y) || wet(x, y + r) || wet(x, y - r);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function actor(x, y) {
-  return { x, y, hp: 3e3, max: 3e3, w: 0, gear: [], cd: 0, ammo: AMMO.max, reload: 0, dir: 4, frame: 0, moving: false, dash: 0, dashCD: 0, dx: 0, dy: 0 };
+  return { x, y, hp: 3e3, max: 3e3, w: 0, gear: [], cd: 0, ammo: AMMO.max, reload: 0, grenades: 0, grenCD: 0, dir: 4, frame: 0, moving: false, dash: 0, dashCD: 0, dx: 0, dy: 0 };
 }
 function nearBox(x, y, r) {
   for (let i = 0; i < boxes.length; i++) if (Math.hypot(x - boxes[i].x, y - boxes[i].y) < r) return true;
@@ -59,7 +59,7 @@ function move(a, dx, dy, dt) {
   a.dir = (Math.round(Math.atan2(dx, -dy) / (Math.PI / 4)) + 8) % 8;
   a.frame = (a.frame + dt * 12) % 8;
   a._anim = true; // 이번 스텝에 걷기 프레임을 이미 넘김 (update 의 봇 애니메이션 중복 방지)
-  let s = 150 * (a === p && pet ? 1.1 : 1) * (a === p && a.run > 0 ? character === "runner" ? 1.6 : 1.7 : 1) * (a === p && a.heal > 0 ? 0.7 : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (a.gear.includes(0) ? 1.1 : 1) * dt, x = clamp(a.x + dx * s, 18, W - 18), y = clamp(a.y + dy * s, 18, H - 18);
+  let s = 150 * (a === p && pet ? 1.1 : 1) * (a === p && a.run > 0 ? character === "runner" ? 1.6 : 1.7 : 1) * (a === p && a.heal > 0 ? 0.7 : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * dt, x = clamp(a.x + dx * s, 18, W - 18), y = clamp(a.y + dy * s, 18, H - 18);
   if (!terrain(x, a.y) && !blocked(x, a.y) && !nearBox(x, a.y, 30)) a.x = x;
   if (!terrain(a.x, y) && !blocked(a.x, y) && !nearBox(a.x, y, 30)) a.y = y;
 }

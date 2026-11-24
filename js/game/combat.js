@@ -1,5 +1,19 @@
 // 전투: 피해 계산, 아이템 획득, 공격
 
+// 액세서리 효과 확인 (FEATURES.accessories 가 꺼져 있으면 항상 없음 → 플레이어·AI 동일)
+function hasGear(a, id) {
+  return FEATURES.accessories && !!a.gear && a.gear.includes(id);
+}
+// 상자 드롭: DROP_TABLE 가중치 추첨
+function rollDrop() {
+  const table = DROP_TABLE.filter((e) => !e.accessory || FEATURES.accessories);
+  let r = Math.random() * table.reduce((s, e) => s + e.weight, 0);
+  for (const e of table) {
+    if ((r -= e.weight) < 0) return e;
+  }
+  return table[table.length - 1];
+}
+
 function hit(a, b, d) {
   if (b === p && god) return;
   if (b === p && p.guard > 0) {
@@ -13,39 +27,70 @@ function hit(a, b, d) {
   }
   if (a === p && character === "soccer" && ++p.combo % 4 === 0) d *= 1.3;
   d *= a.weak > 0 ? 0.8 : 1;
-  d *= b.gear?.includes(1) ? 0.9 : 1;
+  d *= hasGear(b, 1) ? 0.9 : 1;
   if (b === p && character === "bear") d *= 1 - 0.08 * Math.min(3, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < 120).length);
+  // 집계: 플레이어(와 내 포켓몬)가 적에게 입힌 피해·처치
+  if (b.max && b !== p && b !== pet && (a === p || a === pet) && b.hp > 0) {
+    stats.damage += Math.min(d, b.hp);
+    if (b.hp - d <= 0) stats.kills++;
+  }
   b.hp -= d;
   if (!b.max) b.flash = elapsed + 0.12;
-  if (a.gear.includes(5) && b.max) a.hp = Math.min(a.max, a.hp + d * 0.05);
+  // 타격감: 피격 깜빡임·밀림 흔들림, 타격 이펙트, 효과음, 내가 맞으면 화면 흔들림
+  if (b.max) b.hitT = 0.14;
+  if (a.max || a === pet) fx.push({ x: b.x, y: b.y - (b.max ? 26 : 14), t: 0.22, impact: true, kind: weaponKind(a) });
+  sfx(b.max ? "hit" : "crate_hit", b);
+  if (b === p) shake(d >= 400 ? 7 : 4);
+  if (hasGear(a, 5) && b.max) a.hp = Math.min(a.max, a.hp + d * 0.05);
   fx.push({ x: b.x, y: b.y, t: 0.65, text: Math.round(d) });
   if (!b.max && b.hp <= 0) {
     fx.push({ x: b.x, y: b.y, t: 0.45, crateBurst: true });
+    fx.push({ x: b.x, y: b.y, t: 2, debris: true }); // 바닥 잔해 (그림만, 충돌 없음)
     boxes = boxes.filter((x) => x !== b);
-    loot.push({ x: b.x, y: b.y, type: Math.random() < 0.5 ? 0 : 1, id: 0 });
-    let l = loot.at(-1);
-    l.id = l.type ? Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 6);
+    const e = rollDrop();
+    loot.push({ x: b.x, y: b.y, type: e.type, id: e.type === LOOT.accessory ? Math.floor(Math.random() * gear.length) : e.id || 0 });
+    sfx("crate_break", b);
   }
 }
-// 손해 없이 바로 먹을 수 있는 아이템: 빈손일 때 무기, 장비 칸이 남았을 때 새 장비
+// 손해 없이 바로 먹을 수 있는 아이템: 빈손일 때 주무기, 수류탄(3개 미만), 회복(체력이 깎였을 때)
 function isFreeLoot(a, l) {
-  return l.type === 0 ? !a.w : !a.gear.includes(l.id) && a.gear.length < 3;
+  if (l.type === LOOT.weapon) return !a.w;
+  if (l.type === LOOT.grenade) return (a.grenades || 0) < GRENADE.max;
+  if (l.type === LOOT.heal) return a.hp < a.max;
+  return FEATURES.accessories && !a.gear.includes(l.id) && a.gear.length < 3;
 }
-// 바꿔야 하는 아이템: 다른 무기, 장비 3칸이 꽉 찼을 때 새 장비
+// 바꿔야 하는 아이템: 다른 주무기 (액세서리가 켜져 있으면 3칸이 꽉 찼을 때 새 액세서리)
 function isSwapLoot(a, l) {
-  return l.type === 0 ? a.w && l.id !== a.w : !a.gear.includes(l.id) && a.gear.length >= 3;
+  if (l.type === LOOT.weapon) return a.w && l.id !== a.w;
+  if (l.type === LOOT.accessory) return FEATURES.accessories && !a.gear.includes(l.id) && a.gear.length >= 3;
+  return false;
+}
+// 봇·키보드 획득용: 지금 주워서 의미가 있는 아이템
+function isUsefulLoot(a, l) {
+  return isFreeLoot(a, l) || isSwapLoot(a, l);
+}
+function lootName(l) {
+  return l.type === LOOT.weapon ? weapons[l.id][0] : l.type === LOOT.grenade ? "수류탄" : l.type === LOOT.heal ? "회복약" : gear[l.id];
 }
 function nearLoot(a, pred) {
   return minBy(loot.filter((x) => dist(a, x) < 48 && (!pred || pred(a, x))), (x) => dist(a, x));
 }
-// pred 를 주면 그 조건에 맞는 아이템만 줍는다 (봇은 조건 없이 가장 가까운 것)
-function pickup(a, pred) {
+// pred 를 주면 그 조건에 맞는 아이템만 줍는다 (기본: 주워서 의미가 있는 것)
+function pickup(a, pred = isUsefulLoot) {
   let l = nearLoot(a, pred);
   if (!l) return;
-  if (l.type === 0) {
-    if (a.w) loot.push({ x: l.x + 20, y: l.y, type: 0, id: a.w });
+  if (l.type === LOOT.weapon) {
+    if (a.w) loot.push({ x: l.x + 20, y: l.y, type: LOOT.weapon, id: a.w });
     a.w = l.id;
+  } else if (l.type === LOOT.grenade) {
+    a.grenades = Math.min(GRENADE.max, (a.grenades || 0) + GRENADE.perPickup);
+  } else if (l.type === LOOT.heal) {
+    const before = a.hp;
+    a.hp = Math.min(a.max, a.hp + a.max * HEAL.ratio);
+    fx.push({ x: a.x, y: a.y - 20, t: 0.8, text: "+" + Math.round(a.hp - before), heal: true });
+    fx.push({ x: a.x, y: a.y, t: 0.5, healRing: true });
   } else {
+    if (!FEATURES.accessories) return;
     if (a.gear.includes(l.id)) return;
     if (a.gear.length === 3) {
       let old = a.gear.shift();
@@ -63,9 +108,10 @@ function pickup(a, pred) {
   }
   loot = loot.filter((x) => x !== l);
   if (a === p) {
-    notice = "획득: " + (l.type ? gear[l.id] : weapons[l.id][0]);
+    notice = "획득: " + lootName(l);
     nt = 2;
   }
+  sfx(l.type === LOOT.heal ? "heal" : "pickup", a);
 }
 function canTarget(a, b) {
   return b !== a && b.hp > 0 && visible(a, b) && !(a === p && b === pet) && !(a === pet && b === p);
@@ -109,7 +155,7 @@ function clearLine(a, b) {
 }
 // 탄창 1발이 충전되는 시간 = 무기 쿨타임 (손목시계 -10%)
 function reloadTime(a) {
-  return weapons[a.w][2] * (a.gear.includes(4) ? 0.9 : 1);
+  return weapons[a.w][2] * (hasGear(a, 4) ? 0.9 : 1);
 }
 function updateAmmo(a, dt) {
   if (a.ammo >= AMMO.max) {
@@ -121,7 +167,25 @@ function updateAmmo(a, dt) {
   if (a.reload >= t) {
     a.reload -= t;
     a.ammo++;
+    if (a === p) sfx("reload", a);
   }
+}
+// 수류탄 투척 (소모품): 기존 수류탄 판정 그대로 (0.8초 후 반경 90, 피해 500, 벽을 넘어감)
+function throwGrenade(a, x, y) {
+  if (a.stun > 0 || (a.grenades || 0) < 1 || (a.grenCD || 0) > 0) return false;
+  let [, d, , r] = weapons[GRENADE.weaponId];
+  d *= hasGear(a, 2) ? 1.15 : 1;
+  const ang = Math.atan2(y - a.y, x - a.x), len = Math.min(r, Math.hypot(x - a.x, y - a.y));
+  a.grenades--;
+  a.grenCD = GRENADE.gap;
+  a.reveal = 1.2;
+  if (a === p) p.stealth = 0;
+  a.attackAng = ang;
+  a.aimT = 0.35;
+  a.swing = { kind: "throw", t: 0, dur: 0.3 };
+  shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(a.x + Math.cos(ang) * len, 0, W), ty: clamp(a.y + Math.sin(ang) * len, 0, H), t: GRENADE.fuse, d, gren: true });
+  sfx("grenade_throw", a);
+  return true;
 }
 function attack(a, x, y) {
   if (a.stun > 0) return;
@@ -130,12 +194,19 @@ function attack(a, x, y) {
   a.reveal = 1.2;
   if (a === p) p.stealth = 0;
   let [name, d, cd, r] = weapons[a.w];
+  // 타격감: 공격 방향으로 몸·무기 돌리기, 무기별 모션·반동·총구 불꽃·효과음
+  const kind = weaponKind(a);
+  a.aimT = 0.35;
+  a.swing = { kind, t: 0, dur: WEAPON_FEEL[a.w].dur };
+  sfx(WEAPON_FEEL[a.w].sound, a);
+  if (a === p && WEAPON_FEEL[a.w].kick) shake(WEAPON_FEEL[a.w].kick);
   // 탄창 1발 소모, 다음 발까지 짧은 간격만 둠 (충전은 reloadTime 마다 1발)
   a.ammo -= 1;
   a.cd = AMMO.fireGap;
-  d *= a.gear.includes(2) ? 1.15 : 1;
+  d *= hasGear(a, 2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;
+  if (kind === "gun") fx.push({ x: a.x, y: a.y, t: 0.08, muzzle: true, ang, big: a.w >= 4, owner: a });
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
     for (let b of targets(a)) {
@@ -152,4 +223,10 @@ function attack(a, x, y) {
       shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d, shotgun: a.w === 4, range: r });
     }
   }
+}
+
+// 무기 종류: 근접(맨손·검·망치) / 총 / 투척
+function weaponKind(a) {
+  if (!a || a.w === undefined) return "pet";
+  return a.w < 3 ? "melee" : a.w === 6 ? "throw" : "gun";
 }

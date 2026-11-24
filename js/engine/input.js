@@ -15,6 +15,7 @@ onkeydown = (e) => {
       p.dy = y;
       p.dash = 0.1;
       p.dashCD = 3;
+      sfx("dash", p);
     }
   }
   if (!over && !e.repeat) {
@@ -22,6 +23,8 @@ onkeydown = (e) => {
     if (e.code === "KeyE") character !== "summoner" ? characterSkill(2) : summon(true);
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
+  if (e.code === "KeyG" && !over && !e.repeat) throwGrenade(p, mouse.x, mouse.y);
+  if (e.code === "Escape") openLobby();
   if (e.code === "KeyR") reset();
   if (e.code === "KeyF" && !over) pickup(p, isSwapLoot);
   if (e.code.startsWith("Arrow")) e.preventDefault();
@@ -49,5 +52,7 @@ c.onmousedown = (e) => {
   // 터치 모드에서는 캔버스 탭이 호환 마우스 이벤트로 공격을 일으키지 않게 무시
   if (document.body.classList.contains("mobile")) return;
   if (e.button === 0) mouse.down = true;
+  if (e.button === 2 && !over) throwGrenade(p, mouse.x, mouse.y); // 오른쪽 클릭: 수류탄
 };
 onmouseup = () => mouse.down = false;
+c.oncontextmenu = (e) => e.preventDefault();

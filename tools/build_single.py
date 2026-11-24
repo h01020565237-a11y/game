@@ -13,15 +13,16 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-MIME = {'.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
-ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg))(["\')])')
+MIME = {'.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
+ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg))(["\')])')
 
 
 def inline_assets(text):
     def rep(m):
         path = ROOT / m.group(2)
-        if not path.exists():
-            raise SystemExit(f'missing asset: {m.group(2)}')
+        if not path.exists():  # 주석 속 예시 경로 등: 그대로 두고 알림만
+            print(f'warning: missing asset (left as is): {m.group(2)}')
+            return m.group(0)
         b64 = base64.b64encode(path.read_bytes()).decode()
         return f'{m.group(1)}data:{MIME[path.suffix]};base64,{b64}{m.group(3)}'
     return ASSET_RE.sub(rep, text)
@@ -38,7 +39,7 @@ def build(out):
         assert '</script' not in code, m.group(1)
         return f'<script>/* {m.group(1)} */\n' + code + '</script>'
 
-    html = re.sub(r'<link rel="stylesheet" href="([^"]+)">', css, html)
+    html = re.sub(r'<link rel="stylesheet" href="(?!https?:)([^"]+)">', css, html)
     html = re.sub(r'<script src="([^"]+)"></script>', js, html)
     html = inline_assets(html)
     out.parent.mkdir(parents=True, exist_ok=True)

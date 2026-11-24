@@ -137,7 +137,7 @@ atkBtn.onpointermove = (e) => {
   }
 };
 function fireManual() {
-  const r = weapons[p.w][3] * (p.w === 6 ? manualAim.mag : 1);
+  const r = weapons[p.w][3];
   attack(p, p.x + manualAim.x * r, p.y + manualAim.y * r);
 }
 function releaseAttack(fire) {
@@ -170,6 +170,7 @@ document.querySelector("#dashBtn").onpointerdown = (e) => {
   p.dy = y;
   p.dash = 0.1;
   p.dashCD = 3;
+  sfx("dash", p);
 };
 document.querySelector("#pickBtn").onpointerdown = (e) => {
   e.preventDefault();
@@ -200,6 +201,12 @@ const ammoText = (a) => "●".repeat(a.ammo) + "○".repeat(Math.max(0, AMMO.max
 function touchHUD() {
   checkHoldAttack();
   setText("atk", "공격\n" + ammoText(p));
+  setText("grenBtn", "수류탄\n" + (p.grenades || 0) + "/" + GRENADE.max);
+  const gOn = (p.grenades || 0) > 0;
+  if (grenBtn._on !== gOn) {
+    grenBtn._on = gOn;
+    grenBtn.classList.toggle("empty", !gOn);
+  }
   if (swipe) for (let i = 0; i < 3; i++) {
     let id = deck[i], b = menu.children[i], live = pet?.id === id, locked = !live && (summonCD[id] > 0 || !!flight || !!pet && swapCD > 0);
     let html = `<strong>${mons[id][1]}</strong>${mons[id][0]}<span>${live ? "전투 중" : summonCD[id] > 0 ? Math.ceil(summonCD[id]) + "초" : flight ? "투척 중" : pet && swapCD > 0 ? Math.ceil(swapCD) + "초" : "준비"}</span>`;
@@ -215,7 +222,7 @@ function touchHUD() {
   setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : pet ? "교체 ↔" : flight ? "투척 중" : "소환 ↑");
   // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
-  let label = swapL ? "교체\n" + (swapL.type ? gear[swapL.id] : weapons[swapL.id][0]) : "";
+  let label = swapL ? "교체\n" + lootName(swapL) : "";
   setText("pickBtn", label);
   if (pick._show !== !!swapL) {
     pick._show = !!swapL;
@@ -234,6 +241,7 @@ document.querySelector("#charApply").onclick = () => {
   document.querySelector("#bearHeal").style.display = character !== "summoner" ? "block" : "none";
   closeSwipe();
   document.body.classList.remove("menuOpen");
+  closeLobby();
   reset();
 };
 
@@ -244,3 +252,41 @@ for (const ev of ["contextmenu", "selectstart"]) {
     if (document.body.classList.contains("mobile") && !allowNative(e.target)) e.preventDefault();
   });
 }
+
+// 수류탄 버튼 (소모품, 최대 3개)
+// - 탭: 가장 가까운 적에게 자동 조준 투척 (적이 없으면 바라보는 방향 최대 거리)
+// - 끌기: 방향과 거리를 직접 조준 (화면에 낙하 지점과 폭발 범위 표시), 손을 떼면 투척, 가운데로 되돌리면 취소
+const grenBtn = document.querySelector("#grenBtn");
+let grenPress = null, grenAim = null;
+grenBtn.onpointerdown = (e) => {
+  e.preventDefault();
+  if (over || grenPress) return;
+  grenBtn.setPointerCapture(e.pointerId);
+  grenPress = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  grenAim = null;
+};
+grenBtn.onpointermove = (e) => {
+  if (grenPress?.id !== e.pointerId) return;
+  let [dx, dy] = toLocal(e.clientX - grenPress.x, e.clientY - grenPress.y), m = Math.hypot(dx, dy);
+  if (m > AIM_DEAD || grenAim) {
+    const R = grenBtn.offsetWidth * 1.6;
+    grenAim = m < 1 ? { x: 0, y: 0, mag: 0, cancel: true } : { x: dx / m, y: dy / m, mag: clamp(m / R, 0.2, 1), cancel: m <= AIM_DEAD };
+  }
+};
+function releaseGrenade(fire) {
+  if (!grenPress) return;
+  if (fire && !over) {
+    const r = weapons[GRENADE.weaponId][3];
+    if (grenAim) {
+      if (!grenAim.cancel) throwGrenade(p, p.x + grenAim.x * r * grenAim.mag, p.y + grenAim.y * r * grenAim.mag);
+    } else {
+      const b = minBy(targets(p).filter((t) => t.max && dist(p, t) <= r), (t) => dist(p, t));
+      const a = b ? Math.atan2(b.y - p.y, b.x - p.x) : dirToAngle(p.dir);
+      throwGrenade(p, b ? b.x : p.x + Math.cos(a) * r, b ? b.y : p.y + Math.sin(a) * r);
+    }
+  }
+  grenPress = null;
+  grenAim = null;
+}
+grenBtn.onpointerup = (e) => grenPress?.id === e.pointerId && releaseGrenade(true);
+grenBtn.onpointercancel = grenBtn.onlostpointercapture = () => releaseGrenade(false);

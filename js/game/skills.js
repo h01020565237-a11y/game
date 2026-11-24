@@ -6,6 +6,11 @@ function tackleInput() {
 // 소환사를 제외한 캐릭터의 스킬1/스킬2 (예전 이름 bearSkill)
 function characterSkill(i) {
   if (over || character === "summoner") return;
+  const before = [p.run, p.heal, p.tackle, p.s1, p.s2].join();
+  characterSkillInner(i);
+  if ([p.run, p.heal, p.tackle, p.s1, p.s2].join() !== before) sfx("skill", p); // 실제로 발동했을 때만
+}
+function characterSkillInner(i) {
   if (extraNames[character]) {
     extraSkill(i);
     return;
