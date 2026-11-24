@@ -24,6 +24,7 @@ function drawLoading() {
 fitCanvas();
 reset();
 function loop(t) {
+  trackFrame(t);
   beginFrame();
   if (!assetsReady()) {
     last = t;

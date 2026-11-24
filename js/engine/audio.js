@@ -63,34 +63,35 @@ document.addEventListener("visibilitychange", () => {
   else audio.ctx.resume();
 });
 
+// 소리 파일을 한 번만 디코딩해서 Web Audio 버퍼로 보관 (재생할 때마다 새로 만들지 않음 → 프레임 드랍 방지)
+// - data: URI(한 파일로 합친 빌드, 테스트 링크): fetch 없이 직접 풀어서 디코딩 (보안 정책에 막히지 않음)
+// - http(s): fetch 로 받아서 디코딩
+// - file:// (파일을 직접 연 경우): fetch 가 막혀 있어 <audio> 요소 4개를 미리 만들어 돌려 씀 (복제 안 함)
+function dataUriToBuffer(uri) {
+  const b64 = uri.slice(uri.indexOf(",") + 1), bin = atob(b64), out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
 function loadSounds() {
-  const fileMode = location.protocol === "file:" ; // file:// 은 fetch 가 막혀서 바로 <audio> 사용
-  for (const [name, s] of Object.entries(SOUNDS)) {
-    if (!s.src) continue;
-    if (fileMode && !s.src.startsWith("data:")) {
-      audio.els[name] = Object.assign(new Audio(s.src), { preload: "auto" });
-      continue;
-    }
-    fetch(s.src)
-      .then((r) => {
-        if (!r.ok) throw new Error(r.status);
-        return r.arrayBuffer();
-      })
-      .then((ab) => audio.ctx.decodeAudioData(ab))
-      .then((buf) => (audio.buffers[name] = buf))
-      .catch(() => {
-        // file:// 등 fetch 가 막힌 경우: <audio> 요소로 재생
-        const el = new Audio(s.src);
-        el.preload = "auto";
-        audio.els[name] = el;
-      });
-  }
-  if (BGM.src) {
-    fetch(BGM.src).then((r) => r.arrayBuffer()).then((ab) => audio.ctx.decodeAudioData(ab)).then((buf) => {
-      audio.buffers.__bgm = buf;
-      syncBgm(true);
-    }).catch(() => {});
-  }
+  const fileMode = location.protocol === "file:";
+  const decode = (name, src, done) => {
+    let job;
+    if (src.startsWith("data:")) job = Promise.resolve(dataUriToBuffer(src));
+    else if (fileMode) job = Promise.reject(new Error("file"));
+    else job = fetch(src).then((r) => {
+      if (!r.ok) throw new Error(r.status);
+      return r.arrayBuffer();
+    });
+    job.then((ab) => audio.ctx.decodeAudioData(ab)).then(done).catch(() => {
+      if (name === "__bgm") return;
+      audio.els[name] = { pool: [0, 1, 2, 3].map(() => Object.assign(new Audio(src), { preload: "auto" })), next: 0 };
+    });
+  };
+  for (const [name, s] of Object.entries(SOUNDS)) if (s.src) decode(name, s.src, (buf) => (audio.buffers[name] = buf));
+  if (BGM.src) decode("__bgm", BGM.src, (buf) => {
+    audio.buffers.__bgm = buf;
+    syncBgm(true);
+  });
 }
 
 // 효과음 재생. pos 를 주면 내 캐릭터와의 거리로 음량 조절
@@ -120,9 +121,13 @@ function sfx(name, pos) {
     src.onended = done;
     src.start();
   } else if (audio.els[name]) {
-    const el = audio.els[name].cloneNode();
+    // 미리 만든 <audio> 4개를 돌려 가며 재생 (복제 없음)
+    const P = audio.els[name], el = P.pool[P.next++ % P.pool.length];
     el.volume = clamp(v * audio.settings.sfx, 0, 1);
     el.onended = done;
+    try {
+      el.currentTime = 0;
+    } catch (e) {}
     el.play().catch(done);
   } else {
     synth(s.synth || name, v);

@@ -7,7 +7,9 @@
 // 선명도: 캔버스 내부 해상도를 기기 픽셀에 맞춰 올린다 (최대 2배, 성능 보호).
 
 const MOBILE_VIEW_H = 480;
-let viewScale = 1;
+// 캔버스 내부 픽셀 상한 (모바일 발열·프레임 드랍 방지). 실제 배율은 프레임 상황에 따라 자동 조절
+const MAX_BACKING_PIXELS = 1.4e6;
+let viewScale = 1, qualityScale = 1;
 
 function fitCanvas() {
   const mobile = document.body.classList.contains("mobile");
@@ -20,6 +22,8 @@ function fitCanvas() {
     vh = MOBILE_VIEW_H;
     vw = Math.round(clamp(vh * sw / Math.max(1, sh), 480, W));
     k = clamp(sh * (window.devicePixelRatio || 1) / vh, 1, 2);
+    k = Math.min(k, Math.sqrt(MAX_BACKING_PIXELS / (vw * vh)));
+    k = Math.max(1, k * qualityScale);
   }
   VW = vw;
   VH = vh;
@@ -38,3 +42,34 @@ function beginFrame() {
 
 window.addEventListener("resize", fitCanvas);
 window.addEventListener("orientationchange", () => setTimeout(fitCanvas, 200));
+
+// 자동 화질 조절: 최근 2초 평균 프레임 간격이 22ms(약 45fps)보다 길면 해상도를 한 단계 낮추고,
+// 5초 이상 여유(14ms 이하)가 있으면 한 단계 올림. 모바일에서만 동작
+const perfWin = { sum: 0, n: 0, since: 0, last: 0 };
+function trackFrame(t) {
+  if (!document.body.classList.contains("mobile")) return;
+  if (perfWin.last) {
+    const d = t - perfWin.last;
+    if (d < 250) { // 백그라운드 복귀 등 긴 공백은 제외
+      perfWin.sum += d;
+      perfWin.n++;
+    }
+  }
+  perfWin.last = t;
+  if (!perfWin.since) perfWin.since = t;
+  const span = t - perfWin.since;
+  if (span < 2000 || perfWin.n < 30) return;
+  const avg = perfWin.sum / perfWin.n;
+  let q = qualityScale;
+  if (avg > 22 && q > 0.5) q = Math.max(0.5, q - 0.15);
+  else if (avg < 14 && span > 5000 && q < 1) q = Math.min(1, q + 0.15);
+  else if (avg <= 22 && !(avg < 14 && span > 5000)) {
+    if (span > 5000) Object.assign(perfWin, { sum: 0, n: 0, since: t });
+    return;
+  }
+  Object.assign(perfWin, { sum: 0, n: 0, since: t });
+  if (q !== qualityScale) {
+    qualityScale = q;
+    fitCanvas();
+  }
+}
