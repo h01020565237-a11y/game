@@ -65,15 +65,13 @@
     </div>
 
     <!-- 로비 (캐릭터 선택) -->
-    <!-- 타이틀 화면 (처음 열 때). 레이어: 배경 → 16:9 무대(로고·캐릭터·버튼) -->
+    <!-- 타이틀 화면 (처음 열 때): 완성 이미지 1장 + 그림 속 버튼 위치에 투명 버튼 -->
     <section id="title" class="screen" hidden aria-label="타이틀">
       <img id="titleBg" class="title-bg" alt="">
       <div class="title-stage">
-        <img id="titleLogo" class="title-logo" alt="주엽공고">
-        <div id="titleChars" class="title-chars"></div>
-        <button id="titleStart" class="title-start"><i>«</i><span>TAP TO START</span><i>»</i></button>
-        <button id="titleSettings" class="title-gear" aria-label="설정">⚙</button>
-        <span id="titleVersion" class="title-version"></span>
+        <img id="titleArt" class="title-art" alt="주엽공고 타이틀" draggable="false">
+        <button id="titleStart" class="title-hit" aria-label="시작하기 (TAP TO START)"></button>
+        <button id="titleSettings" class="title-hit round" aria-label="설정"></button>
       </div>
       <div id="titleSettingsPanel" class="panel title-settings" hidden>
         <h3>설정</h3>

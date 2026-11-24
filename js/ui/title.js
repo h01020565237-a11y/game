@@ -1,77 +1,25 @@
 // ===== 타이틀 화면 (게임 처음 열 때) =====
+// 완성된 타이틀 이미지 1장을 그대로 표시하고, 그림 속 TAP TO START·설정 아이콘 위치에 투명 버튼을 겹침
 // 시작 → 기존 메인 로비로 전환. 로비·전투 코드는 건드리지 않음
-// 레이어: 배경(화면 전체 cover) → 16:9 무대(로고, 캐릭터, 버튼). 화면 비율이 달라도 무대는 16:9 를 유지하고 배경이 남는 곳을 채움
+// 반응형: 무대는 이미지 비율(1672:941) 그대로 화면 안에 꽉 차게(contain) → 그림이 잘리지 않고 버튼 위치도 항상 일치.
+//         화면 비율이 달라 남는 곳은 같은 그림을 흐리게 깔아 채움
 
-// 좌표가 있는 캐릭터는 그대로, 없는 캐릭터는 같은 줄의 빈자리(가운데에 가까운 순, 좌우 번갈아)에 자동 배치
-function titleLayout(list) {
-  const R = TITLE_LAYOUT.rows, used = { hero: [], back: [], front: [] };
-  for (const c of list) if (c.x !== undefined) (used[c.row || "front"] || used.front).push(c.x);
-  return list.map((c) => {
-    const row = R[c.row] ? c.row : "front", cfg = R[row];
-    let x = c.x;
-    if (x === undefined) {
-      x = cfg.xs.find((v) => used[row].every((u) => Math.abs(u - v) >= TITLE_LAYOUT.minGap));
-      if (x === undefined) x = cfg.xs[used[row].length % cfg.xs.length]; // 자리가 다 차면 겹쳐서라도 배치
-      used[row].push(x);
-    }
-    return { ...c, row, x, y: c.y !== undefined ? c.y : cfg.y, h: c.h !== undefined ? c.h : cfg.h, flip: !!c.flip };
-  });
-}
-const TITLE_ROW_ORDER = { back: 0, front: 1, hero: 2 };
-
-// 원본 PNG 의 실제 그림 영역(알파 > 20)을 잼. 그림을 읽을 수 없는 환경(file:// 등)이면 이미지 전체를 그림 영역으로 봄
-function figureBox(im) {
-  const w = im.naturalWidth, h = im.naturalHeight;
-  try {
-    const cv = document.createElement("canvas");
-    cv.width = w;
-    cv.height = h;
-    const cx = cv.getContext("2d", { willReadFrequently: true });
-    cx.drawImage(im, 0, 0);
-    const a = cx.getImageData(0, 0, w, h).data;
-    let x0 = w, y0 = h, x1 = -1, y1 = -1;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (a[(y * w + x) * 4 + 3] > 20) {
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
-    }
-    if (x1 >= x0) return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
-  } catch (e) {}
-  return { x0: 0, y0: 0, x1: w, y1: h };
-}
-// 그림 영역 기준: 키 = c.h(무대 세로 %), 발 = c.y, 가로 가운데 = c.x. 무대는 16:9
-function placeTitleChar(im, c) {
-  const b = figureBox(im), s = c.h / (b.y1 - b.y0); // 원본 1px 당 무대 세로 %
-  const W = im.naturalWidth, H = im.naturalHeight, ar = 9 / 16;
-  const cx = c.flip ? W - (b.x0 + b.x1) / 2 : (b.x0 + b.x1) / 2;
-  im.style.height = H * s + "%";
-  im.style.top = c.y - b.y1 * s + "%";
-  im.style.left = c.x - cx * s * ar + "%";
-  if (c.flip) im.classList.add("flip");
-}
 function buildTitle() {
-  const t = el("title");
-  el("titleBg").src = TITLE_ART.background;
-  el("titleLogo").src = TITLE_ART.logo;
-  el("titleLogo").style.width = TITLE_LAYOUT.logo.w + "%";
-  el("titleLogo").style.top = TITLE_LAYOUT.logo.top + "%";
-  const box = el("titleChars");
-  box.innerHTML = "";
-  // 뒷줄 → 앞줄 → 가운데 주인공 순서로 그려서 앞쪽이 위에 오게
-  const items = titleLayout(TITLE_CHARACTERS.filter((c) => c.img || LOBBY_ART[c.id])).sort((a, b) => TITLE_ROW_ORDER[a.row] - TITLE_ROW_ORDER[b.row]);
-  items.forEach((c, i) => {
-    const im = document.createElement("img");
-    im.className = "title-char " + c.row;
-    im.alt = DISPLAY_NAMES[c.id] || "";
-    im.draggable = false;
-    im.style.animationDelay = (i * 0.07).toFixed(2) + "s";
-    im.onload = () => placeTitleChar(im, c);
-    im.src = c.img || LOBBY_ART[c.id].full;
-    box.append(im);
-  });
-  el("titleVersion").textContent = GAME_VERSION;
-  t.hidden = false;
+  const T = TITLE_IMAGE;
+  el("titleBg").src = T.src;
+  el("titleArt").src = T.src;
+  el("title").style.setProperty("--title-ar", `${T.width} / ${T.height}`);
+  el("title").style.setProperty("--title-k", String(T.width / T.height));
+  const s = el("titleStart").style;
+  s.left = T.start.x + "%";
+  s.top = T.start.y + "%";
+  s.width = T.start.w + "%";
+  s.height = T.start.h + "%";
+  const g = el("titleSettings").style;
+  g.left = T.settings.cx + "%";
+  g.top = T.settings.cy + "%";
+  g.width = T.settings.d + "%";
+  el("title").hidden = false;
   document.body.classList.add("titleOpen");
 }
 function closeTitle() {
@@ -101,7 +49,6 @@ el("tClose").onclick = () => {
   el("titleSettingsPanel").hidden = true;
   sfx("ui_click");
 };
-buildTitle();
 // PC: Enter / Space 로도 시작
 document.addEventListener("keydown", (e) => {
   if (!document.body.classList.contains("titleOpen") || !el("titleSettingsPanel").hidden) return;
@@ -110,3 +57,4 @@ document.addEventListener("keydown", (e) => {
     closeTitle();
   }
 });
+buildTitle();

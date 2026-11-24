@@ -457,29 +457,22 @@ body.lobbyOpen #lobby { display: flex; }
 .mission > div { text-align: left; }
 #waveBanner { background: #0f1838e6; color: #fff; text-shadow: 0 1px 2px #000; }
 
-/* ---------- 타이틀 화면 ---------- */
+/* ---------- 타이틀 화면 (완성 이미지 1장) ---------- */
 #title { z-index: 30; padding: 0; gap: 0; background: #1b3f86; overflow: hidden; }
 #title[hidden] { display: none; }
-.title-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-/* 16:9 무대: 화면 안에 꽉 차게(contain). 16:9 보다 넓거나 좁은 화면은 배경이 나머지를 채움 */
-.title-stage { position: relative; width: min(100cqw, 177.78cqh); height: min(100cqh, 56.25cqw); container-type: size; }
-.title-logo { position: absolute; left: 50%; transform: translateX(-50%); height: auto; pointer-events: none; filter: drop-shadow(0 6px 10px #0006); animation: title-drop .7s cubic-bezier(.2, 1.4, .4, 1) both; }
-.title-chars { position: absolute; inset: 0; pointer-events: none; }
-.title-char { position: absolute; width: auto; filter: drop-shadow(0 4px 6px #0007); animation: title-rise .6s ease-out both; }
-.title-char.flip { transform: scaleX(-1); }
-.title-char.back { filter: drop-shadow(0 3px 5px #0006) brightness(.96); }
+/* 화면 비율이 그림과 다를 때 남는 곳: 같은 그림을 흐리게 */
+.title-bg { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover; filter: blur(14px) brightness(.8); pointer-events: none; }
+/* 무대 = 그림 비율 그대로 화면 안에 꽉 차게. 그림이 잘리지 않으므로 버튼 위치(%)가 항상 그림과 일치 */
+.title-stage { position: relative; width: min(100cqw, calc(100cqh * var(--title-k, 1.7768))); aspect-ratio: var(--title-ar, 1672 / 941); }
+.title-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; }
+/* 투명 버튼: 그림에 그려진 버튼 위에 겹침. 누를 때만 살짝 밝게 */
+#title .title-hit { position: absolute; padding: 0; margin: 0; border: 0; background: transparent; cursor: pointer; border-radius: 10px; font-size: 0; -webkit-tap-highlight-color: transparent; }
+#title .title-hit.round { aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); }
+#title .title-hit:active { background: #ffffff33; }
+#title .title-hit:focus-visible { outline: 3px solid #ffe873; outline-offset: 2px; }
 .title-settings { position: absolute; z-index: 3; display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; color: #fff; min-width: min(80cqw, 320px); }
 .title-settings[hidden] { display: none; }
 .title-settings h3 { margin: 0; font-weight: normal; }
 .title-settings label { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 #title .title-settings .row { display: flex; gap: 8px; justify-content: flex-end; }
-@keyframes title-drop { from { transform: translate(-50%, -30%) scale(.85); opacity: 0; } }
-@keyframes title-rise { from { opacity: 0; margin-top: 4%; } }
 #title .title-settings .btn, #title .title-settings label { font-size: clamp(13px, 3.4cqh, 18px); }
-
-/* v2 시안: 아래 가운데 "TAP TO START" 막대, 왼쪽 아래 둥근 설정, 오른쪽 아래 버전 */
-#title .title-start { position: absolute; left: 50%; top: 88.5%; width: 30%; height: 7.6%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 6%; padding: 0; border: 2px solid #7fe3ff; border-radius: 8px; background: linear-gradient(180deg, #1d4fc4 0%, #0c2a86 100%); box-shadow: 0 0 12px #3fc8ff, inset 0 0 10px #5fd8ff88; color: #fff; font-family: var(--bl-font); font-style: italic; font-weight: bold; font-size: clamp(14px, 5cqh, 54px); letter-spacing: .02em; text-shadow: 0 2px 4px #001a5a; z-index: 2; cursor: pointer; animation: title-glow 1.6s ease-in-out 1s infinite; }
-#title .title-start i { font-style: normal; color: #7fe3ff; font-size: 1.15em; }
-#title .title-gear { position: absolute; left: 4.4%; top: 93%; width: 5.4%; aspect-ratio: 1; transform: translate(-50%, -50%); padding: 0; border: 3px solid #cfe1ff; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #33508f, #16244f); color: #fff; font-size: clamp(16px, 6cqh, 60px); line-height: 1; z-index: 2; cursor: pointer; box-shadow: 0 3px 6px #0008; }
-.title-version { position: absolute; right: 1.2%; bottom: 2%; color: #fff; font-family: var(--bl-font); font-weight: bold; font-size: clamp(10px, 3.2cqh, 30px); text-shadow: 0 1px 3px #000; }
-@keyframes title-glow { 50% { box-shadow: 0 0 22px #5fd8ff, inset 0 0 14px #8fe8ff; } }

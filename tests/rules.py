@@ -229,19 +229,25 @@ def main(path='index.html'):
         m.on('pageerror', lambda e: errors.append(str(e)))
         m.goto(url)
         m.wait_for_timeout(1500)
-        title_ok = m.evaluate("!document.querySelector('#title').hidden && document.querySelectorAll('.title-char').length === TITLE_CHARACTERS.length")
-        auto = m.evaluate("""(() => {
-          const L = titleLayout(TITLE_CHARACTERS.concat([{ id: 'new1', row: 'back' }, { id: 'new2', row: 'front' }, { id: 'new3' }]));
-          const n = L.filter((c) => c.id.startsWith('new'));
-          const ok = n.every((c) => c.x !== undefined && c.h > 0 && L.filter((o) => o !== c && o.row === c.row).every((o) => Math.abs(o.x - c.x) >= TITLE_LAYOUT.minGap));
-          return ok && L.find((c) => c.id === 'suit').row === 'hero';
+        title_ok = m.evaluate("""(() => {
+          const t = document.querySelector('#title'), art = document.querySelector('#titleArt');
+          if (t.hidden || !art.getAttribute('src').includes('title_final')) return false;
+          // 투명 시작 버튼이 그림 속 TAP TO START 영역 위에 있는지 (무대 기준 %)
+          const st = document.querySelector('.title-stage').getBoundingClientRect(), b = document.querySelector('#titleStart').getBoundingClientRect();
+          const cx = (b.left + b.width / 2 - st.left) / st.width * 100, cy = (b.top + b.height / 2 - st.top) / st.height * 100;
+          return Math.abs(cx - 50) < 2 && Math.abs(cy - 92) < 2 && document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2) === document.querySelector('#titleStart');
         })()""")
-        fails += not auto
-        print(('PASS ' if auto else 'FAIL ') + '타이틀: 좌표 없이 추가한 캐릭터는 빈자리에 자동 배치, 동기는 가운데')
-        m.evaluate("closeTitle()")
+        fails += not title_ok
+        print(('PASS ' if title_ok else 'FAIL ') + '타이틀: 완성 이미지 그대로 표시 + TAP TO START 위치에 투명 버튼')
+        m.evaluate("document.querySelector('#titleSettings').click()")
+        set_ok = m.evaluate("!document.querySelector('#titleSettingsPanel').hidden")
+        m.evaluate("document.querySelector('#tClose').click()")
+        fails += not set_ok
+        print(('PASS ' if set_ok else 'FAIL ') + '타이틀: 설정 아이콘 위치 투명 버튼 → 설정 창')
+        m.keyboard.press('Enter')
         title_closed = m.evaluate("document.querySelector('#title').hidden && document.body.classList.contains('lobbyOpen')")
-        fails += not (title_ok and title_closed)
-        print(('PASS ' if title_ok and title_closed else 'FAIL ') + '타이틀: 처음 진입 시 표시(캐릭터 데이터 수만큼 레이어) → 시작하면 로비')
+        fails += not title_closed
+        print(('PASS ' if title_closed else 'FAIL ') + '타이틀: Enter 로 시작 → 로비')
         m.evaluate("document.querySelector('#charApply').click(); freeze = true; god = true; p.w = 3;")
         cdp = ctx.new_cdp_session(m)
         r1 = m.evaluate("JSON.parse(JSON.stringify(document.querySelector('#mv').getBoundingClientRect()))")
