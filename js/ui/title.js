@@ -16,6 +16,37 @@ function titleLayout(list) {
   });
 }
 
+// 원본 PNG 의 실제 그림 영역(알파 > 20)을 잼. 그림을 읽을 수 없는 환경(file:// 등)이면 이미지 전체를 그림 영역으로 봄
+function figureBox(im) {
+  const w = im.naturalWidth, h = im.naturalHeight;
+  try {
+    const cv = document.createElement("canvas");
+    cv.width = w;
+    cv.height = h;
+    const cx = cv.getContext("2d", { willReadFrequently: true });
+    cx.drawImage(im, 0, 0);
+    const a = cx.getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (a[(y * w + x) * 4 + 3] > 20) {
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+    if (x1 >= x0) return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+  } catch (e) {}
+  return { x0: 0, y0: 0, x1: w, y1: h };
+}
+// 그림 영역 기준: 키 = c.h(무대 세로 %), 발 = c.y, 가로 가운데 = c.x. 무대는 16:9
+function placeTitleChar(im, c) {
+  const b = figureBox(im), s = c.h / (b.y1 - b.y0); // 원본 1px 당 무대 세로 %
+  const W = im.naturalWidth, H = im.naturalHeight, ar = 9 / 16;
+  const cx = c.flip ? W - (b.x0 + b.x1) / 2 : (b.x0 + b.x1) / 2;
+  im.style.height = H * s + "%";
+  im.style.top = c.y - b.y1 * s + "%";
+  im.style.left = c.x - cx * s * ar + "%";
+  if (c.flip) im.classList.add("flip");
+}
 function buildTitle() {
   const t = el("title");
   el("titleBg").src = TITLE_ART.background;
@@ -28,14 +59,12 @@ function buildTitle() {
   const items = titleLayout(TITLE_CHARACTERS.filter((c) => LOBBY_ART[c.id])).sort((a, b) => b.back - a.back);
   items.forEach((c, i) => {
     const im = document.createElement("img");
-    im.className = "title-char" + (c.back ? " back" : "") + (c.flip ? " flip" : "");
-    im.src = LOBBY_ART[c.id].full;
+    im.className = "title-char" + (c.back ? " back" : "");
     im.alt = DISPLAY_NAMES[c.id] || "";
     im.draggable = false;
-    im.style.left = c.x + "%";
-    im.style.top = c.y + "%";
-    im.style.height = c.h + "%";
     im.style.animationDelay = (i * 0.07).toFixed(2) + "s";
+    im.onload = () => placeTitleChar(im, c);
+    im.src = c.img || LOBBY_ART[c.id].full;
     box.append(im);
   });
   el("titleVersion").textContent = GAME_VERSION;
