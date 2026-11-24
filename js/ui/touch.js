@@ -3,46 +3,18 @@
 const touchMode = matchMedia("(pointer:coarse)").matches;
 document.body.classList.toggle("mobile", touchMode);
 let mvX = 0, mvY = 0, aiming = false;
-const sb = document.querySelector("#summonBtn"), menu = document.querySelector("#summonMenu");
-let swipe = null;
-for (let i = 0; i < 3; i++) {
-  let el = document.createElement("div");
-  el.className = "choice";
-  menu.append(el);
-}
+const sb = document.querySelector("#summonBtn");
 // 화면 회전 모드(세로로 든 폰에서 게임을 90도 돌려 가로로 표시)일 때
 // 화면 좌표의 이동량을 게임 화면 기준으로 바꿈
 function toLocal(dx, dy) {
   return document.body.classList.contains("rot") ? [dy, -dx] : [dx, dy];
 }
-// 소환 메뉴: 버튼을 누르면 왼쪽 · 왼쪽 위 · 위 세 방향에 포켓몬 3마리가 부채꼴로 펼쳐짐
-// (오른쪽 화면 끝에 몰려 겹치지 않도록 왼쪽·위로만 펼침)
-const SWIPE_ANGLES = [-90, -45, 0]; // 위=0°, 왼쪽=-90°
-function swipeChoice(dx, dy) {
-  [dx, dy] = toLocal(dx, dy);
-  let angle = Math.atan2(dx, -dy) * 180 / Math.PI;
-  if (Math.hypot(dx, dy) < 22 || angle < -112.5 || angle > 22.5) return -1;
-  return angle < -67.5 ? 0 : angle < -22.5 ? 1 : 2;
-}
-function closeSwipe() {
-  swipe = null;
-  summonAim = null;
-  menu.classList.remove("open");
-}
-// 소환은 한 번 누르고 떼는 동작으로 끝남 (두 번 터치 불필요)
-// - 탭: 지금 선택된 포켓몬(준비 안 됐으면 준비된 다음 포켓몬)을 자동 위치로 바로 투척
-// - 아이콘 쪽으로 밀고 떼기: 그 포켓몬을 자동 위치로 바로 투척 (펫이 나와 있으면 교체)
-// - 아이콘 위에서 0.35초 멈춤 → 조준 고정: 그대로 계속 끌면 조준점 이동, 떼면 그 자리에 투척
-//   (처음 누른 자리로 손가락을 되돌려 떼면 취소)
-// - 자동 위치: 사거리 안 가장 가까운 적 근처 → 없으면 이동(바라보는) 방향 110px, 막힌 자리면 가까운 빈자리
-const AIM_HOLD = 0.35; // 초
-let summonAim = null; // 조준 미리보기 { x, y } (렌더러가 사거리 원·조준점을 그림)
-function readyChoice() {
-  const ok = (i) => summonCD[deck[i]] <= 0 && pet?.id !== deck[i];
-  if (ok(selected)) return selected;
-  for (let i = 0; i < 3; i++) if (ok(i)) return i;
-  return selected;
-}
+// 현곤(소환사): 소환 버튼 대신 포켓몬 3마리 버튼을 화면에 바로 표시
+// - 탭: 그 포켓몬을 자동 위치로 바로 소환 (다른 포켓몬이 나와 있으면 교체)
+// - 끌기: 방향·거리 조준(사거리 원과 조준점 표시), 떼면 그 자리에 투척, 가운데로 되돌려 떼면 취소
+let summonAim = null; // 조준 미리보기 { x, y } (렌더러가 그림)
+let petPress = null;  // { id, i, x, y, moved, cancel }
+const petBtns = [...document.querySelectorAll(".petBtn")];
 function throwSummon(i, x, y) {
   selected = i;
   if (pet?.id === deck[i]) return;
@@ -50,84 +22,53 @@ function throwSummon(i, x, y) {
   mouse.y = y;
   summon(!!pet);
 }
-function tickSummonAim(dt) {
-  if (!swipe) return;
-  if (character !== "summoner" || p.hp <= 0 || over) {
-    closeSwipe();
-    return;
-  }
-  // 같은 아이콘 위에 머무르면 조준 고정
-  if (!swipe.aim && swipe.choice >= 0) {
-    swipe.hold = swipe.choice === swipe.holdOn ? swipe.hold + dt : 0;
-    swipe.holdOn = swipe.choice;
-    if (swipe.hold >= AIM_HOLD) {
-      selected = swipe.choice;
-      swipe.aim = { i: swipe.choice, ...autoSummonSpot() };
-      summonAim = { x: swipe.aim.x, y: swipe.aim.y };
-      swipe.aim.fx = swipe.lx; // 고정 순간의 손가락 위치 기준으로 조준
-      swipe.aim.fy = swipe.ly;
-      touchHUD();
-    }
-  }
+function closeSwipe() { // 이름은 예전 호출부 호환용: 진행 중인 소환 조준 취소
+  petPress = null;
+  summonAim = null;
 }
-sb.onpointerdown = (e) => {
-  if (over || swipe) return;
-  e.preventDefault();
-  if (character !== "summoner") {
-    characterSkill(1);
-    return;
-  }
-  sb.setPointerCapture(e.pointerId);
-  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: 0, ly: 0, choice: -1, hold: 0, holdOn: -1, aim: null };
-  menu.classList.add("open"); // 먼저 열어야 크기를 잴 수 있음
-  // 레이아웃 좌표(offset*) 사용: 화면이 회전돼 있어도 정확함
-  let bw = sb.offsetWidth, cx = sb.offsetLeft + bw / 2, cy = sb.offsetTop + sb.offsetHeight / 2, aw = menu.offsetWidth, ah = menu.offsetHeight;
-  let cw = menu.children[0].offsetWidth || 60, half = cw / 2;
-  // 이웃한 아이콘 중심 거리(현의 길이 2R·sin22.5°)가 아이콘 크기의 1.2배 이상이 되도록 반지름 결정
-  let R = Math.max(bw / 2 + half + 10, cw * 1.2 / (2 * Math.sin(Math.PI / 8)));
-  SWIPE_ANGLES.forEach((deg, i) => {
-    let r = deg * Math.PI / 180, el = menu.children[i];
-    el.style.left = clamp(cx + Math.sin(r) * R, half + 4, aw - half - 4) + "px";
-    el.style.top = clamp(cy - Math.cos(r) * R, half + 4, ah - half - 4) + "px";
-  });
-  touchHUD();
-};
-sb.onpointermove = (e) => {
-  if (swipe?.id !== e.pointerId) return;
-  [swipe.lx, swipe.ly] = toLocal(e.clientX - swipe.x, e.clientY - swipe.y);
-  if (swipe.aim) {
-    // 조준 고정 뒤: 고정 지점에서 끈 만큼 조준점 이동 (버튼 1.6배 = 사거리 전체)
-    const k = SUMMON_RANGE / (sb.offsetWidth * 1.6), A = swipe.aim;
-    summonAim.x = A.x + (swipe.lx - A.fx) * k;
-    summonAim.y = A.y + (swipe.ly - A.fy) * k;
-    const dx = summonAim.x - p.x, dy = summonAim.y - p.y, n = Math.hypot(dx, dy);
-    if (n > SUMMON_RANGE) {
-      summonAim.x = p.x + dx / n * SUMMON_RANGE;
-      summonAim.y = p.y + dy / n * SUMMON_RANGE;
+function tickSummonAim() {
+  if (petPress && (character !== "summoner" || p.hp <= 0 || over)) closeSwipe();
+}
+petBtns.forEach((btn, i) => {
+  btn.onpointerdown = (e) => {
+    e.preventDefault();
+    if (over || petPress || character !== "summoner") return;
+    btn.setPointerCapture(e.pointerId);
+    petPress = { id: e.pointerId, i, x: e.clientX, y: e.clientY, moved: false, cancel: false };
+  };
+  btn.onpointermove = (e) => {
+    if (petPress?.id !== e.pointerId) return;
+    const [dx, dy] = toLocal(e.clientX - petPress.x, e.clientY - petPress.y), m = Math.hypot(dx, dy);
+    if (m > AIM_DEAD) petPress.moved = true;
+    if (!petPress.moved) return;
+    petPress.cancel = m <= AIM_DEAD;
+    if (petPress.cancel) {
+      summonAim = null;
+      return;
     }
-  } else swipe.choice = swipeChoice(e.clientX - swipe.x, e.clientY - swipe.y);
-  touchHUD();
+    const d = clamp(m / (btn.offsetWidth * 1.6), 0.15, 1) * SUMMON_RANGE; // 버튼 1.6배 끌면 최대 사거리
+    summonAim = { x: p.x + dx / m * d, y: p.y + dy / m * d };
+    selected = i; // 조준 미리보기에 이름 표시
+  };
+  btn.onpointerup = (e) => {
+    if (petPress?.id !== e.pointerId) return;
+    const pr = petPress, aimAt = summonAim;
+    closeSwipe();
+    if (over) return;
+    if (pr.moved) {
+      if (!pr.cancel && aimAt) throwSummon(i, aimAt.x, aimAt.y);
+      return;
+    }
+    selected = i;
+    const t = autoSummonSpot();
+    throwSummon(i, t.x, t.y);
+  };
+  btn.onpointercancel = btn.onlostpointercapture = (e) => petPress?.id === e.pointerId && closeSwipe();
+});
+sb.onpointerdown = (e) => {
+  e.preventDefault();
+  if (!over && character !== "summoner") characterSkill(1);
 };
-sb.onpointerup = (e) => {
-  if (swipe?.id !== e.pointerId) return;
-  const s = swipe, moved = Math.hypot(s.lx, s.ly), aimAt = summonAim;
-  closeSwipe();
-  if (over) return;
-  if (s.aim) {
-    if (moved < 22) return; // 처음 누른 자리로 되돌려 뗌: 취소
-    throwSummon(s.aim.i, aimAt.x, aimAt.y);
-    return;
-  }
-  let i = s.choice;
-  if (i < 0) {
-    if (moved >= 22 || pet) return; // 아이콘이 없는 방향으로 끌었거나, 펫이 이미 있으면 탭은 무시
-    i = readyChoice();
-  }
-  selected = i;
-  const t = autoSummonSpot();
-  throwSummon(i, t.x, t.y);
-};
-sb.onpointercancel = sb.onlostpointercapture = () => closeSwipe();
 function aimSummon() {
   let x = mvX, y = mvY;
   if (!x && !y) {
@@ -295,20 +236,21 @@ function touchHUD() {
     grenBtn.classList.toggle("empty", !gOn);
     grenBtn.setAttribute("aria-disabled", String(!gOn));
   }
-  if (swipe) for (let i = 0; i < 3; i++) {
-    // 조준 고정 중에는 고른 아이콘만 남김
-    let id = deck[i], b = menu.children[i], live = pet?.id === id, locked = !live && (summonCD[id] > 0 || !!flight || !!pet && swapCD > 0);
-    let html = `<strong>${mons[id][1]}</strong>${mons[id][0]}<span>${live ? "전투 중" : summonCD[id] > 0 ? Math.ceil(summonCD[id]) + "초" : flight ? "투척 중" : pet && swapCD > 0 ? Math.ceil(swapCD) + "초" : "준비"}</span>`;
-    if (b._html !== html) {
-      b._html = html;
-      b.innerHTML = html;
+  if (character === "summoner") for (let i = 0; i < 3; i++) {
+    const id = deck[i], btn = petBtns[i], live = pet?.id === id;
+    const wait = live ? 0 : summonCD[id] > 0 ? summonCD[id] : flight ? -1 : pet && swapCD > 0 ? swapCD : 0;
+    const status = live ? "전투 중" : wait > 0 ? Math.ceil(wait) + "초" : wait < 0 ? "투척 중" : pet ? "교체" : "소환";
+    const html = `<strong>${mons[id][1]}</strong><span class="pn">${mons[id][0]}</span><span class="ps">${status}</span>`;
+    if (btn._html !== html) {
+      btn._html = html;
+      btn.innerHTML = html;
     }
-    let cls = "choice" + (swipe.aim ? (swipe.aim.i === i ? " focus aimed" : " hide") : swipe.choice === i ? " focus" : "") + (locked ? " lock" : "") + (live ? " live" : "");
-    if (b.className !== cls) b.className = cls;
+    const cls = "petBtn" + (live ? " live" : "") + (wait !== 0 ? " lock" : "") + (petPress?.i === i ? " press" : "");
+    if (btn.className !== cls) btn.className = cls;
   }
   setText("dashBtn", p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시");
   setText("bearHeal", extraNames[character] ? extraNames[character][1] + (p.s2 > 0 ? " " + p.s2.toFixed(1) : "") : character === "runner" ? p.tackleCD > 0 ? "태클 " + p.tackleCD.toFixed(1) : "태클" : p.healCD > 0 ? "회복 " + p.healCD.toFixed(1) : "회복");
-  setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : pet ? "교체 ↔" : flight ? "투척 중" : "소환 ↑");
+  setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : "소환");
   // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
   let label = swapL ? "교체\n" + lootName(swapL) : "";
@@ -328,6 +270,7 @@ document.querySelector("#charApply").onclick = () => {
   ui.style.display = character !== "summoner" ? "none" : "";
   document.querySelector("#petHUD").style.display = character !== "summoner" ? "none" : "";
   document.querySelector("#bearHeal").style.display = character !== "summoner" ? "block" : "none";
+  document.body.classList.toggle("summoner", character === "summoner");
   closeSwipe();
   document.body.classList.remove("menuOpen");
   closeLobby();

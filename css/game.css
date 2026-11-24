@@ -157,52 +157,8 @@ body.mobile #msg {
 #slots {
   display: none;
 }
-#summonMenu {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  display: none;
-}
-#summonMenu.open {
-  display: block;
-}
-#summonMenu .choice {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: clamp(48px, 8vw, 72px);
-  height: clamp(48px, 8vw, 72px);
-  border-radius: 50%;
-  background: #20334eee;
-  border: 2px solid #a9c5e8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.1;
-  font-size: 10px;
-  color: white;
-  box-sizing: border-box;
-}
-#summonMenu .choice strong {
-  font-size: 20px;
-}
-#summonMenu .choice.focus {
-  border: 3px solid #ffdf56;
-  background: #456c9b;
-}
-#summonMenu .choice.hide { opacity: 0; }
-#summonMenu .choice.aimed { box-shadow: 0 0 0 4px #7ff0ff88; }
-#summonMenu .choice.lock {
-  opacity: .55;
-}
-#summonMenu .choice.live {
-  border-color: #63e99b;
-}
 #summonBtn {
   z-index: 3;
-}
-#summonMenu {
-  z-index: 4;
 }
 body.mobile #msg {
   display: block;
@@ -389,3 +345,29 @@ body.mobile button {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* 현곤: 포켓몬 3마리 버튼 (소환 버튼 대신). 오른쪽 위로 부채꼴 배치 */
+#touch .petBtn { display: none; }
+body.summoner #touch #summonBtn { display: none; }
+body.summoner #touch .petBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: clamp(50px, 9vw, 78px);
+  border: 2px solid #a9c5e8;
+  background: #20334eee;
+  font-size: 10px;
+  line-height: 1.1;
+  z-index: 3;
+}
+#touch .petBtn strong { font-size: 20px; line-height: 1; }
+#touch .petBtn .pn { white-space: nowrap; }
+#touch .petBtn .ps { color: #ffe07c; }
+#touch .petBtn.live { border-color: #63e99b; box-shadow: 0 0 0 2px #63e99b66; }
+#touch .petBtn.live .ps { color: #63e99b; }
+#touch .petBtn.lock { opacity: .6; }
+#touch .petBtn.press { border-color: #ffdf56; background: #456c9b; }
+#touch .petBtn[data-i="0"] { right: 3%; bottom: 43%; }
+#touch .petBtn[data-i="1"] { right: 15%; bottom: 36%; }
+#touch .petBtn[data-i="2"] { right: 5%; bottom: 66%; }

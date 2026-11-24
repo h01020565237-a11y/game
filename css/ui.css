@@ -348,7 +348,6 @@ body.lobbyOpen #lobby { display: flex; }
 #touch #menuBtn { background: linear-gradient(180deg, var(--bl-navy-2), var(--bl-navy)); }
 .stick { background: radial-gradient(circle, #1c2f6e66 0%, #1c2f6e99 70%); border: 3px solid #8fc1ffcc; }
 .stick i { background: radial-gradient(circle at 40% 35%, #8cc4ff, #2f7bff 60%, #1b4fc0); box-shadow: 0 2px 0 #0b1436; }
-#summonMenu .choice { font-family: var(--bl-font); }
 .res-who { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
 #resName { font-size: clamp(14px, 4.5cqh, 20px); color: #fff; text-shadow: 0 2px 0 var(--bl-deep); }
 
