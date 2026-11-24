@@ -230,6 +230,14 @@ def main(path='index.html'):
         m.goto(url)
         m.wait_for_timeout(1500)
         title_ok = m.evaluate("!document.querySelector('#title').hidden && document.querySelectorAll('.title-char').length === TITLE_CHARACTERS.length")
+        auto = m.evaluate("""(() => {
+          const L = titleLayout(TITLE_CHARACTERS.concat([{ id: 'new1', row: 'back' }, { id: 'new2', row: 'front' }, { id: 'new3' }]));
+          const n = L.filter((c) => c.id.startsWith('new'));
+          const ok = n.every((c) => c.x !== undefined && c.h > 0 && L.filter((o) => o !== c && o.row === c.row).every((o) => Math.abs(o.x - c.x) >= TITLE_LAYOUT.minGap));
+          return ok && L.find((c) => c.id === 'suit').row === 'hero';
+        })()""")
+        fails += not auto
+        print(('PASS ' if auto else 'FAIL ') + '타이틀: 좌표 없이 추가한 캐릭터는 빈자리에 자동 배치, 동기는 가운데')
         m.evaluate("closeTitle()")
         title_closed = m.evaluate("document.querySelector('#title').hidden && document.body.classList.contains('lobbyOpen')")
         fails += not (title_ok and title_closed)

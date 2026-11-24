@@ -2,19 +2,22 @@
 // 시작 → 기존 메인 로비로 전환. 로비·전투 코드는 건드리지 않음
 // 레이어: 배경(화면 전체 cover) → 16:9 무대(로고, 캐릭터, 버튼). 화면 비율이 달라도 무대는 16:9 를 유지하고 배경이 남는 곳을 채움
 
+// 좌표가 있는 캐릭터는 그대로, 없는 캐릭터는 같은 줄의 빈자리(가운데에 가까운 순, 좌우 번갈아)에 자동 배치
 function titleLayout(list) {
-  const L = TITLE_LAYOUT, n = list.length, left = Math.ceil(n / 2), right = n - left;
-  const half = (100 - L.centerGap) / 2 - L.side;
-  return list.map((c, i) => {
-    const onLeft = i < left, k = onLeft ? i : i - left, cnt = onLeft ? left : right;
-    // 가장자리는 앞줄, 가운데 쪽으로 갈수록 번갈아 뒷줄 (단체 사진처럼)
-    const back = c.back !== undefined ? c.back : k % 2 === (onLeft ? 1 : 0) && cnt > 1;
-    const row = back ? L.back : L.front;
-    const x0 = onLeft ? L.side : 100 - L.side - half;
-    const x = c.x !== undefined ? c.x : x0 + half * (cnt === 1 ? 0.5 : (k + 0.5) / cnt);
-    return { ...c, x, y: c.y !== undefined ? c.y : row.y, h: c.h !== undefined ? c.h : row.h, back, flip: c.flip !== undefined ? c.flip : !onLeft };
+  const R = TITLE_LAYOUT.rows, used = { hero: [], back: [], front: [] };
+  for (const c of list) if (c.x !== undefined) (used[c.row || "front"] || used.front).push(c.x);
+  return list.map((c) => {
+    const row = R[c.row] ? c.row : "front", cfg = R[row];
+    let x = c.x;
+    if (x === undefined) {
+      x = cfg.xs.find((v) => used[row].every((u) => Math.abs(u - v) >= TITLE_LAYOUT.minGap));
+      if (x === undefined) x = cfg.xs[used[row].length % cfg.xs.length]; // 자리가 다 차면 겹쳐서라도 배치
+      used[row].push(x);
+    }
+    return { ...c, row, x, y: c.y !== undefined ? c.y : cfg.y, h: c.h !== undefined ? c.h : cfg.h, flip: !!c.flip };
   });
 }
+const TITLE_ROW_ORDER = { back: 0, front: 1, hero: 2 };
 
 // 원본 PNG 의 실제 그림 영역(알파 > 20)을 잼. 그림을 읽을 수 없는 환경(file:// 등)이면 이미지 전체를 그림 영역으로 봄
 function figureBox(im) {
@@ -55,11 +58,11 @@ function buildTitle() {
   el("titleLogo").style.top = TITLE_LAYOUT.logo.top + "%";
   const box = el("titleChars");
   box.innerHTML = "";
-  // 뒷줄 먼저 그려서 앞줄이 위에 오게
-  const items = titleLayout(TITLE_CHARACTERS.filter((c) => LOBBY_ART[c.id])).sort((a, b) => b.back - a.back);
+  // 뒷줄 → 앞줄 → 가운데 주인공 순서로 그려서 앞쪽이 위에 오게
+  const items = titleLayout(TITLE_CHARACTERS.filter((c) => c.img || LOBBY_ART[c.id])).sort((a, b) => TITLE_ROW_ORDER[a.row] - TITLE_ROW_ORDER[b.row]);
   items.forEach((c, i) => {
     const im = document.createElement("img");
-    im.className = "title-char" + (c.back ? " back" : "");
+    im.className = "title-char " + c.row;
     im.alt = DISPLAY_NAMES[c.id] || "";
     im.draggable = false;
     im.style.animationDelay = (i * 0.07).toFixed(2) + "s";
