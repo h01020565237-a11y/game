@@ -1,10 +1,12 @@
 // 정글 이미지가 없을 때 쓰는 대체 배경
 
-const ground = document.createElement("canvas");
-ground.width = W;
-ground.height = H;
-const gg = ground.getContext("2d");
+// 성능: 정글 이미지가 있으면 쓰지 않으므로, 필요할 때(scenery 첫 호출) 한 번만 만든다 (메모리 약 13.8MB 절약)
+let ground = null, gg = null;
 function buildGround() {
+  ground = document.createElement("canvas");
+  ground.width = W;
+  ground.height = H;
+  gg = ground.getContext("2d");
   let grad = gg.createLinearGradient(0, 0, W, H);
   grad.addColorStop(0, "#a7c779");
   grad.addColorStop(1, "#82aa65");
@@ -32,6 +34,7 @@ function buildGround() {
   }
 }
 function scenery() {
+  if (!ground) buildGround();
   g.drawImage(ground, 0, 0);
   for (let [x, y, w, h] of bushes) {
     g.fillStyle = "#416c45";

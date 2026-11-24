@@ -141,13 +141,22 @@ window.addEventListener("blur", () => {
 function touchHUD() {
   if (swipe) for (let i = 0; i < 3; i++) {
     let id = deck[i], b = menu.children[i], live = pet?.id === id, locked = !live && (summonCD[id] > 0 || !!flight || !!pet && swapCD > 0);
-    b.innerHTML = `<strong>${mons[id][1]}</strong>${mons[id][0]}<span>${live ? "전투 중" : summonCD[id] > 0 ? Math.ceil(summonCD[id]) + "초" : flight ? "투척 중" : pet && swapCD > 0 ? Math.ceil(swapCD) + "초" : "준비"}</span>`;
-    b.className = "choice" + (swipe.choice === i ? " focus" : "") + (locked ? " lock" : "") + (live ? " live" : "");
+    let html = `<strong>${mons[id][1]}</strong>${mons[id][0]}<span>${live ? "전투 중" : summonCD[id] > 0 ? Math.ceil(summonCD[id]) + "초" : flight ? "투척 중" : pet && swapCD > 0 ? Math.ceil(swapCD) + "초" : "준비"}</span>`;
+    if (b._html !== html) {
+      b._html = html;
+      b.innerHTML = html;
+    }
+    let cls = "choice" + (swipe.choice === i ? " focus" : "") + (locked ? " lock" : "") + (live ? " live" : "");
+    if (b.className !== cls) b.className = cls;
   }
-  document.querySelector("#dashBtn").textContent = p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시";
-  document.querySelector("#bearHeal").textContent = extraNames[character] ? extraNames[character][1] + (p.s2 > 0 ? " " + p.s2.toFixed(1) : "") : character === "runner" ? p.tackleCD > 0 ? "태클 " + p.tackleCD.toFixed(1) : "태클" : p.healCD > 0 ? "회복 " + p.healCD.toFixed(1) : "회복";
-  document.querySelector("#summonBtn").textContent = extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : pet ? "교체 ↔" : flight ? "투척 중" : "소환 ↑";
-  document.querySelector("#pickBtn").style.opacity = loot.some((l) => dist(p, l) < 48) ? 1 : 0.45;
+  setText("dashBtn", p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시");
+  setText("bearHeal", extraNames[character] ? extraNames[character][1] + (p.s2 > 0 ? " " + p.s2.toFixed(1) : "") : character === "runner" ? p.tackleCD > 0 ? "태클 " + p.tackleCD.toFixed(1) : "태클" : p.healCD > 0 ? "회복 " + p.healCD.toFixed(1) : "회복");
+  setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : pet ? "교체 ↔" : flight ? "투척 중" : "소환 ↑");
+  let op = loot.some((l) => dist(p, l) < 48) ? "1" : "0.45", pick = el("pickBtn");
+  if (pick._op !== op) {
+    pick._op = op;
+    pick.style.opacity = op;
+  }
 }
 document.querySelector("#bearHeal").onclick = () => bearSkill(2);
 document.querySelector("#charApply").onclick = () => {

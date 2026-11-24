@@ -1,5 +1,18 @@
 // 화면 그리기와 HUD
 
+// 성능: DOM 요소는 한 번만 찾고, 글자가 바뀔 때만 다시 씀 (매 프레임 레이아웃 방지)
+const domCache = {};
+function el(id) {
+  return domCache[id] || (domCache[id] = document.getElementById(id));
+}
+function setText(id, s) {
+  const e = el(id);
+  if (e._text !== s) {
+    e._text = s;
+    e.textContent = s;
+  }
+}
+
 function renderActor(a, k) {
   let im = sheets[k];
   if (im && im.naturalWidth) {
@@ -35,10 +48,13 @@ function draw() {
   camY = clamp(p.y - VH / 2, 0, H - VH);
   g.save();
   g.translate(-camX, -camY);
+  // 성능: 맵 전체(2472×1392) 대신 카메라에 보이는 영역만 그림
   g.fillStyle = "#789b65";
-  g.fillRect(0, 0, W, H);
-  if (jungle.naturalWidth) g.drawImage(jungle, 0, 0, W, H);
-  else scenery();
+  g.fillRect(camX, camY, VW, VH);
+  if (jungle.naturalWidth) {
+    const sx = jungle.naturalWidth / W, sy = jungle.naturalHeight / H;
+    g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
+  } else scenery();
   if (aiming && p.w !== 6) {
     let b = aimTarget();
     let ang = b ? Math.atan2(b.y - p.y, b.x - p.x) : p.dir * Math.PI / 4 - Math.PI / 2;
@@ -148,7 +164,7 @@ function draw() {
     g.font = "12px sans-serif";
     g.fillText(mons[pet.id][0], pet.x, pet.y + 30);
   }
-  document.querySelector("#petHUD").textContent = `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${skillCD.toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`;
+  setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${skillCD.toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
   for (let s of shots) {
     if (s.octo) {
       let u = clamp(1 - s.t / 0.55, 0, 1);
@@ -248,7 +264,7 @@ function draw() {
   }
   g.fillStyle = "#a72d4944";
   g.beginPath();
-  g.rect(0, 0, W, H);
+  g.rect(camX, camY, VW, VH); // 성능: 맵 전체 대신 화면 영역 기준
   g.arc(W / 2, H / 2, zone, 0, Math.PI * 2, true);
   g.fill("evenodd");
   g.strokeStyle = "#ff758d";
@@ -271,6 +287,6 @@ function draw() {
     g.textAlign = "center";
     g.fillText(over, VW / 2, VH / 2);
   }
-  document.querySelector("#hud").textContent = `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} | 장비 ${p.gear.map((i) => gear[i]).join(", ") || "없음"} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`;
-  document.querySelector("#msg").textContent = extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택";
+  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} | 장비 ${p.gear.map((i) => gear[i]).join(", ") || "없음"} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
+  setText("msg", extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택");
 }

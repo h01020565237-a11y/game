@@ -1,3 +1,9 @@
+// 배열을 새로 만들지 않고 조건에 맞는 원소만 남김 (GC 감소)
+function compact(arr, keep) {
+  let j = 0;
+  for (let i = 0; i < arr.length; i++) if (keep(arr[i])) arr[j++] = arr[i];
+  arr.length = j;
+}
 // 한 프레임 게임 로직 (자기장, 상태이상, 펫, 플레이어, 봇 AI, 투사체)
 
 function update(dt) {
@@ -70,7 +76,7 @@ function update(dt) {
       pet = null;
     } else {
       command();
-      let b = bots.filter((b2) => b2.hp > 0).sort((a, b2) => dist(pet, a) - dist(pet, b2))[0], m = mons[pet.id];
+      let b = minBy(bots.filter((b2) => b2.hp > 0), (b2) => dist(pet, b2)), m = mons[pet.id];
       if (b) {
         if (dist(pet, b) > m[3] || blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)) move(pet, b.x - pet.x, b.y - pet.y, dt);
         else {
@@ -128,8 +134,8 @@ function update(dt) {
   }
   if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(100, p.energy + Math.hypot(p.x - ox, p.y - oy) / 6);
   if (!freeze) for (let a of bots.filter((a2) => a2.hp > 0 && !(a2.stun > 0))) {
-    let l = loot.filter((l2) => l2.type === 0 && !a.w).sort((x, y) => dist(a, x) - dist(a, y))[0];
-    let b = targets(a).sort((x, y) => dist(a, x) + (x.max && !a.w ? 150 : 0) - (dist(a, y) + (y.max && !a.w ? 150 : 0)))[0];
+    let l = a.w ? undefined : minBy(loot.filter((l2) => l2.type === 0), (x) => dist(a, x));
+    let b = minBy(targets(a), (x) => dist(a, x) + (x.max && !a.w ? 150 : 0));
     if (Math.hypot(a.x - W / 2, a.y - H / 2) > zone - 40) {
       move(a, W / 2 - a.x, H / 2 - a.y, dt);
       continue;
@@ -235,7 +241,7 @@ function update(dt) {
         s.dead = true;
         break;
       }
-      let b = targets(s.a).find((b2) => dist(s, b2) < 18);
+      let b = firstTargetNear(s.a, s, 18);
       if (b) {
         hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1));
         if (s.slow) b.slow = 2.5;
@@ -243,8 +249,8 @@ function update(dt) {
       }
     }
   }
-  shots = shots.filter((s) => !s.dead);
-  fx = fx.filter((f) => (f.t -= dt) > 0);
+  compact(shots, (s) => !s.dead);
+  compact(fx, (f) => (f.t -= dt) > 0);
   if (p.hp <= 0) over = "패배 — R 재시작";
   else if (!bots.some((a) => a.hp > 0)) over = "승리! — R 재시작";
 }

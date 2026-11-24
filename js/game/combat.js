@@ -28,7 +28,7 @@ function hit(a, b, d) {
   }
 }
 function pickup(a) {
-  let l = loot.filter((x) => dist(a, x) < 48).sort((x, y) => dist(a, x) - dist(a, y))[0];
+  let l = minBy(loot.filter((x) => dist(a, x) < 48), (x) => dist(a, x));
   if (!l) return;
   if (l.type === 0) {
     if (a.w) loot.push({ x: l.x + 20, y: l.y, type: 0, id: a.w });
@@ -55,8 +55,40 @@ function pickup(a) {
     nt = 2;
   }
 }
+function canTarget(a, b) {
+  return b !== a && b.hp > 0 && visible(a, b) && !(a === p && b === pet) && !(a === pet && b === p);
+}
+// 대상 후보 순서: 플레이어, 봇, 상자, 펫 (원본과 동일)
+function forEachCandidate(fn) {
+  if (fn(p)) return true;
+  for (let i = 0; i < bots.length; i++) if (fn(bots[i])) return true;
+  for (let i = 0; i < boxes.length; i++) if (fn(boxes[i])) return true;
+  return pet ? fn(pet) : false;
+}
 function targets(a) {
-  return [p, ...bots, ...boxes, ...pet ? [pet] : []].filter((b) => b !== a && b.hp > 0 && visible(a, b) && !(a === p && b === pet) && !(a === pet && b === p));
+  const out = [];
+  forEachCandidate((b) => {
+    if (canTarget(a, b)) out.push(b);
+  });
+  return out;
+}
+// 성능: targets(a).find(b => dist(c, b) < r) 와 같은 결과, 배열을 만들지 않음
+function firstTargetNear(a, c, r) {
+  let hitB;
+  forEachCandidate((b) => dist(c, b) < r && canTarget(a, b) && (hitB = b, true));
+  return hitB;
+}
+// 성능: arr.sort((x, y) => key(x) - key(y))[0] 와 같은 결과 (동점이면 앞쪽 우선)
+function minBy(arr, key) {
+  let best, bk = Infinity;
+  for (let i = 0; i < arr.length; i++) {
+    const k = key(arr[i]);
+    if (best === undefined || k < bk) {
+      best = arr[i];
+      bk = k;
+    }
+  }
+  return best;
 }
 function clearLine(a, b) {
   let n = Math.ceil(dist(a, b) / 8);

@@ -41,10 +41,14 @@ function drawPika(a) {
     g.ellipse(x, y, rx, ry, rot, 0, 7);
     g.fill();
   }
-  let yellow = g.createRadialGradient(-7, -32, 2, 0, -22, 30);
-  yellow.addColorStop(0, "#fff8a1");
-  yellow.addColorStop(0.55, "#ffda39");
-  yellow.addColorStop(1, "#ce8c16");
+  // 성능: 그라디언트는 한 번만 만들어 재사용 (로컬 좌표 기준이라 결과 동일)
+  let yellow = drawPika.yellow || (drawPika.yellow = (() => {
+    let gr = g.createRadialGradient(-7, -32, 2, 0, -22, 30);
+    gr.addColorStop(0, "#fff8a1");
+    gr.addColorStop(0.55, "#ffda39");
+    gr.addColorStop(1, "#ce8c16");
+    return gr;
+  })());
   g.save();
   g.scale(side < 0 ? -1 : 1, 1);
   g.fillStyle = "#e5a51e";
@@ -84,11 +88,15 @@ function drawPika(a) {
 function lightning(f) {
   g.save();
   g.globalAlpha = Math.min(1, f.t * 5);
-  for (let pass = 0; pass < 2; pass++) {
-    g.strokeStyle = pass ? "#fffbd1" : "#ffce24";
-    g.lineWidth = pass ? 2 : f.strong ? 10 : 5;
-    g.shadowColor = "#ffe129";
-    g.shadowBlur = 12;
+  // 성능: 모바일(터치 모드)에서는 비싼 shadowBlur 대신 넓은 반투명 선으로 빛 번짐 표현
+  const cheap = document.body.classList.contains("mobile");
+  for (let pass = cheap ? -1 : 0; pass < 2; pass++) {
+    g.strokeStyle = pass < 0 ? "#ffe12955" : pass ? "#fffbd1" : "#ffce24";
+    g.lineWidth = pass < 0 ? (f.strong ? 22 : 14) : pass ? 2 : f.strong ? 10 : 5;
+    if (!cheap) {
+      g.shadowColor = "#ffe129";
+      g.shadowBlur = 12;
+    }
     g.beginPath();
     g.moveTo(f.sx, f.sy - 22);
     for (let i = 1; i < 8; i++) {
