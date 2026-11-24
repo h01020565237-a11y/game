@@ -18,8 +18,8 @@ onkeydown = (e) => {
     }
   }
   if (!over && !e.repeat) {
-    if (e.code === "KeyQ") character !== "summoner" ? bearSkill(1) : summon();
-    if (e.code === "KeyE") character !== "summoner" ? bearSkill(2) : summon(true);
+    if (e.code === "KeyQ") character !== "summoner" ? characterSkill(1) : summon();
+    if (e.code === "KeyE") character !== "summoner" ? characterSkill(2) : summon(true);
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
   if (e.code === "KeyR") reset();
@@ -31,12 +31,23 @@ onblur = () => {
   for (const k in keys) keys[k] = false;
   mouse.down = false;
 };
+// 버그 수정(3.1): 마우스는 화면 좌표(sx, sy)로 저장하고, 월드 좌표는 매 프레임
+// 현재 카메라 기준으로 다시 계산한다 (updateMouseWorld). 예전에는 카메라가 움직이면
+// 커서와 공격 방향이 어긋났음.
 c.onmousemove = (e) => {
   let r = c.getBoundingClientRect();
-  mouse.x = camX + (e.clientX - r.left) * VW / r.width;
-  mouse.y = camY + (e.clientY - r.top) * VH / r.height;
+  mouse.sx = (e.clientX - r.left) * VW / r.width;
+  mouse.sy = (e.clientY - r.top) * VH / r.height;
+  updateMouseWorld();
 };
+function updateMouseWorld() {
+  if (mouse.sx === undefined) return;
+  mouse.x = camX + mouse.sx;
+  mouse.y = camY + mouse.sy;
+}
 c.onmousedown = (e) => {
+  // 터치 모드에서는 캔버스 탭이 호환 마우스 이벤트로 공격을 일으키지 않게 무시
+  if (document.body.classList.contains("mobile")) return;
   if (e.button === 0) mouse.down = true;
 };
 onmouseup = () => mouse.down = false;

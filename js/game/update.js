@@ -20,11 +20,13 @@ function update(dt) {
       b.moving = Math.hypot(dx, dy) > 0.05;
       if (b.moving) {
         b.dir = (Math.round(Math.atan2(dx, -dy) / (Math.PI / 4)) + 8) % 8;
-        b.frame = ((b.frame || 0) + dt * 12) % 8;
+        // 버그 수정(3.3): move() 로 이미 프레임을 넘긴 경우 다시 넘기지 않음 (예전엔 2배속)
+        if (!b._anim) b.frame = ((b.frame || 0) + dt * 12) % 8;
       }
     }
     b.prevX = b.x;
     b.prevY = b.y;
+    b._anim = false;
   }
   for (let k of ["s1", "s2", "focus", "guard", "stealth"]) p[k] = Math.max(0, p[k] - dt);
   if (character === "support") p.hp = Math.min(p.max, p.hp + p.max * 3e-3 * dt);
@@ -78,7 +80,7 @@ function update(dt) {
       command();
       let b = minBy(bots.filter((b2) => b2.hp > 0), (b2) => dist(pet, b2)), m = mons[pet.id];
       if (b) {
-        if (dist(pet, b) > m[3] || blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)) move(pet, b.x - pet.x, b.y - pet.y, dt);
+        if (dist(pet, b) > m[3] || blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)) steer(pet, b.x, b.y, dt); // AI: 경로 탐색
         else {
           pet.moving = false;
           pet.dir = (Math.round(Math.atan2(b.x - pet.x, pet.y - b.y) / (Math.PI / 4)) + 8) % 8;
@@ -137,10 +139,11 @@ function update(dt) {
     let l = a.w ? undefined : minBy(loot.filter((l2) => l2.type === 0), (x) => dist(a, x));
     let b = minBy(targets(a), (x) => dist(a, x) + (x.max && !a.w ? 150 : 0));
     if (Math.hypot(a.x - W / 2, a.y - H / 2) > zone - 40) {
-      move(a, W / 2 - a.x, H / 2 - a.y, dt);
+      steer(a, W / 2, H / 2, dt); // AI: 물·벽을 돌아서 자기장 안으로
       continue;
     }
-    if (b && b.max && dist(a, b) < 230 && (a.skillTimer || 0) <= elapsed) {
+    // 수정(3.5): 정장·소환사 봇의 직접 피해 스킬은 벽 너머로 쓰지 않음 (시야가 열릴 때까지 대기)
+    if (b && b.max && dist(a, b) < 230 && (a.skillTimer || 0) <= elapsed && (a.visual !== "suit" && a.visual !== "summoner" || clearLine(a, b))) {
       a.skillTimer = elapsed + 7 + Math.random() * 3;
       let k = a.visual;
       if (k === "bear" || k === "support") {
@@ -160,13 +163,14 @@ function update(dt) {
       }
     }
     if (l && dist(a, l) < 250) {
-      move(a, l.x - a.x, l.y - a.y, dt);
+      steer(a, l.x, l.y, dt);
       pickup(a);
     } else if (b) {
       let r = weapons[a.w][3];
-      if (dist(a, b) > r * 0.75) {
+      // AI: 사거리 밖이거나, 벽에 가려 공격이 막히면(수류탄 제외) 경로를 따라 접근
+      if (dist(a, b) > r * 0.75 || a.w !== 6 && !clearLine(a, b)) {
         let x = a.x, y = a.y;
-        move(a, b.x - a.x, b.y - a.y, dt);
+        steer(a, b.x, b.y, dt);
         if (dist(a, { x, y }) < 0.1) {
           let sign = a.avoid || (a.avoid = Math.random() < 0.5 ? 1 : -1);
           move(a, (b.y - a.y) * sign, -(b.x - a.x) * sign, dt);
@@ -251,6 +255,6 @@ function update(dt) {
   }
   compact(shots, (s) => !s.dead);
   compact(fx, (f) => (f.t -= dt) > 0);
-  if (p.hp <= 0) over = "패배 — R 재시작";
-  else if (!bots.some((a) => a.hp > 0)) over = "승리! — R 재시작";
+  if (p.hp <= 0) over = "패배";
+  else if (!bots.some((a) => a.hp > 0)) over = "승리!";
 }

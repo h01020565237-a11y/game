@@ -234,7 +234,8 @@ body.mobile {
 body.mobile #arena {
   width: min(100%, calc((100dvh - 78px)*1.538));
 }
-body.mobile > div:first-of-type {
+/* 수정(3.6): 예전 선택자 body.mobile > div:first-of-type 는 #rotateHint 를 가리켜서 안내문이 숨겨지지 않았음 */
+body.mobile #help {
   display: none;
 }
 body.mobile #deckUI {
@@ -257,4 +258,23 @@ body.mobile #msg {
     align-content: center;
     font-size: 22px;
   }
+}
+/* 게임 종료 시 다시 하기 버튼 (기능용 기본 스타일, 디자인은 UI 담당이 조정) */
+#overBtn {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  margin: 0;
+  padding: 10px 24px;
+  line-height: 1.2;
+  font-size: 20px;
+  color: white;
+  background: #287c49;
+  border: 2px solid #ffffffaa;
+  border-radius: 10px;
+}
+#overBtn[hidden] {
+  display: none;
 }

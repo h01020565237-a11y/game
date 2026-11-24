@@ -93,7 +93,7 @@ def run(path, frames, seed, mobile, timing):
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.add_init_script(INIT)
         page.goto(url)
-        page.wait_for_function('typeof sheets !== "undefined" && Object.values(sheets).every(i => i.naturalWidth) && jungle.naturalWidth && window.__rafCb && (typeof assetsReady === "undefined" || assetsReady())', timeout=30000)
+        page.wait_for_function('typeof sheets !== "undefined" && Object.values(sheets).every(i => i.naturalWidth) && jungle.naturalWidth && window.__rafCb && (typeof assetsReady === "undefined" || assetsReady())', timeout=30000, polling=100)
         for ch in CHARS:
             res[ch] = page.evaluate(RUN, {'char': ch, 'frames': frames, 'seed': seed, 'every': max(1, frames // 8), 'timing': timing})
         b.close()

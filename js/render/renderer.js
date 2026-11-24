@@ -117,11 +117,11 @@ function draw() {
       g.globalAlpha = f.t / 0.18 * 0.35;
       g.drawImage(bearImg, f.dir * 80, 0, 80, 80, f.x - 34, f.y - 54, 68, 68);
       g.restore();
-    } else if (img.complete && img.naturalWidth) {
+    } else if (sheets[character] && sheets[character].naturalWidth) {
+      // 버그 수정(3.2): 예전에는 모든 캐릭터가 소환사 잔상으로 나왔음 → 자기 시트 사용
       g.save();
       g.globalAlpha = f.t / 0.18 * 0.35;
-      let sw = img.width / 8, sh = img.height / 8;
-      g.drawImage(img, f.frame * sw, f.dir * sh, sw, sh, f.x - 32, f.y - 49, 64, 64);
+      g.drawImage(sheets[character], (f.frame % 8) * 96, f.dir * 96, 96, 96, f.x - 34, f.y - 56, 68, 68);
       g.restore();
     }
   }
@@ -216,6 +216,9 @@ function draw() {
     g.ellipse(flight.tx, flight.ty, 20, 10, 0, 0, 7);
     g.stroke();
   }
+  // 수정(3.8): 데미지 숫자 글꼴이 직전 그리기 상태에 따라 달라지던 문제 → 고정
+  g.font = "12px sans-serif";
+  g.textAlign = "center";
   for (let f of fx) {
     if (f.trail) continue;
     if (f.inkBurst) {

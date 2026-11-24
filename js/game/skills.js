@@ -3,9 +3,10 @@
 function tackleInput() {
   return Math.hypot(mvX, mvY) > 0.15 ? [mvX, mvY] : [(keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), (keys.KeyS ? 1 : 0) - (keys.KeyW ? 1 : 0)];
 }
-function bearSkill(i) {
+// 소환사를 제외한 캐릭터의 스킬1/스킬2 (예전 이름 bearSkill)
+function characterSkill(i) {
   if (over || character === "summoner") return;
-  if (extraImages[character]) {
+  if (extraNames[character]) {
     extraSkill(i);
     return;
   }

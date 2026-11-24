@@ -2,7 +2,7 @@
 
 const touchMode = matchMedia("(pointer:coarse)").matches;
 document.body.classList.toggle("mobile", touchMode);
-let mvX = 0, mvY = 0, aimX = 0, aimY = 0, aiming = false;
+let mvX = 0, mvY = 0, aiming = false;
 const sb = document.querySelector("#summonBtn"), menu = document.querySelector("#summonMenu");
 let swipe = null;
 for (let i = 0; i < 3; i++) {
@@ -22,7 +22,7 @@ sb.onpointerdown = (e) => {
   if (over || swipe) return;
   e.preventDefault();
   if (character !== "summoner") {
-    bearSkill(1);
+    characterSkill(1);
     return;
   }
   sb.setPointerCapture(e.pointerId);
@@ -55,7 +55,7 @@ sb.onpointerup = (e) => {
 };
 sb.onpointercancel = sb.onlostpointercapture = () => closeSwipe();
 function aimSummon() {
-  let x = aimX || mvX, y = aimY || mvY;
+  let x = mvX, y = mvY;
   if (!x && !y) {
     x = Math.sin(p.dir * Math.PI / 4);
     y = -Math.cos(p.dir * Math.PI / 4);
@@ -113,7 +113,9 @@ atkBtn.onpointerdown = (e) => {
   autoAttack();
 };
 atkBtn.onpointerup = atkBtn.onpointercancel = atkBtn.onlostpointercapture = () => aiming = false;
-document.querySelector("#dashBtn").onclick = () => {
+// 반응 속도: 손을 뗄 때(click)가 아니라 누르는 순간(pointerdown) 발동
+document.querySelector("#dashBtn").onpointerdown = (e) => {
+  e.preventDefault();
   if (over || p.dashCD > 0 || p.tackle > 0) return;
   let x = mvX, y = mvY;
   if (Math.hypot(x, y) < 0.15) {
@@ -125,7 +127,8 @@ document.querySelector("#dashBtn").onclick = () => {
   p.dash = 0.1;
   p.dashCD = 3;
 };
-document.querySelector("#pickBtn").onclick = () => {
+document.querySelector("#pickBtn").onpointerdown = (e) => {
+  e.preventDefault();
   if (!over) pickup(p);
 };
 document.querySelector("#mobileToggle").onclick = () => {
@@ -158,7 +161,11 @@ function touchHUD() {
     pick.style.opacity = op;
   }
 }
-document.querySelector("#bearHeal").onclick = () => bearSkill(2);
+// #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
+document.querySelector("#bearHeal").onpointerdown = (e) => {
+  e.preventDefault();
+  characterSkill(2);
+};
 document.querySelector("#charApply").onclick = () => {
   character = document.querySelector("#character").value;
   ui.style.display = character !== "summoner" ? "none" : "";
