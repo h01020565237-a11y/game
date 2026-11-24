@@ -29,8 +29,10 @@ function syncOverButton() {
   el("overBtn").hidden = !over;
 }
 
+fitCanvas();
 reset();
 function loop(t) {
+  beginFrame();
   if (!assetsReady()) {
     last = t;
     drawLoading();
@@ -40,6 +42,8 @@ function loop(t) {
   acc += Math.min(MAX_STEPS * STEP, (t - last) / 1e3 || 0);
   last = t;
   let n = 0;
+  // 모바일 메뉴가 열려 있으면 게임 일시정지
+  if (document.body.classList.contains("menuOpen")) acc = 0;
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
     updateMouseWorld();
     update(STEP);

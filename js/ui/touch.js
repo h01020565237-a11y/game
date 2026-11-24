@@ -133,8 +133,18 @@ document.querySelector("#pickBtn").onpointerdown = (e) => {
 };
 document.querySelector("#mobileToggle").onclick = () => {
   document.body.classList.toggle("mobile");
+  document.body.classList.remove("menuOpen");
   mvX = mvY = 0;
   aiming = false;
+  fitCanvas();
+};
+// 모바일 메뉴 (캐릭터·덱 선택). 열려 있는 동안 게임은 멈춤
+document.querySelector("#menuBtn").onpointerdown = (e) => {
+  e.preventDefault();
+  document.body.classList.toggle("menuOpen");
+  mvX = mvY = 0;
+  aiming = false;
+  closeSwipe();
 };
 window.addEventListener("blur", () => {
   mvX = mvY = 0;
@@ -172,5 +182,6 @@ document.querySelector("#charApply").onclick = () => {
   document.querySelector("#petHUD").style.display = character !== "summoner" ? "none" : "";
   document.querySelector("#bearHeal").style.display = character !== "summoner" ? "block" : "none";
   closeSwipe();
+  document.body.classList.remove("menuOpen");
   reset();
 };

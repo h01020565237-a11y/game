@@ -6,7 +6,9 @@ function wet(x, y) {
   return i >= 0 && i < 95584 && !!(waterBits.charCodeAt(i >> 3) & 128 >> (i & 7));
 }
 let character = "summoner";
-const W = MAP_JUNGLE.width, H = MAP_JUNGLE.height, VW = c.width, VH = c.height, keys = {}, mouse = { x: 500, y: 300, down: false };
+// VW, VH: 화면에 보이는 월드 크기 (PC 1000×650 고정, 모바일은 화면 비율에 맞춰 view.js 가 조정)
+let VW = c.width, VH = c.height;
+const W = MAP_JUNGLE.width, H = MAP_JUNGLE.height, keys = {}, mouse = { x: 500, y: 300, down: false };
 let p, bots, boxes, loot, shots, fx, last = 0, god = false, freeze = false, over = "", notice = "", nt = 0;
 const walls = MAP_JUNGLE.walls, bushes = MAP_JUNGLE.bushes;
 let camX = 0, camY = 0, elapsed = 0, zone = 1450;

@@ -9,5 +9,6 @@ document.querySelector("#applyDeck").onclick = () => {
     return;
   }
   deck = d;
+  document.body.classList.remove("menuOpen");
   reset();
 };
