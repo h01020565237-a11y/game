@@ -137,6 +137,8 @@ function update(dt) {
       autoAttack();
     } else if (mouse.down) attack(p, mouse.x, mouse.y);
   }
+  // 자동 획득: 지나가기만 하면 손해 없는 아이템은 바로 먹음 (교체는 버튼/F 키)
+  if (p.hp > 0) pickup(p, isFreeLoot);
   if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(100, p.energy + Math.hypot(p.x - ox, p.y - oy) / 6);
   if (!freeze) for (let a of bots.filter((a2) => a2.hp > 0 && !(a2.stun > 0))) {
     let l = a.w ? undefined : minBy(loot.filter((l2) => l2.type === 0), (x) => dist(a, x));

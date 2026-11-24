@@ -173,7 +173,7 @@ document.querySelector("#dashBtn").onpointerdown = (e) => {
 };
 document.querySelector("#pickBtn").onpointerdown = (e) => {
   e.preventDefault();
-  if (!over) pickup(p);
+  if (!over) pickup(p, isSwapLoot);
 };
 document.querySelector("#mobileToggle").onclick = () => {
   document.body.classList.toggle("mobile");
@@ -213,10 +213,13 @@ function touchHUD() {
   setText("dashBtn", p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시");
   setText("bearHeal", extraNames[character] ? extraNames[character][1] + (p.s2 > 0 ? " " + p.s2.toFixed(1) : "") : character === "runner" ? p.tackleCD > 0 ? "태클 " + p.tackleCD.toFixed(1) : "태클" : p.healCD > 0 ? "회복 " + p.healCD.toFixed(1) : "회복");
   setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : pet ? "교체 ↔" : flight ? "투척 중" : "소환 ↑");
-  let op = loot.some((l) => dist(p, l) < 48) ? "1" : "0.45", pick = el("pickBtn");
-  if (pick._op !== op) {
-    pick._op = op;
-    pick.style.opacity = op;
+  // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
+  let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
+  let label = swapL ? "교체\n" + (swapL.type ? gear[swapL.id] : weapons[swapL.id][0]) : "";
+  setText("pickBtn", label);
+  if (pick._show !== !!swapL) {
+    pick._show = !!swapL;
+    pick.style.visibility = swapL ? "visible" : "hidden";
   }
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
@@ -233,3 +236,11 @@ document.querySelector("#charApply").onclick = () => {
   document.body.classList.remove("menuOpen");
   reset();
 };
+
+// 길게 누르기 메뉴(복사·붙여넣기·이미지 저장)와 텍스트 선택 막기. 메뉴 패널의 선택 상자는 그대로 동작
+const allowNative = (t) => t && t.closest && t.closest("select, option, input, #menuPanel");
+for (const ev of ["contextmenu", "selectstart"]) {
+  document.addEventListener(ev, (e) => {
+    if (document.body.classList.contains("mobile") && !allowNative(e.target)) e.preventDefault();
+  });
+}

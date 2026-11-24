@@ -23,7 +23,7 @@ onkeydown = (e) => {
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
   if (e.code === "KeyR") reset();
-  if (e.code === "KeyF" && !over) pickup(p);
+  if (e.code === "KeyF" && !over) pickup(p, isSwapLoot);
   if (e.code.startsWith("Arrow")) e.preventDefault();
 };
 onkeyup = (e) => keys[e.code] = false;

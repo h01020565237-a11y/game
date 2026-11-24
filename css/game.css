@@ -392,3 +392,19 @@ body.mobile.rot.menuOpen #menuPanel {
 #touch #atk {
   white-space: pre-line;
 }
+/* 교체 버튼: 두 줄 (교체 / 아이템 이름), 바꿀 아이템이 있을 때만 보임 */
+#touch #pickBtn {
+  white-space: pre-line;
+  font-size: 11px;
+  visibility: hidden;
+}
+/* 길게 누를 때 텍스트 선택·복사 메뉴, 이미지 저장 메뉴, 탭 하이라이트 막기 (카카오톡 등 인앱 브라우저 포함) */
+body.mobile,
+body.mobile #arena,
+body.mobile canvas,
+body.mobile button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}

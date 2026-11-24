@@ -27,8 +27,20 @@ function hit(a, b, d) {
     l.id = l.type ? Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 6);
   }
 }
-function pickup(a) {
-  let l = minBy(loot.filter((x) => dist(a, x) < 48), (x) => dist(a, x));
+// 손해 없이 바로 먹을 수 있는 아이템: 빈손일 때 무기, 장비 칸이 남았을 때 새 장비
+function isFreeLoot(a, l) {
+  return l.type === 0 ? !a.w : !a.gear.includes(l.id) && a.gear.length < 3;
+}
+// 바꿔야 하는 아이템: 다른 무기, 장비 3칸이 꽉 찼을 때 새 장비
+function isSwapLoot(a, l) {
+  return l.type === 0 ? a.w && l.id !== a.w : !a.gear.includes(l.id) && a.gear.length >= 3;
+}
+function nearLoot(a, pred) {
+  return minBy(loot.filter((x) => dist(a, x) < 48 && (!pred || pred(a, x))), (x) => dist(a, x));
+}
+// pred 를 주면 그 조건에 맞는 아이템만 줍는다 (봇은 조건 없이 가장 가까운 것)
+function pickup(a, pred) {
+  let l = nearLoot(a, pred);
   if (!l) return;
   if (l.type === 0) {
     if (a.w) loot.push({ x: l.x + 20, y: l.y, type: 0, id: a.w });
