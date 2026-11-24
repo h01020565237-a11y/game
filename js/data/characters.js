@@ -3,9 +3,9 @@
 const extraNames = { suit: ["집중", "반격"], octo: ["먹물 폭탄", "촉수 함정"], stripe: ["은신", "기습"], soccer: ["드리블", "강슛"], support: ["회복", "둔화탄"] };
 
 // 그래픽 사용 설정
-// bearSprint: 곰 Q 질주(1초) 동안 네 발 질주 시트 사용 여부.
-//   검수 결과 기존 곰(실사 얼굴)과 얼굴·체형이 달라 질주 중 다른 캐릭터처럼 보여서 기본값은 꺼 둠.
-const CHARACTER_ART = { bearSprint: false };
+// bearSheet: 정용 이동 그림을 새 시트(빨간 스카프, 8방향 × 8프레임)로 (false 면 예전 방향당 1장 그림)
+// bearSprint: 정용 Q 질주(1초) 동안 네 발 질주 시트 사용 (통합 패키지에서 승인, 연결 동작은 실제 플레이 확인 필요)
+const CHARACTER_ART = { bearSheet: true, bearSprint: true };
 
 // 로비·설명용 정보 (실제 코드 수치 기준, 기획 변경 아님)
 const CHARACTER_INFO = {
@@ -30,14 +30,16 @@ const ATTACK_SPRITES = {};
 // ===== 무기 손 위치 (8방향, 캐릭터 그림 중심 기준 px) =====
 // 순서: N NE E SE S SW W NW. behind: true 면 무기를 몸 뒤에 그림 (오른손에 든 무기가 몸에 가려지는 방향)
 const HAND_ANCHORS = [
-  { x: 10, y: -24, behind: true },  // N
-  { x: 13, y: -22, behind: true },  // NE
-  { x: 9, y: -20, behind: false },  // E
-  { x: 4, y: -18, behind: false },  // SE
-  { x: -9, y: -18, behind: false }, // S
-  { x: -12, y: -20, behind: false },// SW
-  { x: -8, y: -21, behind: true },  // W
-  { x: -3, y: -23, behind: true },  // NW
+  // 오른손 기준. 바라보는 방향의 오른쪽이 카메라 쪽이면 몸 앞(behind: false), 반대쪽이면 몸 뒤
+  // 손 높이는 배 근처(머리가 큰 캐릭터라 몸 중심보다 아래, y -6 ~ -14)
+  { x: 11, y: -12, behind: true },  // N  (뒤돌아 섬, 오른손은 화면 오른쪽)
+  { x: 10, y: -9, behind: false },  // NE
+  { x: 4, y: -7, behind: false },   // E  (오른쪽을 볼 때 오른손이 카메라 쪽)
+  { x: -5, y: -6, behind: false },  // SE
+  { x: -11, y: -8, behind: false }, // S  (정면, 오른손은 화면 왼쪽)
+  { x: -10, y: -11, behind: true }, // SW
+  { x: -4, y: -13, behind: true },  // W  (왼쪽을 볼 때 오른손은 몸 너머)
+  { x: 5, y: -14, behind: true },   // NW
 ];
 // 캐릭터별 손 위치 보정 (몸집·팔 길이가 다를 때). 예: bear: { x: 2, y: 3 }
 const HAND_OFFSET = {};
@@ -47,14 +49,15 @@ const HAND_OFFSET = {};
 const DISPLAY_NAMES = { stripe: "경수", soccer: "재한", support: "은숙", summoner: "현곤", suit: "동기", octo: "상훈", bear: "정용", runner: "기섭" };
 for (const [k, v] of Object.entries(DISPLAY_NAMES)) if (CHARACTER_INFO[k]) CHARACTER_INFO[k].name = v;
 
-// ===== 로비 그림 (tools/make_lobby_art.py 로 이동 시트에서 생성, 고해상도 그림이 오면 경로만 교체) =====
+// ===== 로비 그림: ChatGPT 전신 그림(512px)의 구멍을 메우고 얼굴을 잘라 만듦 (tools/make_lobby_art.py) =====
+// face: 얼굴 아이콘(로비 목록·결과), full: 전신(캐릭터 상세에서만 사용)
 const LOBBY_ART = {
-  summoner: { face: "assets/lobby/summoner-face.webp", stand: "assets/lobby/summoner-stand.webp" },
-  bear: { face: "assets/lobby/bear-face.webp", stand: "assets/lobby/bear-stand.webp" },
-  runner: { face: "assets/lobby/runner-face.webp", stand: "assets/lobby/runner-stand.webp" },
-  suit: { face: "assets/lobby/suit-face.webp", stand: "assets/lobby/suit-stand.webp" },
-  octo: { face: "assets/lobby/octo-face.webp", stand: "assets/lobby/octo-stand.webp" },
-  stripe: { face: "assets/lobby/stripe-face.webp", stand: "assets/lobby/stripe-stand.webp" },
-  soccer: { face: "assets/lobby/soccer-face.webp", stand: "assets/lobby/soccer-stand.webp" },
-  support: { face: "assets/lobby/support-face.webp", stand: "assets/lobby/support-stand.webp" },
+  summoner: { face: "assets/lobby/summoner-face.webp", full: "assets/lobby/summoner-full.webp" },
+  bear: { face: "assets/lobby/bear-face.webp", full: "assets/lobby/bear-full.webp" },
+  runner: { face: "assets/lobby/runner-face.webp", full: "assets/lobby/runner-full.webp" },
+  suit: { face: "assets/lobby/suit-face.webp", full: "assets/lobby/suit-full.webp" },
+  octo: { face: "assets/lobby/octo-face.webp", full: "assets/lobby/octo-full.webp" },
+  stripe: { face: "assets/lobby/stripe-face.webp", full: "assets/lobby/stripe-full.webp" },
+  soccer: { face: "assets/lobby/soccer-face.webp", full: "assets/lobby/soccer-full.webp" },
+  support: { face: "assets/lobby/support-face.webp", full: "assets/lobby/support-full.webp" },
 };

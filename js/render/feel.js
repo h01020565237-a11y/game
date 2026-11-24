@@ -45,7 +45,7 @@ const easeIn = (u) => u * u;
 
 // 무기 모션 계산: 회전 보정, 손에서 뻗는 거리, 반동, 섬광 세기
 function weaponPose(a) {
-  const sw = a.swing, pose = { rot: 0, reach: 4, back: 0, flash: 0, lift: 0, body: 0, w: a.w, trail: 0 };
+  const sw = a.swing, pose = { rot: 0, reach: 2, back: 0, flash: 0, lift: 0, body: 0, w: a.w, trail: 0 };
   if (!sw) return pose;
   const f = WEAPON_FEEL[sw.w], [ph, u] = swingPhase(sw);
   pose.w = sw.w;
@@ -88,8 +88,11 @@ function drawHeldWeapon(a, k, pose) {
   if (a.swing && sheet && sheet.naturalWidth && ATTACK_SPRITES[k].weaponInHand) return;
   // 수류탄을 던지는 동안에는 주무기 대신 수류탄을 손에 듦 (던진 뒤에는 아무것도 안 듦)
   const w = a.swing && a.swing.kind === "throw" ? (pose.released ? -1 : GRENADE.weaponId) : a.w;
-  const ang = aimAngle(a), rot = ang + pose.rot;
   const H = handPoint(a, k);
+  // 공격 중(aimT)에는 조준 방향, 평소에는 쉬는 자세: 근접은 손 쪽 바깥 위로, 총은 손 쪽 바깥 아래로 비스듬히
+  const out = H.x - a.x >= 0;
+  const idle = w >= 3 && w <= 5 ? (out ? 0.5 : Math.PI - 0.5) : (out ? -1.0 : Math.PI + 1.0);
+  const ang = a.aimT > 0 && a.attackAng !== undefined ? a.attackAng : idle, rot = ang + pose.rot;
   const cx = Math.cos(ang), sy = Math.sin(ang);
   const hx = H.x + Math.cos(rot) * pose.reach - cx * pose.back;
   const hy = H.y + Math.sin(rot) * pose.reach * 0.8 - sy * pose.back + pose.lift;
@@ -169,6 +172,11 @@ function drawActorWithFeel(a, k) {
   }
   if (!behind) drawHeldWeapon(a, k, pose);
   drawSlashTrail(a, pose);
+  if (window.__showHand) { // 검수 도구(tools/grip_grid.py) 전용: 손 앵커 표시
+    const H = handPoint(a, k);
+    g.fillStyle = "#ff0000";
+    g.fillRect(H.x - 1.5, H.y - 1.5, 3, 3);
+  }
   g.restore();
 }
 

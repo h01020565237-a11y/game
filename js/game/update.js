@@ -75,6 +75,7 @@ function update(dt) {
     pet.cd = Math.max(0, pet.cd - dt);
     if (pet.life <= 0 || pet.hp <= 0) {
       fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true });
+      sfx("pet_return", pet);
       pet = null;
     } else {
       command();
@@ -162,11 +163,15 @@ function update(dt) {
     if (b && b.max && dist(a, b) < 230 && (a.skillTimer || 0) <= elapsed && (a.visual !== "suit" && a.visual !== "summoner" || clearLine(a, b))) {
       a.skillTimer = elapsed + 7 + Math.random() * 3;
       let k = a.visual;
+      // 봇 스킬 효과음 (그 캐릭터의 해당 스킬 소리, 거리에 따라 작게)
+      sfx({ bear: "skill_bear_e", support: "skill_support_q", suit: "skill_suit_q", stripe: "skill_stripe_e", runner: "skill_runner_e", soccer: "skill_soccer_q", summoner: "pet_summon" }[k] || "", a);
       if (k === "bear" || k === "support") {
         a.hp = Math.min(a.max, a.hp + a.max * 0.18);
         fx.push({ x: a.x, y: a.y, t: 0.6, text: "회복" });
       } else if (k === "octo") {
-        throwOcto(a, Math.random() < 0.5 ? 1 : 2);
+        const oi = Math.random() < 0.5 ? 1 : 2;
+        sfx(oi === 1 ? "skill_octo_q" : "skill_octo_e", a);
+        throwOcto(a, oi);
       } else if (k === "suit") {
         hit(a, b, 250);
       } else if (k === "stripe" || k === "runner" || k === "soccer") {

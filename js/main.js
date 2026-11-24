@@ -41,6 +41,7 @@ function loop(t) {
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
     updateMouseWorld();
     update(STEP);
+    tickSummonAim(STEP);
     acc -= STEP;
     n++;
   }

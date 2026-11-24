@@ -42,7 +42,11 @@ sheets.soccer = loadImage("assets/characters/soccer-sheet.webp");
 sheets.support = loadImage("assets/characters/support-sheet.webp");
 sheets.summoner = loadImage("assets/characters/summoner-sheet.webp");
 sheets.runner = loadImage("assets/characters/runner-sheet.webp");
-const crateArt = loadImage("assets/props/crate.webp"); // 새 상자 그림을 못 불러올 때 대체용
+// 정용(곰): ChatGPT 승인 디자인(빨간 스카프) 이동 시트. 맨 뒤에 둬서 봇 외형 배정 순서는 그대로
+// 예전 그림(bear.webp, 방향당 1장)은 CHARACTER_ART.bearSheet = false 로 되돌릴 수 있음
+sheets.bear = loadImage("assets/characters/bear-run-sheet.webp");
+const crateArt = loadImage("assets/props/crate.webp");
+const healArt = loadImage("assets/props/heal.png"); // 체력 회복 아이템 // 새 상자 그림을 못 불러올 때 대체용
 // 상자 상태별 그림 (96×90, 잔디 받침 중심 = (48, 84))
 const chestArt = {
   intact: loadImage("assets/props/chest-intact.webp"),
@@ -63,4 +67,4 @@ const bearSprintImg = loadImage("assets/characters/bear-sprint-sheet.webp");
 const jungle = loadImage(MAP_JUNGLE.background);
 // 로비 그림
 const lobbyArt = {};
-for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: loadImage(v.face), stand: loadImage(v.stand) };
+for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: loadImage(v.face), full: loadImage(v.full) };

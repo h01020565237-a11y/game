@@ -1,5 +1,7 @@
 // 라운드 초기화
 
+// 봇 외형 배정 순서 (예전 Object.keys(sheets) + "bear" 순서와 같음)
+const BOT_VISUAL_ORDER = ["suit", "octo", "stripe", "soccer", "support", "summoner", "runner", "bear"];
 // 결과 화면용 집계 (실제로 일어난 일만 기록, 게임 규칙에는 영향 없음)
 let stats = { kills: 0, damage: 0, rank: 0, time: 0 };
 function reset() {
@@ -27,7 +29,7 @@ function reset() {
   p.guard = 0;
   p.stealth = 0;
   p.combo = 0;
-  bots = MAP_JUNGLE.botSpawns.map((a, i) => Object.assign(actor(...a), { visual: Object.keys(sheets).concat("bear").filter((k) => k !== character)[i] }));
+  bots = MAP_JUNGLE.botSpawns.map((a, i) => Object.assign(actor(...a), { visual: BOT_VISUAL_ORDER.filter((k) => k !== character)[i] }));
   boxes = MAP_JUNGLE.crates.map(([x, y]) => ({ x, y, hp: 1e3 }));
   loot = [];
   shots = [];

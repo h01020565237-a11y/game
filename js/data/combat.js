@@ -64,10 +64,10 @@ WEAPON_FEEL.forEach((f) => (f.dur = (f.phases[0] + f.phases[1] + f.phases[2]) / 
 // grip: 그림 안에서 손으로 잡는 지점 (0~1 비율)
 const WEAPON_ART = [
   null, // 맨손
-  { src: "assets/weapons/sword.webp", angle: -0.86, size: 34, grip: [0.3, 0.74] },
-  { src: "assets/weapons/hammer.webp", angle: -0.95, size: 36, grip: [0.34, 0.8] },
-  { src: "assets/weapons/pistol.webp", angle: -0.3, size: 26, grip: [0.42, 0.72] },
-  { src: "assets/weapons/shotgun.webp", angle: -0.42, size: 38, grip: [0.3, 0.68] },
-  { src: "assets/weapons/sniper.webp", angle: -0.4, size: 42, grip: [0.3, 0.7] },
-  { src: "assets/weapons/grenade.webp", angle: -1.2, size: 20, grip: [0.5, 0.6] },
+  { src: "assets/weapons/sword.webp", angle: -0.86, size: 30, grip: [0.3, 0.74] },
+  { src: "assets/weapons/hammer.webp", angle: -0.95, size: 30, grip: [0.34, 0.8] },
+  { src: "assets/weapons/pistol.webp", angle: -0.3, size: 20, grip: [0.42, 0.72] },
+  { src: "assets/weapons/shotgun.webp", angle: -0.42, size: 30, grip: [0.3, 0.68] },
+  { src: "assets/weapons/sniper.webp", angle: -0.4, size: 34, grip: [0.3, 0.7] },
+  { src: "assets/weapons/grenade.webp", angle: -1.2, size: 16, grip: [0.5, 0.6] },
 ];

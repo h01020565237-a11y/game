@@ -68,7 +68,6 @@ function renderLobbyInfo() {
     ul.append(li);
   });
   el("ciPassive").textContent = "패시브 · " + info.passive;
-  el("charPreview").src = lobbyArt[lobbySel].stand.src;
   renderDeckPicker();
 }
 
@@ -139,6 +138,34 @@ el("lobbyStart").onclick = () => {
     if (s) s.value = v;
   });
   document.querySelector("#charApply").click();
+};
+// 캐릭터 상세: 전신 그림 + 스킬 설명
+function fillSkills(ul, info) {
+  ul.innerHTML = "";
+  info.skills.forEach(([n, d], i) => {
+    const li = document.createElement("li");
+    const kb = document.createElement("b");
+    kb.textContent = (i ? "E" : "Q") + " " + n;
+    const sp = document.createElement("span");
+    sp.textContent = d;
+    li.append(kb, sp);
+    ul.append(li);
+  });
+}
+el("lobbyDetail").onclick = () => {
+  const info = CHARACTER_INFO[lobbySel];
+  el("detailArt").src = lobbyArt[lobbySel].full.src;
+  el("detailName").textContent = info.name;
+  el("detailRole").textContent = info.role;
+  el("detailRole").hidden = !info.role;
+  fillSkills(el("detailSkills"), info);
+  el("detailPassive").textContent = "패시브 · " + info.passive;
+  el("charDetail").hidden = false;
+  sfx("ui_click");
+};
+el("detailClose").onclick = () => {
+  el("charDetail").hidden = true;
+  sfx("ui_click");
 };
 el("lobbyTouch").onclick = () => document.querySelector("#mobileToggle").click();
 el("resLobby").onclick = () => {

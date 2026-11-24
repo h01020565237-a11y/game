@@ -63,17 +63,16 @@
     <section id="lobby" class="screen" aria-label="캐릭터 선택">
       <div class="panel lobby-card">
         <div class="lobby-grid" id="charGrid"></div>
-        <div class="lobby-stage">
-          <img id="charPreview" alt="">
-          <div class="podium"></div>
-        </div>
         <div class="lobby-info">
           <div class="ci-head"><h3 id="ciName"></h3><span id="ciRole"></span></div>
           <ul id="ciSkills"></ul>
           <p id="ciPassive"></p>
           <div id="lobbyDeck"></div>
           <p id="lobbyErr" role="alert"></p>
-          <button id="lobbyStart" class="btn btn-gold">선택</button>
+          <div class="lobby-actions">
+            <button id="lobbyDetail" class="btn btn-ghost">상세 보기</button>
+            <button id="lobbyStart" class="btn btn-gold">선택</button>
+          </div>
         </div>
       </div>
       <div class="lobby-foot">
@@ -81,6 +80,19 @@
         <label>효과음 <input type="range" id="volSfx" min="0" max="100"></label>
         <button id="muteBtn" class="btn btn-ghost">음소거</button>
         <button id="lobbyTouch" class="btn btn-ghost">터치 조작 전환</button>
+      </div>
+    </section>
+
+    <!-- 캐릭터 상세 (전신 그림은 여기서만) -->
+    <section id="charDetail" class="screen" hidden aria-label="캐릭터 상세">
+      <div class="panel detail-card">
+        <div class="detail-art"><img id="detailArt" alt=""></div>
+        <div class="detail-info">
+          <div class="ci-head"><h3 id="detailName"></h3><span id="detailRole"></span></div>
+          <ul id="detailSkills"></ul>
+          <p id="detailPassive"></p>
+          <button id="detailClose" class="btn btn-blue">닫기</button>
+        </div>
       </div>
     </section>
 

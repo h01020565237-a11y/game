@@ -1,14 +1,16 @@
-"""로비(캐릭터 선택)용 이미지 생성.
+"""로비·상세 화면용 캐릭터 그림 만들기 (ChatGPT 전신 그림 기준).
 
-이동 시트의 정면(S) 서 있는 프레임을 잘라서
-- 계단 현상 정리(알파 가장자리 부드럽게, 떨어진 점 제거)
-- 고품질 확대(Lanczos)
-- 얼굴 아이콘은 머리의 실제 위치를 찾아 가운데 정렬
-해서 assets/lobby/<id>-stand.webp(서 있는 모습), <id>-face.webp(얼굴 아이콘)으로 저장한다.
-고해상도 로비 그림이 따로 오면 이 파일들만 교체하면 됨.
-사용법: python3 tools/make_lobby_art.py
+입력: 전신 그림 폴더(예: 통합 패키지의 assets/lobby/<id>.png, 높이 512px)
+처리:
+  1) 배경 제거 때 어두운 부분(눈·코·발톱·머리카락 등)이 같이 지워진 '안쪽 구멍'을 메움
+     - 구멍 아래 원래 색이 남아 있으면 그 색, 없으면 어두운 색(원래 지워진 부분이 어두운 색이라서)
+  2) 전신: assets/lobby/<id>-full.webp (캐릭터 상세 화면용)
+  3) 얼굴 아이콘: 머리 위치를 찾아 정사각형으로 잘라 256px → assets/lobby/<id>-face.webp
+사용법: python3 tools/make_lobby_art.py <전신 그림 폴더>
+(통합 패키지의 portraits/*.png 는 얼굴이 입 근처에서 가로로 잘려 있어 쓰지 않음)
 """
 import pathlib
+import sys
 
 import numpy as np
 from PIL import Image, ImageFilter
@@ -16,89 +18,62 @@ from scipy import ndimage
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'assets' / 'lobby'
-# (시트 파일, 칸 크기, 정면 행, 서 있는 프레임 열)
-SRC = {
-    'summoner': ('summoner-hd.webp', 128, 4, 0),  # 소환사는 128px 고해상도 시트가 있음
-    'bear': ('bear.webp', 80, 0, 4),               # 곰: 한 줄 8방향, 정면은 4번 칸
-    'runner': ('runner-sheet.webp', 96, 4, 0),
-    'suit': ('suit-sheet-fixed.webp', 96, 4, 0),  # 안쪽 구멍 복구본 (tools/fix_sheet_holes.py)
-    'octo': ('octo-sheet.webp', 96, 4, 0),
-    'stripe': ('stripe-run-sheet.webp', 96, 4, 0),
-    'soccer': ('soccer-sheet.webp', 96, 4, 0),
-    'support': ('support-sheet.webp', 96, 4, 0),
-}
+IDS = ['summoner', 'bear', 'runner', 'suit', 'octo', 'stripe', 'soccer', 'support']
+DARK = np.array([34, 29, 29])
 
 
-def clean(im):
-    a = np.array(im).astype(np.float32)
+def fill_holes(im, max_hole=1200):
+    a = np.array(im.convert('RGBA')).astype(np.float32)
     al = a[..., 3]
-    lab, n = ndimage.label(al > 24)
+    solid = al > 100
+    holes = ndimage.binary_fill_holes(solid) & ~solid
+    lab, n = ndimage.label(holes)
+    filled = 0
     if n:
         sizes = ndimage.sum(np.ones_like(al), lab, range(1, n + 1))
-        keep = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= max(12, sizes.max() * 0.01)])
-        al[~ndimage.binary_dilation(keep, iterations=1)] = 0
+        mask = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s <= max_hole])
+        rgb = a[..., :3]
+        has = rgb.sum(-1) > 30
+        rgb[mask & ~has] = DARK
+        # 메운 부분이 튀지 않게 살짝 흐린 값과 섞음
+        blur = np.array(Image.fromarray(rgb.astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))).astype(np.float32)
+        rgb[mask] = rgb[mask] * 0.6 + blur[mask] * 0.4
+        a[..., :3] = rgb
+        al[mask] = 255
+        filled = int(mask.sum())
+    # 혼자 반투명한 점 (주변 8칸 중 6칸 이상이 불투명)
+    s = (al > 200).astype(int)
+    nb = sum(np.roll(np.roll(s, dy, 0), dx, 1) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+    speck = (al < 230) & (nb >= 6)
+    al[speck] = 255
     a[..., 3] = al
-    return Image.fromarray(a.astype(np.uint8))
+    return Image.fromarray(a.astype(np.uint8)), filled + int(speck.sum())
 
 
-def round_cut_edge(im, max_ext=5):
-    """원본 그림이 칸 경계에서 세로로 잘린 경우(곰 정면): 잘린 쪽 가장자리를 반대편을 비춰 몇 px 둥글게 채움"""
-    a = np.array(im)
-    al = a[..., 3] > 100
-    h, w = al.shape
-    ys, xs = np.nonzero(al[: int(h * 0.35)])
-    c = int(round(xs.mean()))
-    for y in range(h):
-        row = np.nonzero(al[y])[0]
-        if len(row) < 2:
-            continue
-        xl, xr = row[0], row[-1]
-        if (c - xl) - (xr - c) > 3:  # 오른쪽이 왼쪽보다 짧게 끊김
-            for k in range(1, max_ext + 1):
-                x, mx = xr + k, 2 * c - (xr + k)
-                if x >= w or mx < 0 or not al[y, mx]:
-                    break
-                a[y, x] = a[y, mx]
-    return Image.fromarray(a)
+def face_crop(im, size=256):
+    a = np.array(im)[..., 3] > 60
+    ys, xs = np.nonzero(a)
+    top = ys.min()
+    body_h = ys.max() - top
+    head = a[top: top + int(body_h * 0.40)]
+    hy, hx = np.nonzero(head)
+    cx = float(hx.mean())
+    side = int(body_h * 0.50)
+    x0, y0 = int(round(cx - side / 2)), max(0, top - int(side * 0.04))
+    canvas = Image.new('RGBA', (side, side))
+    canvas.paste(im.crop((x0, y0, x0 + side, y0 + side)), (0, 0))
+    return canvas.resize((size, size), Image.LANCZOS)
 
 
-def upscale(im, h):
-    """알파 가장자리 계단을 줄이며 확대: 프리멀티플라이 후 Lanczos, 알파만 살짝 부드럽게"""
-    a = np.array(im).astype(np.float32) / 255
-    rgb = a[..., :3] * a[..., 3:4]
-    pm = Image.fromarray((np.dstack([rgb, a[..., 3:4]]) * 255).astype(np.uint8), 'RGBA')
-    w = round(im.width * h / im.height)
-    big = pm.resize((w, h), Image.LANCZOS)
-    b = np.array(big).astype(np.float32) / 255
-    al = np.array(Image.fromarray((b[..., 3] * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7))).astype(np.float32) / 255
-    al = np.clip((al - 0.04) / 0.92, 0, 1)  # 흐려진 가장자리를 다시 또렷하게
-    rgb = np.where(b[..., 3:4] > 1e-3, b[..., :3] / np.maximum(b[..., 3:4], 1e-3), 0)
-    return Image.fromarray((np.dstack([np.clip(rgb, 0, 1), al]) * 255).astype(np.uint8), 'RGBA')
-
-
-def main():
+def main(src):
+    src = pathlib.Path(src)
     OUT.mkdir(parents=True, exist_ok=True)
-    for k, (f, cell, row, col) in SRC.items():
-        sheet = Image.open(ROOT / 'assets' / 'characters' / f).convert('RGBA')
-        im = clean(sheet.crop((col * cell, row * cell, (col + 1) * cell, (row + 1) * cell)))
-        if k == 'bear':
-            im = round_cut_edge(im)
-        im = im.crop(im.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox())
-        stand = upscale(im, 256)
-        stand.save(OUT / f'{k}-stand.webp', quality=92, method=6)
-        # 얼굴: 위쪽 45% 에서 머리 중심을 찾아 정사각형으로 자름
-        al = np.array(stand)[..., 3] > 40
-        top = int(stand.height * 0.45)
-        ys, xs = np.nonzero(al[:top])
-        cx = float(np.average(xs, weights=np.ones_like(xs)))
-        side = int(stand.height * 0.62)  # 머리 전체 + 어깨 조금
-        x0 = int(round(cx - side / 2))
-        face = Image.new('RGBA', (side, side))
-        face.paste(stand.crop((x0, 0, x0 + side, side)), (0, 0))
-        face = face.resize((160, 160), Image.LANCZOS)
-        face.save(OUT / f'{k}-face.webp', quality=92, method=6)
-        print(k, stand.size, 'face center x', round(cx))
+    for k in IDS:
+        im, n = fill_holes(Image.open(src / f'{k}.png'))
+        im.save(OUT / f'{k}-full.webp', quality=90, method=6)
+        face_crop(im).save(OUT / f'{k}-face.webp', quality=90, method=6)
+        print(f'{k}: filled {n} px, full {im.size}')
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])

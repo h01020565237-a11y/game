@@ -19,7 +19,7 @@ function renderActor(a, k) {
     g.drawImage(bearSprintImg, Math.floor(a.frame || 0) % 8 * 96, (a.dir || 0) * 96, 96, 96, a.x - 34, a.y - 56, 68, 68);
     return true;
   }
-  let im = sheets[k];
+  let im = k === "bear" && !CHARACTER_ART.bearSheet ? null : sheets[k];
   if (im && im.naturalWidth) {
     g.drawImage(im, (a.moving ? Math.floor(a.frame || 0) % 8 : 0) * 96, (a.dir || 0) * 96, 96, 96, a.x - 34, a.y - 56, 68, 68);
     return true;
@@ -52,6 +52,14 @@ function ammoBar(x, y, a) {
 }
 // 체력 회복 아이템 (개별 그림이 없어 캔버스로 그림. 그림이 오면 교체)
 function drawMedkit(x, y) {
+  if (healArt.naturalWidth) {
+    g.fillStyle = "#1a24164d";
+    g.beginPath();
+    g.ellipse(x, y + 10, 13, 5, 0, 0, 7);
+    g.fill();
+    g.drawImage(healArt, x - 16, y - 24, 32, 32);
+    return;
+  }
   g.fillStyle = "#1a24164d";
   g.beginPath();
   g.ellipse(x, y + 10, 13, 5, 0, 0, 7);
@@ -101,6 +109,7 @@ function draw() {
     const sx = jungle.naturalWidth / W, sy = jungle.naturalHeight / H;
     g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
   } else scenery();
+  if (summonAim && p.hp > 0) drawSummonAim();
   if (grenAim && !grenAim.cancel) {
     // 수류탄 조준 미리보기: 던질 지점과 폭발 범위
     const d = weapons[GRENADE.weaponId][3] * grenAim.mag, tx = clamp(p.x + grenAim.x * d, 0, W), ty = clamp(p.y + grenAim.y * d, 0, H);
@@ -192,7 +201,12 @@ function draw() {
     g.fillText(lootName(l), l.x, (icon && icon.naturalWidth) || l.type === LOOT.heal ? l.y - 26 : l.y - 12);
   }
   for (let f of fx.filter((f2) => f2.trail)) {
-    if (character === "runner" && runnerImg.naturalWidth) {
+    if (character === "bear" && CHARACTER_ART.bearSheet && sheets.bear.naturalWidth) {
+      g.save();
+      g.globalAlpha = f.t / 0.18 * 0.35;
+      g.drawImage(sheets.bear, (f.frame % 8) * 96, f.dir * 96, 96, 96, f.x - 34, f.y - 56, 68, 68);
+      g.restore();
+    } else if (character === "runner" && runnerImg.naturalWidth) {
       g.save();
       g.globalAlpha = f.t / 0.18 * 0.35;
       g.drawImage(runnerImg, f.dir * 80, 0, 80, 80, f.x - 34, f.y - 54, 68, 68);
@@ -402,4 +416,44 @@ function draw() {
   }
   setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} ${FEATURES.accessories ? "| 장비 " + (p.gear.map((i) => gear[i]).join(", ") || "없음") + " " : ""}| 수류탄 ${p.grenades}/${GRENADE.max} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
   setText("msg", extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택");
+}
+
+// 소환 조준 미리보기: 사거리 원 + 떨어질 지점 (못 던지는 자리는 빨간색)
+function drawSummonAim() {
+  const t = summonPoint(summonAim.x, summonAim.y), col = t.ok ? "#7ff0ff" : "#ff6b6b";
+  g.save();
+  g.lineWidth = 2;
+  g.setLineDash([8, 6]);
+  g.strokeStyle = "rgba(127,240,255,0.55)";
+  g.fillStyle = "rgba(127,240,255,0.07)";
+  g.beginPath();
+  g.arc(p.x, p.y, SUMMON_RANGE, 0, 7);
+  g.fill();
+  g.stroke();
+  g.strokeStyle = col;
+  g.beginPath();
+  g.moveTo(p.x, p.y - 20);
+  g.quadraticCurveTo((p.x + t.x) / 2, Math.min(p.y, t.y) - 60, t.x, t.y);
+  g.stroke();
+  g.setLineDash([]);
+  g.lineWidth = 3;
+  g.beginPath();
+  g.arc(t.x, t.y, 18, 0, 7);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(t.x - 26, t.y); g.lineTo(t.x - 10, t.y);
+  g.moveTo(t.x + 10, t.y); g.lineTo(t.x + 26, t.y);
+  g.moveTo(t.x, t.y - 26); g.lineTo(t.x, t.y - 10);
+  g.moveTo(t.x, t.y + 10); g.lineTo(t.x, t.y + 26);
+  g.stroke();
+  const ic = mons[deck[selected]];
+  g.font = "bold 13px sans-serif";
+  g.textAlign = "center";
+  g.fillStyle = "#fff";
+  g.strokeStyle = "rgba(0,0,0,.6)";
+  g.lineWidth = 3;
+  const label = (ic ? ic[0] : "") + (t.ok ? "" : " · 불가");
+  g.strokeText(label, t.x, t.y - 32);
+  g.fillText(label, t.x, t.y - 32);
+  g.restore();
 }

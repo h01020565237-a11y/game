@@ -8,7 +8,7 @@ function characterSkill(i) {
   if (over || character === "summoner") return;
   const before = [p.run, p.heal, p.tackle, p.s1, p.s2].join();
   characterSkillInner(i);
-  if ([p.run, p.heal, p.tackle, p.s1, p.s2].join() !== before) sfx("skill", p); // 실제로 발동했을 때만
+  if ([p.run, p.heal, p.tackle, p.s1, p.s2].join() !== before) sfx(`skill_${character}_${i === 1 ? "q" : "e"}`, p); // 실제로 발동했을 때만
 }
 function characterSkillInner(i) {
   if (extraNames[character]) {

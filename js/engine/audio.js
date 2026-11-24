@@ -59,8 +59,13 @@ function unlockAudio() {
 for (const ev of ["pointerdown", "touchend", "keydown", "click"]) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
 document.addEventListener("visibilitychange", () => {
   if (!audio.ctx) return;
-  if (document.hidden) audio.ctx.suspend();
-  else audio.ctx.resume();
+  if (document.hidden) {
+    audio.ctx.suspend();
+    if (audio.bgmEl) audio.bgmEl.pause();
+  } else {
+    audio.ctx.resume();
+    if (audio.bgmEl && audio.bgmNode) audio.bgmEl.play().catch(() => {});
+  }
 });
 
 // 소리 파일을 한 번만 디코딩해서 Web Audio 버퍼로 보관 (재생할 때마다 새로 만들지 않음 → 프레임 드랍 방지)
@@ -88,10 +93,33 @@ function loadSounds() {
     });
   };
   for (const [name, s] of Object.entries(SOUNDS)) if (s.src) decode(name, s.src, (buf) => (audio.buffers[name] = buf));
-  if (BGM.src) decode("__bgm", BGM.src, (buf) => {
-    audio.buffers.__bgm = buf;
-    syncBgm(true);
-  });
+  // 배경음악: 이 브라우저가 재생할 수 있는 형식부터 시도
+  const probe = document.createElement("audio");
+  const list = (BGM.srcs || []).filter(([, type]) => probe.canPlayType(type));
+  const tryBgm = (i) => {
+    if (i >= list.length) return;
+    const src = list[i][0];
+    const ab = src.startsWith("data:") ? Promise.resolve(dataUriToBuffer(src)) : fileMode ? Promise.reject(new Error("file")) : fetch(src).then((r) => r.arrayBuffer());
+    ab.then((x) => audio.ctx.decodeAudioData(x)).then((buf) => {
+      audio.buffers.__bgm = buf;
+      audio.bgmLoop = loopBounds(buf);
+      syncBgm(true);
+    }).catch(() => tryBgm(i + 1));
+  };
+  tryBgm(0);
+  // file:// 로 연 경우: <audio loop> 로 재생
+  if (fileMode && list.length) {
+    audio.bgmEl = Object.assign(new Audio(list[0][0]), { loop: true, preload: "auto" });
+  }
+}
+
+// 반복 구간: 앞뒤 무음(압축 형식이 붙이는 여백)을 잘라 이음매 없이 반복
+function loopBounds(buf) {
+  const d = buf.getChannelData(0), th = 0.002, sr = buf.sampleRate;
+  let a = 0, b = d.length - 1;
+  while (a < d.length && Math.abs(d[a]) < th && a < sr * 0.2) a++;
+  while (b > a && Math.abs(d[b]) < th && d.length - b < sr * 0.2) b--;
+  return [a / sr, (b + 1) / sr];
 }
 
 // 효과음 재생. pos 를 주면 내 캐릭터와의 거리로 음량 조절
@@ -168,13 +196,21 @@ function syncBgm(force) {
   if (!audio.ctx) return;
   const want = !audio.settings.muted && audio.settings.bgm > 0;
   if (!want) return stopBgm();
+  if (audio.bgmEl) audio.bgmEl.volume = clamp(audio.settings.bgm * BGM.vol, 0, 1); // file:// 재생 음량
   if (audio.bgmNode && !force) return;
   stopBgm();
+  if (audio.bgmEl && !audio.buffers.__bgm) {
+    audio.bgmEl.volume = clamp(audio.settings.bgm * BGM.vol, 0, 1);
+    audio.bgmEl.play().catch(() => {});
+    audio.bgmNode = { stop: () => audio.bgmEl.pause() };
+    return;
+  }
   if (!audio.buffers.__bgm && !AUDIO_SYNTH_FALLBACK) return; // 배경음악 파일이 없으면 무음
   if (audio.buffers.__bgm) {
     const s = audio.ctx.createBufferSource();
     s.buffer = audio.buffers.__bgm;
     s.loop = true;
+    if (audio.bgmLoop) [s.loopStart, s.loopEnd] = audio.bgmLoop;
     s.connect(audio.bgmGain);
     s.start();
     audio.bgmNode = s;
