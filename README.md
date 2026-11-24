@@ -46,7 +46,7 @@
 python3 tests/sim.py index.html                 # 캐릭터 8종 시드 고정 시뮬레이션
 python3 tests/sim.py old.html index.html        # 두 버전의 게임 상태가 같은지 비교
 python3 tests/sim.py index.html --mobile --fps  # 터치 모드 + 프레임 처리 시간
-python3 tests/rules.py                          # 전투 규칙 회귀 테스트 (39개 항목)
+python3 tests/rules.py                          # 전투 규칙·QA 회귀 테스트 (60개 항목)
 ```
 
 자세한 분석과 변경 이력은 [docs/TECH_REVIEW.md](docs/TECH_REVIEW.md)를 참고하세요.

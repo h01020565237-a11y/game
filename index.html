@@ -17,14 +17,14 @@
   <div>
     <label>캐릭터
       <select id="character">
-        <option value="summoner">빨간 모자 · 소환사</option>
-        <option value="bear">곰 · 생존형</option>
-        <option value="runner">러닝 선수 · 기동형</option>
-        <option value="suit">검은 정장</option>
-        <option value="octo">문어</option>
-        <option value="stripe">줄무늬</option>
-        <option value="soccer">축구 선수</option>
-        <option value="support">정장 여성</option>
+        <option value="summoner">현곤 · 소환사</option>
+        <option value="bear">정용 · 생존형</option>
+        <option value="runner">기섭 · 기동형</option>
+        <option value="suit">동기</option>
+        <option value="octo">상훈</option>
+        <option value="stripe">경수</option>
+        <option value="soccer">재한</option>
+        <option value="support">은숙</option>
       </select>
     </label>
     <button id="charApply">선택 및 시작</button>
@@ -64,7 +64,7 @@
       <div class="panel lobby-card">
         <div class="lobby-grid" id="charGrid"></div>
         <div class="lobby-stage">
-          <canvas id="charPreview" width="240" height="240"></canvas>
+          <img id="charPreview" alt="">
           <div class="podium"></div>
         </div>
         <div class="lobby-info">
@@ -89,7 +89,7 @@
       <div class="panel res-card">
         <div class="res-title" id="resTitle">승리!</div>
         <div class="res-body">
-          <canvas id="resChar" width="200" height="200"></canvas>
+          <figure class="res-who"><img id="resChar" alt=""><figcaption id="resName"></figcaption></figure>
           <div class="res-stats">
             <div class="stat"><span>순위</span><b id="resRank">1위</b></div>
             <div class="stat"><span>처치</span><b id="resKills">0</b></div>

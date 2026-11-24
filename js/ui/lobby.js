@@ -21,15 +21,6 @@ function closeLobby() {
   document.body.classList.remove("lobbyOpen");
 }
 
-// 캐릭터 얼굴 아이콘: 이동 시트의 정면(S) 첫 프레임에서 위쪽을 잘라 씀
-function drawPortrait(cv, k, zoom = 1) {
-  const x = cv.getContext("2d");
-  x.clearRect(0, 0, cv.width, cv.height);
-  const im = sheets[k];
-  if (im && im.naturalWidth) x.drawImage(im, 18, 4 * 96 + 6, 60, 60 / zoom, 0, 0, cv.width, cv.height / zoom);
-  else if (k === "bear" && bearImg.naturalWidth) x.drawImage(bearImg, 4 * 80 + 12, 2, 56, 56 / zoom, 0, 0, cv.width, cv.height / zoom);
-}
-
 function buildLobby() {
   const grid = el("charGrid");
   grid.innerHTML = "";
@@ -38,10 +29,11 @@ function buildLobby() {
     b.className = "char-tile";
     b.dataset.k = k;
     b.setAttribute("aria-label", CHARACTER_INFO[k].name);
-    const cv = document.createElement("canvas");
-    cv.width = cv.height = 72;
-    drawPortrait(cv, k);
-    b.append(cv);
+    const im = document.createElement("img");
+    im.src = lobbyArt[k].face.src;
+    im.alt = "";
+    im.draggable = false;
+    b.append(im);
     const n = document.createElement("span");
     n.textContent = CHARACTER_INFO[k].name;
     b.append(n);
@@ -76,39 +68,65 @@ function renderLobbyInfo() {
     ul.append(li);
   });
   el("ciPassive").textContent = "패시브 · " + info.passive;
-  // 소환사: 포켓몬 덱 3마리 선택
+  el("charPreview").src = lobbyArt[lobbySel].stand.src;
+  renderDeckPicker();
+}
+
+// 소환사: 포켓몬 8마리 중 3마리를 눌러서 고름 (고른 순서 = 1·2·3번 슬롯)
+function renderDeckPicker() {
   const dk = el("lobbyDeck");
   dk.innerHTML = "";
   dk.hidden = lobbySel !== "summoner";
-  if (lobbySel === "summoner") {
-    const lab = document.createElement("span");
-    lab.textContent = "덱";
-    dk.append(lab);
-    lobbyDeck.forEach((v, i) => {
-      const s = document.createElement("select");
-      s.setAttribute("aria-label", `덱 ${i + 1}번`);
-      mons.forEach((m, j) => s.add(new Option(m[1] + " " + m[0], j, false, j === v)));
-      s.onchange = () => {
-        lobbyDeck[i] = +s.value;
-        el("lobbyErr").textContent = "";
-      };
-      dk.append(s);
-    });
-  }
-}
-
-// 로비 가운데 캐릭터 미리보기 (정면으로 달리는 모습)
-function drawLobbyPreview() {
-  const cv = el("charPreview"), x = cv.getContext("2d"), k = lobbySel;
-  x.clearRect(0, 0, cv.width, cv.height);
-  const t = performance.now() / 1000, f = Math.floor(t * 10) % 8, s = cv.width;
-  const im = sheets[k];
-  if (im && im.naturalWidth) x.drawImage(im, f * 96, 4 * 96, 96, 96, 0, 0, s, s);
-  else if (k === "bear" && bearImg.naturalWidth) x.drawImage(bearImg, 4 * 80, 0, 80, 80, s * 0.05, s * 0.04 + Math.abs(Math.sin(t * 6)) * -6, s * 0.9, s * 0.9);
+  if (lobbySel !== "summoner") return;
+  const head = document.createElement("div");
+  head.className = "deck-head";
+  head.textContent = `포켓몬 3마리 선택 (${lobbyDeck.length}/3)`;
+  dk.append(head);
+  const grid = document.createElement("div");
+  grid.className = "mon-grid";
+  mons.forEach((m, j) => {
+    const b = document.createElement("button");
+    const slot = lobbyDeck.indexOf(j);
+    b.className = "mon-tile" + (slot >= 0 ? " sel" : "");
+    b.style.setProperty("--mon", PET_LOOK[j].color);
+    b.setAttribute("aria-pressed", String(slot >= 0));
+    b.setAttribute("aria-label", m[0]);
+    const icon = document.createElement("span");
+    icon.className = "mon-icon";
+    if (PET_LOOK[j].img) {
+      const im = document.createElement("img");
+      im.src = PET_LOOK[j].img;
+      im.alt = "";
+      icon.append(im);
+    } else icon.textContent = m[1];
+    const name = document.createElement("span");
+    name.className = "mon-name";
+    name.textContent = m[0];
+    b.append(icon, name);
+    if (slot >= 0) {
+      const badge = document.createElement("b");
+      badge.className = "mon-slot";
+      badge.textContent = String(slot + 1);
+      b.append(badge);
+    }
+    b.onclick = () => {
+      const at = lobbyDeck.indexOf(j);
+      if (at >= 0) lobbyDeck.splice(at, 1); // 다시 누르면 빼기
+      else {
+        if (lobbyDeck.length >= 3) lobbyDeck.shift(); // 3마리가 차 있으면 가장 먼저 고른 것과 교체
+        lobbyDeck.push(j);
+      }
+      el("lobbyErr").textContent = "";
+      sfx("ui_click");
+      renderDeckPicker();
+    };
+    grid.append(b);
+  });
+  dk.append(grid);
 }
 
 el("lobbyStart").onclick = () => {
-  if (lobbySel === "summoner" && new Set(lobbyDeck).size !== 3) {
+  if (lobbySel === "summoner" && (lobbyDeck.length !== 3 || new Set(lobbyDeck).size !== 3)) {
     el("lobbyErr").textContent = "서로 다른 포켓몬 3마리를 골라 주세요.";
     return;
   }
@@ -206,7 +224,8 @@ function syncResults() {
     el("resKills").textContent = String(stats.kills);
     el("resDmg").textContent = Math.round(stats.damage).toLocaleString("ko-KR");
     el("resTime").textContent = fmtTime(stats.time);
-    drawPortrait(el("resChar"), character, 0.75);
+    el("resChar").src = lobbyArt[character].face.src;
+    el("resName").textContent = DISPLAY_NAMES[character];
     r.hidden = false;
   }, 700);
 }
@@ -214,7 +233,6 @@ function syncResults() {
 // 메인 루프에서 매 프레임 호출
 function uiFrame() {
   if (!lobbyReady && assetsReady()) buildLobby();
-  if (isLobbyOpen()) drawLobbyPreview();
-  else updateHUD();
+  if (!isLobbyOpen()) updateHUD();
   syncResults();
 }

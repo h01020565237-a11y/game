@@ -31,40 +31,84 @@ function aimAngle(a) {
   return a.aimT > 0 && a.attackAng !== undefined ? a.attackAng : dirToAngle(a.dir || 0);
 }
 
-// 손에 든 무기 (공격 모션 포함)
-function drawHeldWeapon(a, k) {
+// ===== 공격 모션 (docs/ATTACK_ANIMATION.md) =====
+// swing = { kind, w, t, dur } : 공격이 실제로 일어난 순간 기록 (탄창 부족 등으로 실패하면 기록 안 됨)
+// 단계: 0 준비 → 1 공격 → 2 복귀. 이동 방향과 공격 방향은 따로 (aimT 동안 공격 방향을 바라봄)
+function swingPhase(sw) {
+  const ph = WEAPON_FEEL[sw.w].phases, ms = sw.t * 1000;
+  if (ms < ph[0]) return [0, ms / ph[0]];
+  if (ms < ph[0] + ph[1]) return [1, (ms - ph[0]) / ph[1]];
+  return [2, Math.min(1, (ms - ph[0] - ph[1]) / ph[2])];
+}
+const easeOut = (u) => 1 - Math.pow(1 - u, 3);
+const easeIn = (u) => u * u;
+
+// 무기 모션 계산: 회전 보정, 손에서 뻗는 거리, 반동, 섬광 세기
+function weaponPose(a) {
+  const sw = a.swing, pose = { rot: 0, reach: 4, back: 0, flash: 0, lift: 0, body: 0, w: a.w, trail: 0 };
+  if (!sw) return pose;
+  const f = WEAPON_FEEL[sw.w], [ph, u] = swingPhase(sw);
+  pose.w = sw.w;
+  if (sw.kind === "melee") {
+    const arc = f.swing || 1;
+    if (sw.w === 0) {
+      // 맨손: 살짝 당겼다가 앞으로 지르기
+      pose.reach = ph === 0 ? 4 - 5 * easeOut(u) : ph === 1 ? -1 + 16 * easeOut(u) : 15 - 11 * easeIn(u);
+    } else {
+      pose.rot = ph === 0 ? -arc / 2 * easeOut(u) : ph === 1 ? -arc / 2 + arc * easeOut(u) : arc / 2 * (1 - easeIn(u));
+      pose.reach = 4 + (ph === 1 ? Math.sin(u * Math.PI) * 9 : 0);
+      if (sw.w === 2) pose.lift = ph === 0 ? -8 * easeOut(u) : ph === 1 ? -8 + 12 * easeIn(u) : 4 * (1 - u); // 망치: 들어올렸다 내려찍기
+    }
+    pose.trail = ph === 1 ? easeOut(u) : ph === 2 ? 1 : 0;
+    pose.trailFade = ph === 2 ? 1 - u : 1;
+    pose.body = (f.body || 0) * (ph === 1 ? Math.sin(u * Math.PI) : 0);
+  } else if (sw.kind === "gun") {
+    pose.lift = ph === 0 ? -2 * easeOut(u) : 0;
+    pose.back = ph === 0 ? 0 : ph === 1 ? (f.recoil || 6) * (1 - 0.4 * u) : (f.recoil || 6) * 0.6 * (1 - easeOut(u));
+    pose.flash = ph === 1 ? 1 - u : 0;
+    pose.body = (f.body || 0) * (ph === 1 ? 1 : ph === 2 ? 1 - easeOut(u) : 0);
+  } else if (sw.kind === "throw") {
+    pose.rot = ph === 0 ? -1.4 * easeOut(u) : ph === 1 ? -1.4 + 1.8 * easeOut(u) : 0.4 * (1 - u);
+    pose.reach = ph === 1 ? 4 + 10 * u : 4;
+    pose.released = ph === 2 || (ph === 1 && u > 0.5); // 공격 단계 중간에 손을 떠남
+    pose.body = (f.body || 0) * (ph === 1 ? Math.sin(u * Math.PI) : 0);
+  }
+  return pose;
+}
+
+// 손 위치: 바라보는 방향별 손 앵커 + 캐릭터 보정
+function handPoint(a, k) {
+  const A = HAND_ANCHORS[faceDir(a)], o = HAND_OFFSET[k] || {};
+  return { x: a.x + A.x + (o.x || 0), y: a.y + A.y + (o.y || 0), behind: A.behind };
+}
+
+// 손에 든 무기 그리기
+function drawHeldWeapon(a, k, pose) {
   const sheet = attackSheets[k];
   if (a.swing && sheet && sheet.naturalWidth && ATTACK_SPRITES[k].weaponInHand) return;
-  const art = WEAPON_ART[a.w], im = weaponIcons[a.w];
-  const ang = aimAngle(a), cos = Math.cos(ang), sin = Math.sin(ang);
-  const feel = WEAPON_FEEL[a.w];
-  const u = a.swing ? clamp(a.swing.t / a.swing.dur, 0, 1) : 1;
-  let rot = ang, reach = 13, back = 0;
-  if (a.swing && a.swing.kind === "melee") {
-    const e = 1 - Math.pow(1 - u, 3); // 빠르게 휘두르고 천천히 멈춤
-    rot = ang + (feel.swing || 1) * (e - 0.5);
-    reach = 13 + Math.sin(u * Math.PI) * 8;
-  } else if (a.swing && a.swing.kind === "gun") {
-    back = (feel.recoil || 6) * Math.pow(1 - u, 2); // 반동: 뒤로 밀렸다 돌아옴
-  } else if (a.swing && a.swing.kind === "throw") {
-    rot = ang - 1.2 + u * 1.6;
-    reach = 8 + u * 10;
-  }
-  const hx = a.x + Math.cos(rot) * reach - cos * back, hy = a.y - 22 + Math.sin(rot) * reach * 0.8 - sin * back;
-  // 맨손: 주먹 휘두를 때만 작은 주먹 표시
+  // 수류탄을 던지는 동안에는 주무기 대신 수류탄을 손에 듦 (던진 뒤에는 아무것도 안 듦)
+  const w = a.swing && a.swing.kind === "throw" ? (pose.released ? -1 : GRENADE.weaponId) : a.w;
+  const ang = aimAngle(a), rot = ang + pose.rot;
+  const H = handPoint(a, k);
+  const cx = Math.cos(ang), sy = Math.sin(ang);
+  const hx = H.x + Math.cos(rot) * pose.reach - cx * pose.back;
+  const hy = H.y + Math.sin(rot) * pose.reach * 0.8 - sy * pose.back + pose.lift;
+  if (w < 0) return;
+  const art = WEAPON_ART[w], im = weaponIcons[w];
   if (!art || !im || !im.naturalWidth) {
+    // 맨손: 공격할 때만 주먹 표시
     if (a.swing && a.swing.kind === "melee") {
       g.fillStyle = "#f2c9a0";
       g.strokeStyle = "#7a4d2b";
       g.lineWidth = 1.5;
       g.beginPath();
-      g.arc(hx, hy, 5, 0, 7);
+      g.arc(hx, hy, 5.5, 0, 7);
       g.fill();
       g.stroke();
     }
     return;
   }
-  const s = art.size;
+  const sz = art.size;
   g.save();
   g.translate(hx, hy);
   g.rotate(rot - art.angle);
@@ -74,35 +118,46 @@ function drawHeldWeapon(a, k) {
     g.scale(1, -1);
     g.rotate(-art.angle);
   }
-  g.drawImage(im, -art.grip[0] * s, -art.grip[1] * s, s, s);
+  g.drawImage(im, -art.grip[0] * sz, -art.grip[1] * sz, sz, sz);
   g.restore();
-  // 근접 휘두르기 잔상
-  if (a.swing && a.swing.kind === "melee" && a.w > 0) {
-    const arc = feel.swing || 1;
-    g.save();
-    g.globalAlpha = 0.55 * (1 - u);
-    g.strokeStyle = "#ffffff";
-    g.lineWidth = a.w === 2 ? 7 : 5;
-    g.lineCap = "round";
-    g.beginPath();
-    g.arc(a.x, a.y - 20, 30 + (a.w === 2 ? 8 : 0), ang - arc / 2, ang - arc / 2 + arc * (1 - Math.pow(1 - u, 3)));
-    g.stroke();
-    g.restore();
+  // 총구 섬광 (공격 단계에서만)
+  if (pose.flash > 0) {
+    const fl = WEAPON_FEEL[a.swing.w].flash, len = sz * (1 - art.grip[0]) + 4;
+    drawMuzzleAt(hx + Math.cos(ang) * len, hy + Math.sin(ang) * len * 0.8, ang, fl[0], fl[1], pose.flash);
   }
 }
 
-// 무기를 몸 뒤에 그릴지 (위쪽을 볼 때)
-function weaponBehind(a) {
-  return Math.sin(aimAngle(a)) < -0.35;
+// 근접 베기 궤적
+function drawSlashTrail(a, pose) {
+  if (!pose.trail || !a.swing || a.swing.kind !== "melee") return;
+  const w = a.swing.w, arc = WEAPON_FEEL[w].swing || 1, ang = aimAngle(a);
+  g.save();
+  g.globalAlpha = 0.6 * (pose.trailFade ?? 1);
+  g.strokeStyle = "#ffffff";
+  g.lineWidth = w === 2 ? 8 : w === 0 ? 4 : 5;
+  g.lineCap = "round";
+  g.beginPath();
+  const r = w === 0 ? 22 : w === 2 ? 40 : 34;
+  g.arc(a.x, a.y - 20, r, ang - arc / 2, ang - arc / 2 + arc * pose.trail);
+  g.stroke();
+  g.restore();
 }
 
-// 캐릭터 + 무기 + 피격 깜빡임 + 피격 흔들림
+// 캐릭터 + 무기 + 몸 반동 + 피격 깜빡임
 function drawActorWithFeel(a, k) {
+  const pose = weaponPose(a);
+  const ang = aimAngle(a);
+  // 망치 충격파: 공격 단계가 끝나는 순간 한 번
+  if (a.swing && a.swing.w === 2 && !a.swing.shock && swingPhase(a.swing)[0] === 2) {
+    a.swing.shock = true;
+    const H = handPoint(a, k);
+    fx.push({ x: H.x + Math.cos(ang) * 30, y: a.y + Math.sin(ang) * 24, t: 0.35, shock: true });
+  }
   const jitter = a.hitT > 0 ? (fxRand() * 2 - 1) * 2.5 : 0;
   g.save();
-  g.translate(jitter, 0);
-  const behind = weaponBehind(a);
-  if (behind) drawHeldWeapon(a, k);
+  g.translate(jitter + Math.cos(ang) * pose.body, Math.sin(ang) * pose.body * 0.6);
+  const behind = handPoint(a, k).behind;
+  if (behind) drawHeldWeapon(a, k, pose);
   drawBody(a, k);
   if (a.hitT > 0) {
     // 하얗게 번쩍: 같은 그림을 '밝게 더하기'로 한 번 더 그림
@@ -112,11 +167,28 @@ function drawActorWithFeel(a, k) {
     drawBody(a, k);
     g.restore();
   }
-  if (!behind) drawHeldWeapon(a, k);
+  if (!behind) drawHeldWeapon(a, k, pose);
+  drawSlashTrail(a, pose);
   g.restore();
 }
 
-// 몸: 공격 모션 시트가 있으면 공격 중 그 시트, 아니면 이동 시트를 바라보는 방향으로
+// 사망: 0.6초 동안 하얗게 바래며 가라앉는 임시 효과 (사망 스프라이트는 별도 작업)
+function drawDeath(a, k) {
+  const now = performance.now();
+  if (!a._deadAt) a._deadAt = now;
+  const u = (now - a._deadAt) / 600;
+  if (u >= 1) return;
+  g.save();
+  g.globalAlpha = 1 - u;
+  g.translate(0, u * 10);
+  drawBody(a, k);
+  g.globalCompositeOperation = "lighter";
+  g.globalAlpha = (1 - u) * 0.5;
+  drawBody(a, k);
+  g.restore();
+}
+
+// 몸: 공격 모션 시트가 있으면 공격 중 그 시트, 아니면 이동 시트를 바라보는 방향으로 (이동 그림은 왜곡하지 않음)
 function drawBody(a, k) {
   const sheet = attackSheets[k];
   if (a.swing && sheet && sheet.naturalWidth) {
@@ -128,6 +200,19 @@ function drawBody(a, k) {
   a.dir = faceDir(a);
   renderActor(a, k);
   a.dir = d;
+}
+
+// 망치 충격파 (fx.shock)
+function drawShock(f) {
+  const u = 1 - f.t / 0.35;
+  g.save();
+  g.globalAlpha = 1 - u;
+  g.strokeStyle = "#fff4c8";
+  g.lineWidth = 5 * (1 - u) + 1;
+  g.beginPath();
+  g.ellipse(f.x, f.y, 14 + u * 46, 6 + u * 20, 0, 0, 7);
+  g.stroke();
+  g.restore();
 }
 
 // 타격 이펙트 (fx.impact)
@@ -155,26 +240,22 @@ function drawImpact(f) {
   g.restore();
 }
 
-// 총구 불꽃 (fx.muzzle)
-function drawMuzzle(f) {
-  const o = f.owner, art = WEAPON_ART[o.w];
-  const len = (art ? art.size * 0.75 : 20) + 8;
-  const x = o.x + Math.cos(f.ang) * len, y = o.y - 22 + Math.sin(f.ang) * len * 0.8;
+// 총구 섬광: 길이 len, 폭 wid, 세기 k(0~1)
+function drawMuzzleAt(x, y, ang, len, wid, k) {
   g.save();
-  g.globalAlpha = Math.min(1, f.t / 0.08);
+  g.globalAlpha = Math.min(1, k * 1.4);
   g.translate(x, y);
-  g.rotate(f.ang);
-  const s = f.big ? 1.5 : 1;
+  g.rotate(ang);
   g.fillStyle = "#fff6c2";
   g.beginPath();
-  g.moveTo(0, -5 * s);
-  g.lineTo(18 * s, 0);
-  g.lineTo(0, 5 * s);
+  g.moveTo(0, -wid / 2);
+  g.lineTo(len, 0);
+  g.lineTo(0, wid / 2);
   g.closePath();
   g.fill();
   g.fillStyle = "#ffb52e";
   g.beginPath();
-  g.arc(2, 0, 6 * s, 0, 7);
+  g.arc(2, 0, Math.max(4, wid * 0.55), 0, 7);
   g.fill();
   g.restore();
 }

@@ -206,6 +206,7 @@ function touchHUD() {
   if (grenBtn._on !== gOn) {
     grenBtn._on = gOn;
     grenBtn.classList.toggle("empty", !gOn);
+    grenBtn.setAttribute("aria-disabled", String(!gOn));
   }
   if (swipe) for (let i = 0; i < 3; i++) {
     let id = deck[i], b = menu.children[i], live = pet?.id === id, locked = !live && (summonCD[id] > 0 || !!flight || !!pet && swapCD > 0);
@@ -260,7 +261,7 @@ const grenBtn = document.querySelector("#grenBtn");
 let grenPress = null, grenAim = null;
 grenBtn.onpointerdown = (e) => {
   e.preventDefault();
-  if (over || grenPress) return;
+  if (over || grenPress || !(p.grenades > 0)) return; // 수류탄이 없으면 버튼 비활성
   grenBtn.setPointerCapture(e.pointerId);
   grenPress = { id: e.pointerId, x: e.clientX, y: e.clientY };
   grenAim = null;

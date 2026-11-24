@@ -26,3 +26,35 @@ const CHARACTER_ORDER = ["summoner", "bear", "runner", "suit", "octo", "stripe",
 //   frames: 한 방향의 프레임 수, weaponInHand: 시트에 무기가 그려져 있으면 true (그러면 무기 아이콘을 따로 그리지 않음)
 // 시트가 없는 캐릭터는 이동 시트를 공격 방향으로 돌려 보여 주고, 무기 아이콘으로 동작을 표현
 const ATTACK_SPRITES = {};
+
+// ===== 무기 손 위치 (8방향, 캐릭터 그림 중심 기준 px) =====
+// 순서: N NE E SE S SW W NW. behind: true 면 무기를 몸 뒤에 그림 (오른손에 든 무기가 몸에 가려지는 방향)
+const HAND_ANCHORS = [
+  { x: 10, y: -24, behind: true },  // N
+  { x: 13, y: -22, behind: true },  // NE
+  { x: 9, y: -20, behind: false },  // E
+  { x: 4, y: -18, behind: false },  // SE
+  { x: -9, y: -18, behind: false }, // S
+  { x: -12, y: -20, behind: false },// SW
+  { x: -8, y: -21, behind: true },  // W
+  { x: -3, y: -23, behind: true },  // NW
+];
+// 캐릭터별 손 위치 보정 (몸집·팔 길이가 다를 때). 예: bear: { x: 2, y: 3 }
+const HAND_OFFSET = {};
+
+// ===== 표시 이름 (docs/CHARACTER_NAMES.md, 승인됨) =====
+// 내부 ID·외형·스킬·에셋 경로는 그대로, 화면에 보이는 이름만 바뀜
+const DISPLAY_NAMES = { stripe: "경수", soccer: "재한", support: "은숙", summoner: "현곤", suit: "동기", octo: "상훈", bear: "정용", runner: "기섭" };
+for (const [k, v] of Object.entries(DISPLAY_NAMES)) if (CHARACTER_INFO[k]) CHARACTER_INFO[k].name = v;
+
+// ===== 로비 그림 (tools/make_lobby_art.py 로 이동 시트에서 생성, 고해상도 그림이 오면 경로만 교체) =====
+const LOBBY_ART = {
+  summoner: { face: "assets/lobby/summoner-face.webp", stand: "assets/lobby/summoner-stand.webp" },
+  bear: { face: "assets/lobby/bear-face.webp", stand: "assets/lobby/bear-stand.webp" },
+  runner: { face: "assets/lobby/runner-face.webp", stand: "assets/lobby/runner-stand.webp" },
+  suit: { face: "assets/lobby/suit-face.webp", stand: "assets/lobby/suit-stand.webp" },
+  octo: { face: "assets/lobby/octo-face.webp", stand: "assets/lobby/octo-stand.webp" },
+  stripe: { face: "assets/lobby/stripe-face.webp", stand: "assets/lobby/stripe-stand.webp" },
+  soccer: { face: "assets/lobby/soccer-face.webp", stand: "assets/lobby/soccer-stand.webp" },
+  support: { face: "assets/lobby/support-face.webp", stand: "assets/lobby/support-stand.webp" },
+};

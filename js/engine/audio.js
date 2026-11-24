@@ -96,6 +96,7 @@ function loadSounds() {
 // 효과음 재생. pos 를 주면 내 캐릭터와의 거리로 음량 조절
 function sfx(name, pos) {
   const s = SOUNDS[name];
+  if (s && !s.src && !AUDIO_SYNTH_FALLBACK) return; // 파일 없는 소리는 무음
   if (!s || !audio.ctx || audio.settings.muted || audio.ctx.state !== "running") return;
   const now = audio.ctx.currentTime;
   if (now - (audio.last[name] || -1) < (s.gap || 0.03)) return;
@@ -164,6 +165,7 @@ function syncBgm(force) {
   if (!want) return stopBgm();
   if (audio.bgmNode && !force) return;
   stopBgm();
+  if (!audio.buffers.__bgm && !AUDIO_SYNTH_FALLBACK) return; // 배경음악 파일이 없으면 무음
   if (audio.buffers.__bgm) {
     const s = audio.ctx.createBufferSource();
     s.buffer = audio.buffers.__bgm;

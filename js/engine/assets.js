@@ -33,7 +33,8 @@ const bearImg = loadImage("assets/characters/bear.webp");
 const runnerImg = loadImage("assets/characters/runner-dir.webp");
 // 순서 중요: Object.keys(sheets) 순서로 봇 외형이 배정됨
 const sheets = {};
-sheets.suit = loadImage("assets/characters/suit-sheet.webp");
+// 동기(정장): 배경 제거 때 생긴 안쪽 구멍을 메운 복구본 (원본 suit-sheet.webp 보관, tools/fix_sheet_holes.py)
+sheets.suit = loadImage("assets/characters/suit-sheet-fixed.webp");
 sheets.octo = loadImage("assets/characters/octo-sheet.webp");
 // 줄무늬: ChatGPT 인계 후보(stripe_run) 적용. 같은 그림에서 발 위치만 90px 기준선으로 정렬됨 (기존 파일 stripe-sheet.png 는 보관)
 sheets.stripe = loadImage("assets/characters/stripe-run-sheet.webp");
@@ -60,3 +61,6 @@ for (const [k, v] of Object.entries(ATTACK_SPRITES)) attackSheets[k] = loadImage
 // 곰 Q 질주 전용 시트 (ChatGPT 인계 후보). CHARACTER_ART.bearSprint 가 true 일 때만 사용
 const bearSprintImg = loadImage("assets/characters/bear-sprint-sheet.webp");
 const jungle = loadImage(MAP_JUNGLE.background);
+// 로비 그림
+const lobbyArt = {};
+for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: loadImage(v.face), stand: loadImage(v.stand) };

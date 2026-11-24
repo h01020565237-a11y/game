@@ -14,7 +14,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from sim import INIT  # noqa: E402
 
 CHECKS = r"""
-() => {
+async () => {
   const R = [];
   const ok = (name, cond, info) => R.push({ name, ok: !!cond, info: info === undefined ? "" : JSON.stringify(info) });
   const step = (n) => { for (let i = 0; i < n; i++) { window.__t += 1000 / 60; window.__rafCb(window.__t); } };
@@ -129,6 +129,75 @@ CHECKS = r"""
   throwGrenade = origThrow;
   ok("AI 도 수류탄 사용 (같은 규칙)", botThrows > 0, botThrows);
   ok("AI 수류탄도 최대 3개 이하", bots.every((b) => b.grenades <= 3));
+  // 9) 자동 조준 우선순위: 적 → 상자
+  fresh("summoner");
+  p.w = 3; p.x = 1236; p.y = 600;  // 덤불·벽 없는 자리
+  bots.forEach((b, i) => { b.x = 60 + i * 5; b.y = 60; });
+  boxes[0].x = p.x; boxes[0].y = p.y + 80;
+  bots[0].x = p.x + 60; bots[0].y = p.y;
+  ok("자동 조준: 상자보다 적 우선", aimTarget() === bots[0]);
+  bots[0].x = 60; bots[0].y = 60;
+  ok("자동 조준: 적이 없으면 상자", aimTarget() === boxes[0]);
+
+  // 10) 승리·패배·재시작
+  fresh("bear"); god = false;
+  bots.forEach((b) => (b.hp = 0));
+  step(2);
+  ok("모든 봇이 쓰러지면 승리", over === "승리!" && stats.rank === 1, [over, stats.rank]);
+  await new Promise((r) => setTimeout(r, 900)); // 결과 화면은 0.7초 뒤 표시
+  ok("승리 결과 화면 표시", !document.querySelector("#results").hidden && document.querySelector("#resTitle").textContent === "승리!");
+  document.querySelector("#overBtn").click();
+  step(2);
+  ok("다시 하기로 재시작", over === "" && p.hp === p.max && document.querySelector("#results").hidden && bots.every((b) => b.hp > 0));
+  freeze = true;
+  p.hp = 0; bots[0].hp = 0;
+  step(2);
+  ok("패배 + 순위 집계 (살아 있는 봇 6 → 7위)", over === "패배" && stats.rank === 7, [over, stats.rank]);
+  await new Promise((r) => setTimeout(r, 900));
+  ok("패배 결과 화면 표시", !document.querySelector("#results").hidden && document.querySelector("#resTitle").textContent === "패배");
+  document.querySelector("#resLobby").click();
+  ok("로비로 이동", document.body.classList.contains("lobbyOpen"));
+  document.querySelector("#lobbyStart").click();
+  ok("로비에서 다시 시작", !document.body.classList.contains("lobbyOpen") && over === "");
+
+  // 11) 공격 실패 시 모션·소리 없음
+  fresh("summoner");
+  p.w = 3; p.ammo = 0; p.cd = 0; p.swing = null;
+  attack(p, p.x + 100, p.y);
+  ok("탄창 부족이면 공격 모션 없음", p.swing === null);
+  p.grenades = 0; p.grenCD = 0;
+  ok("수류탄 없으면 투척 안 됨", throwGrenade(p, p.x + 100, p.y) === false && p.swing === null);
+
+  // 13) 모든 상자를 맨손으로 칠 수 있는 자리가 있음 (벽 안에 묻힌 상자 없음)
+  const unreachable = boxes.map((bx, i) => {
+    if (blocked(bx.x, bx.y, 2)) return i;
+    for (let dx = -80; dx <= 80; dx += 4) for (let dy = -80; dy <= 80; dy += 4) {
+      const x = bx.x + dx, y = bx.y + dy;
+      if (Math.hypot(dx, dy) > 80 || x < 18 || y < 18 || x > W - 18 || y > H - 18) continue;
+      if (!terrain(x, y) && !blocked(x, y) && !nearBox(x, y, 30) && clearLine({ x, y }, bx)) return -1;
+    }
+    return i;
+  }).filter((i) => i >= 0);
+  ok("모든 상자를 맨손 사거리(80) 안에서 칠 수 있음", unreachable.length === 0, unreachable);
+
+  // 14) 로비 포켓몬 선택: 3마리, 4번째는 가장 먼저 고른 것과 교체
+  openLobby();
+  [...document.querySelectorAll(".char-tile")].find((t) => t.dataset.k === "summoner").click();
+  const tiles = () => [...document.querySelectorAll(".mon-tile")];
+  ok("포켓몬 선택 타일 8개", tiles().length === 8);
+  lobbyDeck = [0, 3, 5]; renderDeckPicker();
+  tiles()[1].click(); tiles()[2].click(); tiles()[6].click();
+  ok("포켓몬 4번째 선택 시 가장 먼저 고른 것과 교체 (기본 덱 0,3,5 → 1,2,6)", lobbyDeck.join() === "1,2,6", lobbyDeck);
+  tiles()[lobbyDeck[0]].click();
+  ok("선택한 포켓몬 다시 누르면 빠짐", lobbyDeck.length === 2, lobbyDeck);
+  document.querySelector("#lobbyStart").click();
+  ok("3마리가 아니면 시작 안 됨", isLobbyOpen() && document.querySelector("#lobbyErr").textContent.length > 0);
+  tiles()[7].click();
+  document.querySelector("#lobbyStart").click();
+  ok("3마리 고르면 그 덱으로 시작", !isLobbyOpen() && deck.length === 3 && new Set(deck).size === 3, deck);
+
+  // 12) 표시 이름 (CHARACTER_NAMES.md)
+  ok("표시 이름 적용", CHARACTER_ORDER.map((k) => CHARACTER_INFO[k].name).join() === "현곤,정용,기섭,동기,상훈,경수,재한,은숙");
   return R;
 }
 """
@@ -142,7 +211,7 @@ def main(path='index.html'):
     url = pathlib.Path(path).resolve().as_uri()
     errors, fails = [], 0
     with sync_playwright() as pw:
-        b = pw.chromium.launch(executable_path='/usr/bin/google-chrome')
+        b = pw.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--autoplay-policy=user-gesture-required'])
         pg = b.new_page()
         pg.on('pageerror', lambda e: errors.append(str(e)))
         pg.add_init_script(INIT)
@@ -173,6 +242,45 @@ def main(path='index.html'):
         mt_ok = st['mvX'] > 0.5 and st['x'] > x0 + 20 and st['ammo'] < 3
         fails += not mt_ok
         print(('PASS ' if mt_ok else 'FAIL ') + '모바일 멀티터치: 이동하면서 공격 (누르고 있으면 자동 연속 공격)', json.dumps(st) if not mt_ok else '')
+        # 수동 조준 취소: 끌었다가 가운데로 되돌리고 떼면 공격하지 않음
+        m.evaluate("p.ammo = 3; p.cd = 0; p.swing = null;")
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': c2[0], 'y': c2[1], 'id': 3}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': c2[0] - 60, 'y': c2[1], 'id': 3}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': c2[0] - 4, 'y': c2[1], 'id': 3}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        m.wait_for_timeout(100)
+        cancel_ok = m.evaluate('p.ammo') == 3
+        fails += not cancel_ok
+        print(('PASS ' if cancel_ok else 'FAIL ') + '모바일: 끌어서 조준 후 가운데로 되돌리면 취소')
+        # 수동 조준: 왼쪽으로 끌고 떼면 왼쪽으로 1발
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': c2[0], 'y': c2[1], 'id': 4}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': c2[0] - 70, 'y': c2[1], 'id': 4}]})
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        m.wait_for_timeout(80)
+        aim = m.evaluate('[p.ammo, p.attackAng]')
+        aim_ok = aim[0] == 2 and abs(abs(aim[1]) - 3.14159) < 0.05
+        fails += not aim_ok
+        print(('PASS ' if aim_ok else 'FAIL ') + '모바일: 끌어서 조준한 방향으로 공격', '' if aim_ok else aim)
+        # 수류탄 버튼 비활성 (0개)
+        m.evaluate("p.grenades = 0;")
+        m.wait_for_timeout(50)
+        r3 = m.evaluate("JSON.parse(JSON.stringify(document.querySelector('#grenBtn').getBoundingClientRect()))")
+        m.touchscreen.tap(r3['x'] + r3['width'] / 2, r3['y'] + r3['height'] / 2)
+        m.wait_for_timeout(80)
+        g_ok = m.evaluate("document.querySelector('#grenBtn').getAttribute('aria-disabled') === 'true' && shots.every(s => !s.gren)")
+        fails += not g_ok
+        print(('PASS ' if g_ok else 'FAIL ') + '모바일: 수류탄 0개면 버튼 비활성')
+        # 오디오: 첫 터치 후 켜짐, 백그라운드 전환 시 멈춤 → 복귀 시 재개
+        st_a = m.evaluate("audio.ctx ? audio.ctx.state : 'none'")
+        m.evaluate("Object.defineProperty(document, 'hidden', {configurable: true, get: () => true}); document.dispatchEvent(new Event('visibilitychange'));")
+        m.wait_for_timeout(150)
+        st_b = m.evaluate("audio.ctx.state")
+        m.evaluate("Object.defineProperty(document, 'hidden', {configurable: true, get: () => false}); document.dispatchEvent(new Event('visibilitychange'));")
+        m.wait_for_timeout(300)
+        st_c = m.evaluate("audio.ctx.state")
+        a_ok = st_a == 'running' and st_b == 'suspended' and st_c == 'running'
+        fails += not a_ok
+        print(('PASS ' if a_ok else 'FAIL ') + '오디오: 첫 터치 후 켜짐 → 백그라운드 멈춤 → 복귀 재개', '' if a_ok else [st_a, st_b, st_c])
         b.close()
     print(f'errors={errors[:3]}')
     print('ALL PASS' if not fails and not errors else f'{fails} FAIL')

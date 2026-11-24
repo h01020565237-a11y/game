@@ -182,7 +182,7 @@ function throwGrenade(a, x, y) {
   if (a === p) p.stealth = 0;
   a.attackAng = ang;
   a.aimT = 0.35;
-  a.swing = { kind: "throw", t: 0, dur: 0.3 };
+  a.swing = { kind: "throw", w: GRENADE.weaponId, t: 0, dur: WEAPON_FEEL[GRENADE.weaponId].dur };
   shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(a.x + Math.cos(ang) * len, 0, W), ty: clamp(a.y + Math.sin(ang) * len, 0, H), t: GRENADE.fuse, d, gren: true });
   sfx("grenade_throw", a);
   return true;
@@ -197,7 +197,7 @@ function attack(a, x, y) {
   // 타격감: 공격 방향으로 몸·무기 돌리기, 무기별 모션·반동·총구 불꽃·효과음
   const kind = weaponKind(a);
   a.aimT = 0.35;
-  a.swing = { kind, t: 0, dur: WEAPON_FEEL[a.w].dur };
+  a.swing = { kind, w: a.w, t: 0, dur: WEAPON_FEEL[a.w].dur };
   sfx(WEAPON_FEEL[a.w].sound, a);
   if (a === p && WEAPON_FEEL[a.w].kick) shake(WEAPON_FEEL[a.w].kick);
   // 탄창 1발 소모, 다음 발까지 짧은 간격만 둠 (충전은 reloadTime 마다 1발)
@@ -206,7 +206,6 @@ function attack(a, x, y) {
   d *= hasGear(a, 2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;
-  if (kind === "gun") fx.push({ x: a.x, y: a.y, t: 0.08, muzzle: true, ang, big: a.w >= 4, owner: a });
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
     for (let b of targets(a)) {

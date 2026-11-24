@@ -210,6 +210,8 @@ function draw() {
       g.restore();
     }
   }
+  // 쓰러진 캐릭터: 사라지기 전 잠깐 바래는 효과
+  for (const a of [p, ...bots]) if (a.hp <= 0) drawDeath(a, a === p ? character : a.visual);
   for (let a of [p, ...bots].filter((a2) => a2.hp > 0 && (a2 === p || visible(p, a2))).sort((a2, b) => a2.y - b.y)) {
     g.fillStyle = a === p ? "#337ddc" : "#b84949";
     g.beginPath();
@@ -232,7 +234,7 @@ function draw() {
     g.fillStyle = "white";
     g.font = "12px sans-serif";
     g.textAlign = "center";
-    g.fillText(weapons[a.w][0], a.x, a.y + 28);
+    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual] + " · " + weapons[a.w][0], a.x, a.y + 28);
   }
   if (pet) {
     if (pet.id === 0) drawPika(pet);
@@ -289,9 +291,17 @@ function draw() {
       g.restore();
       continue;
     }
+    // 총알: 판정은 발밑 좌표, 그림은 총구·몸통 높이(20px 위)에 맞춰 그림
+    const by = s.y - 20;
+    g.strokeStyle = "#fff2a388";
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(s.x - s.vx * 0.012, by - s.vy * 0.012);
+    g.lineTo(s.x, by);
+    g.stroke();
     g.fillStyle = "#fff2a3";
     g.beginPath();
-    g.arc(s.x, s.y, s.gren ? 7 : 4, 0, 7);
+    g.arc(s.x, by, s.soccer ? 7 : 4, 0, 7);
     g.fill();
   }
   if (flight) {
@@ -311,8 +321,8 @@ function draw() {
       drawImpact(f);
       continue;
     }
-    if (f.muzzle) {
-      drawMuzzle(f);
+    if (f.shock) {
+      drawShock(f);
       continue;
     }
     if (f.healRing) {

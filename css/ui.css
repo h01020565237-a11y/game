@@ -175,7 +175,7 @@ body.lobbyOpen #lobby { display: flex; }
   overflow: hidden;
   cursor: pointer;
 }
-.char-tile canvas { width: 100%; height: 100%; display: block; }
+.char-tile img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
 .char-tile span {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -198,7 +198,20 @@ body.lobbyOpen #lobby { display: flex; }
   overflow: hidden;
   min-width: 0;
 }
-#charPreview { position: relative; z-index: 1; width: min(100%, 62cqh); height: auto; margin-bottom: 4%; image-rendering: auto; }
+#charPreview {
+  position: relative;
+  z-index: 1;
+  height: min(78%, 58cqh);
+  width: auto;
+  max-width: 92%;
+  object-fit: contain;
+  margin-bottom: 7%;
+  filter: drop-shadow(0 6px 4px #0005);
+  animation: bl-idle 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bl-idle { 50% { transform: translateY(-4px) scale(1.01); } }
+@media (prefers-reduced-motion: reduce) { #charPreview { animation: none; } }
 .podium {
   position: absolute;
   left: 50%;
@@ -253,7 +266,7 @@ body.lobbyOpen #lobby { display: flex; }
 }
 .res-title.lose { color: #c9d6f2; text-shadow: 0 3px 0 #33416b, -2px -2px 0 #1b2647, 2px -2px 0 #1b2647, -2px 2px 0 #1b2647, 2px 2px 0 #1b2647; }
 .res-body { display: flex; gap: clamp(8px, 3cqw, 20px); align-items: center; width: 100%; }
-#arena #resChar { width: clamp(70px, 26cqh, 150px); height: auto; aspect-ratio: 1; border-radius: 16px; background: linear-gradient(180deg, #5d8ae8, #2c4aa8); border: 3px solid var(--bl-edge); flex: none; }
+#arena #resChar { object-fit: cover; width: clamp(70px, 26cqh, 150px); height: auto; aspect-ratio: 1; border-radius: 16px; background: linear-gradient(180deg, #5d8ae8, #2c4aa8); border: 3px solid var(--bl-edge); flex: none; }
 .res-stats { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(4px, 1.5cqh, 10px); }
 .stat { background: #0f183899; border: 2px solid #4f78d6; border-radius: 12px; padding: clamp(4px, 1.4cqh, 10px); text-align: center; display: flex; flex-direction: column; }
 .stat span { font-size: clamp(11px, 3.2cqh, 14px); color: #9fd0ff; }
@@ -287,3 +300,31 @@ body.lobbyOpen #lobby { display: flex; }
 .stick { background: radial-gradient(circle, #1c2f6e66 0%, #1c2f6e99 70%); border: 3px solid #8fc1ffcc; }
 .stick i { background: radial-gradient(circle at 40% 35%, #8cc4ff, #2f7bff 60%, #1b4fc0); box-shadow: 0 2px 0 #0b1436; }
 #summonMenu .choice { font-family: var(--bl-font); }
+.res-who { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+#resName { font-size: clamp(14px, 4.5cqh, 20px); color: #fff; text-shadow: 0 2px 0 var(--bl-deep); }
+
+/* 소환사 포켓몬 선택 (이미지 타일) */
+#lobbyDeck { display: block; }
+.deck-head { font-size: clamp(11px, 3.2cqh, 14px); color: #cfe1ff; margin-bottom: 4px; }
+.mon-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(3px, 1cqh, 6px); }
+.mon-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: clamp(2px, 0.8cqh, 5px) 2px;
+  margin: 0;
+  border: 2px solid #13204d;
+  border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mon) 55%, #2c4aa8), #1b2a5e);
+  color: #fff;
+  font-family: var(--bl-font);
+  cursor: pointer;
+  min-width: 0;
+}
+.mon-tile.sel { border-color: var(--bl-gold); box-shadow: 0 0 0 2px var(--bl-gold); }
+.mon-icon { display: grid; place-items: center; width: clamp(22px, 7.5cqh, 38px); aspect-ratio: 1; border-radius: 50%; background: #ffffff33; font-size: clamp(14px, 5cqh, 24px); line-height: 1; }
+.mon-icon img { width: 100%; height: 100%; object-fit: contain; }
+.mon-name { font-size: clamp(9px, 2.6cqh, 12px); white-space: nowrap; overflow: hidden; max-width: 100%; }
+.mon-slot { position: absolute; top: -6px; right: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--bl-gold); color: #3b2700; font-size: 12px; line-height: 18px; font-weight: normal; }

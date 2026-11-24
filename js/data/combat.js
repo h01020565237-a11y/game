@@ -42,17 +42,21 @@ const GRENADE = { max: 3, perPickup: 1, gap: 0.6, weaponId: 6, radius: 90, fuse:
 // amount: 회복량(최대 HP 대비 비율), 획득 즉시 회복. 체력이 가득 차 있으면 줍지 않음
 const HEAL = { ratio: 0.25 };
 
-// ===== 타격감 (그림·소리만, 판정과 무관) =====
-// dur: 공격 모션 길이(초), sound: 효과음 이름(js/data/sounds.js), kick: 내 화면 반동 세기(px), swing: 근접 휘두르기 각도(라디안)
+// ===== 공격 모션·타격감 (그림·소리만, 판정·충전·쿨타임과 무관) =====
+// docs/ATTACK_ANIMATION.md (chatgpt-dev) 기준. phases: [준비, 공격, 복귀] 밀리초
+// sound: 효과음 이름(js/data/sounds.js), kick: 내 화면 반동(px), swing: 근접 휘두르는 각도(라디안)
+// recoil: 총 반동(px), flash: 총구 섬광 [길이, 폭], body: 몸 반동(px, +는 앞으로)
 const WEAPON_FEEL = [
-  { dur: 0.16, sound: "punch", swing: 0.9 },              // 맨손
-  { dur: 0.2, sound: "sword", swing: 1.6 },               // 검
-  { dur: 0.32, sound: "hammer", swing: 2.0, kick: 5 },    // 망치
-  { dur: 0.12, sound: "pistol", recoil: 6 },              // 권총
-  { dur: 0.22, sound: "shotgun", recoil: 10, kick: 4 },   // 산탄총
-  { dur: 0.3, sound: "sniper", recoil: 12, kick: 6 },     // 저격총
-  { dur: 0.3, sound: "grenade_throw" },                   // 수류탄
+  { phases: [40, 70, 90], sound: "punch", swing: 0.6, body: 3 },                       // 맨손: 주먹 전진, 짧은 타격
+  { phases: [60, 90, 120], sound: "sword", swing: 1.8, body: 2 },                      // 검: 손 기준 회전, 베기 궤적
+  { phases: [90, 100, 160], sound: "hammer", swing: 2.2, kick: 5, body: 3, shock: 1 }, // 망치: 들어올림 → 내려찍기 → 충격파
+  { phases: [30, 50, 100], sound: "pistol", recoil: 6, flash: [16, 5], body: -1.5 },   // 권총: 총구 섬광, 짧은 반동
+  { phases: [40, 70, 150], sound: "shotgun", recoil: 11, flash: [20, 12], kick: 4, body: -3 }, // 산탄총: 넓은 섬광, 강한 반동
+  { phases: [50, 60, 180], sound: "sniper", recoil: 13, flash: [34, 5], kick: 6, body: -3 },   // 저격총: 긴 섬광, 반동
+  { phases: [80, 80, 120], sound: "grenade_throw", body: 2 },                          // 수류탄: 팔 투척
 ];
+// 모션 전체 길이(초)
+WEAPON_FEEL.forEach((f) => (f.dur = (f.phases[0] + f.phases[1] + f.phases[2]) / 1000));
 
 // ===== 무기 손 그림 (교체 가능) =====
 // 지금은 아이콘(assets/weapons)을 손에 든 모습으로 사용. 손 전용 그림이 오면 src 만 바꾸면 됨
