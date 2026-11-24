@@ -388,3 +388,7 @@ body.mobile.rot.menuOpen #menuPanel {
   max-height: 84vw;
   transform: translate(-50%, -50%) rotate(90deg);
 }
+/* 공격 버튼: 두 줄 (공격 / 탄창 ●●○) */
+#touch #atk {
+  white-space: pre-line;
+}

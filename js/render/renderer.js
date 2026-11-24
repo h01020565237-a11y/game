@@ -31,6 +31,20 @@ function bar(x, y, hp, max) {
   g.fillStyle = "#7de36c";
   g.fillRect(x - 23, y, 46 * clamp(hp / max, 0, 1), 6);
 }
+// 탄창 표시: HP 바 아래 3칸, 충전 중인 칸은 차오르는 정도만큼 표시
+function ammoBar(x, y, a) {
+  const n = AMMO.max, gap = 2, w = (46 - gap * (n - 1)) / n;
+  for (let i = 0; i < n; i++) {
+    const bx = x - 23 + i * (w + gap);
+    g.fillStyle = "#26332b";
+    g.fillRect(bx, y, w, 4);
+    const f = i < a.ammo ? 1 : i === a.ammo ? clamp(a.reload / reloadTime(a), 0, 1) : 0;
+    if (f > 0) {
+      g.fillStyle = f === 1 ? "#ffd35b" : "#ffd35b88";
+      g.fillRect(bx, y, w * f, 4);
+    }
+  }
+}
 function coneDraw(x, y, ang, r, half, alpha = 0.22) {
   g.save();
   g.fillStyle = `rgba(255,240,170,${alpha})`;
@@ -55,7 +69,27 @@ function draw() {
     const sx = jungle.naturalWidth / W, sy = jungle.naturalHeight / H;
     g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
   } else scenery();
-  if (aiming && p.w !== 6) {
+  if (manualAim && !manualAim.cancel) {
+    // 직접 조준 미리보기
+    const ang = Math.atan2(manualAim.y, manualAim.x), r = weapons[p.w][3];
+    if (p.w === 6) {
+      const d = r * manualAim.mag, tx = clamp(p.x + manualAim.x * d, 0, W), ty = clamp(p.y + manualAim.y * d, 0, H);
+      g.save();
+      g.strokeStyle = "#fff0aa";
+      g.fillStyle = "rgba(255,240,170,0.18)";
+      g.lineWidth = 2;
+      g.setLineDash([6, 4]);
+      g.beginPath();
+      g.moveTo(p.x, p.y);
+      g.lineTo(tx, ty);
+      g.stroke();
+      g.beginPath();
+      g.arc(tx, ty, 90, 0, 7);
+      g.fill();
+      g.stroke();
+      g.restore();
+    } else coneDraw(p.x, p.y, ang, r, Math.max(angles[p.w], 6) * Math.PI / 360, 0.3);
+  } else if (aiming && p.w !== 6) {
     let b = aimTarget();
     let ang = b ? Math.atan2(b.y - p.y, b.x - p.x) : p.dir * Math.PI / 4 - Math.PI / 2;
     coneDraw(p.x, p.y, ang, weapons[p.w][3], angles[p.w] * Math.PI / 360);
@@ -143,6 +177,7 @@ function draw() {
       g.fillText("🍯", a.x + 24, a.y - 20);
     }
     bar(a.x, a.y - 54, a.hp, a.max);
+    if (a === p) ammoBar(a.x, a.y - 47, a);
     g.fillStyle = "white";
     g.font = "12px sans-serif";
     g.textAlign = "center";
@@ -290,6 +325,6 @@ function draw() {
     g.textAlign = "center";
     g.fillText(over, VW / 2, VH / 2);
   }
-  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} | 장비 ${p.gear.map((i) => gear[i]).join(", ") || "없음"} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
+  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} | 장비 ${p.gear.map((i) => gear[i]).join(", ") || "없음"} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
   setText("msg", extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택");
 }

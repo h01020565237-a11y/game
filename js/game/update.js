@@ -94,7 +94,10 @@ function update(dt) {
       }
     }
   }
-  for (let a of [p, ...bots]) a.cd = Math.max(0, a.cd - dt);
+  for (let a of [p, ...bots]) {
+    a.cd = Math.max(0, a.cd - dt);
+    updateAmmo(a, dt);
+  }
   p.dashCD = Math.max(0, p.dashCD - dt);
   let ox = p.x, oy = p.y;
   if (character === "runner" && p.tackle > 0) {

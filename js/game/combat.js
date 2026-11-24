@@ -95,13 +95,32 @@ function clearLine(a, b) {
   for (let i = 1; i < n; i++) if (blocked(a.x + (b.x - a.x) * i / n, a.y + (b.y - a.y) * i / n, 2)) return false;
   return true;
 }
+// 탄창 1발이 충전되는 시간 = 무기 쿨타임 (손목시계 -10%)
+function reloadTime(a) {
+  return weapons[a.w][2] * (a.gear.includes(4) ? 0.9 : 1);
+}
+function updateAmmo(a, dt) {
+  if (a.ammo >= AMMO.max) {
+    a.reload = 0;
+    return;
+  }
+  a.reload += dt;
+  const t = reloadTime(a);
+  if (a.reload >= t) {
+    a.reload -= t;
+    a.ammo++;
+  }
+}
 function attack(a, x, y) {
   if (a.stun > 0) return;
   if (a.cd > 0) return;
+  if (a.ammo !== undefined && a.ammo < 1) return; // 탄창이 비었으면 충전될 때까지 대기
   a.reveal = 1.2;
   if (a === p) p.stealth = 0;
   let [name, d, cd, r] = weapons[a.w];
-  a.cd = cd * (a.gear.includes(4) ? 0.9 : 1);
+  // 탄창 1발 소모, 다음 발까지 짧은 간격만 둠 (충전은 reloadTime 마다 1발)
+  a.ammo -= 1;
+  a.cd = AMMO.fireGap;
   d *= a.gear.includes(2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;

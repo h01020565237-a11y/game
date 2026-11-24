@@ -33,7 +33,7 @@ const visible = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && (!(b.ste
 const terrain = (x, y, r = 16) => wet(x, y) || wet(x + r, y) || wet(x - r, y) || wet(x, y + r) || wet(x, y - r);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function actor(x, y) {
-  return { x, y, hp: 3e3, max: 3e3, w: 0, gear: [], cd: 0, dir: 4, frame: 0, moving: false, dash: 0, dashCD: 0, dx: 0, dy: 0 };
+  return { x, y, hp: 3e3, max: 3e3, w: 0, gear: [], cd: 0, ammo: AMMO.max, reload: 0, dir: 4, frame: 0, moving: false, dash: 0, dashCD: 0, dx: 0, dy: 0 };
 }
 function nearBox(x, y, r) {
   for (let i = 0; i < boxes.length; i++) if (Math.hypot(x - boxes[i].x, y - boxes[i].y) < r) return true;
