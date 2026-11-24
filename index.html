@@ -65,6 +65,24 @@
     </div>
 
     <!-- 로비 (캐릭터 선택) -->
+    <!-- 타이틀 화면 (처음 열 때). 레이어: 배경 → 16:9 무대(로고·캐릭터·버튼) -->
+    <section id="title" class="screen" hidden aria-label="타이틀">
+      <img id="titleBg" class="title-bg" alt="">
+      <div class="title-stage">
+        <img id="titleLogo" class="title-logo" alt="주엽공고">
+        <div id="titleChars" class="title-chars"></div>
+        <button id="titleStart" class="btn btn-gold title-start">시작하기</button>
+        <button id="titleSettings" class="btn btn-ghost title-gear" aria-label="설정">⚙ 설정</button>
+        <span id="titleVersion" class="title-version"></span>
+      </div>
+      <div id="titleSettingsPanel" class="panel title-settings" hidden>
+        <h3>설정</h3>
+        <label>배경음 <input type="range" id="tVolBgm" min="0" max="100"></label>
+        <label>효과음 <input type="range" id="tVolSfx" min="0" max="100"></label>
+        <div class="row"><button id="tMute" class="btn btn-ghost">음소거</button><button id="tClose" class="btn btn-blue">닫기</button></div>
+      </div>
+    </section>
+
     <section id="lobby" class="screen" aria-label="캐릭터 선택">
       <div class="panel lobby-card">
         <div class="lobby-grid" id="charGrid"></div>
@@ -167,6 +185,7 @@
   <script src="js/data/pets.js"></script>
   <script src="js/data/characters.js"></script>
   <script src="js/data/waves.js"></script>
+  <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>
   <script src="js/engine/assets.js"></script>
   <script src="js/engine/world.js"></script>
@@ -189,6 +208,7 @@
   <script src="js/ui/touch.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/single.js"></script>
+  <script src="js/ui/title.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
