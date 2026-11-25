@@ -98,9 +98,11 @@
           <div id="lobbyDeck"></div>
           <p id="lobbyErr" role="alert"></p>
           <div class="lobby-actions">
-            <button id="lobbySingle" class="btn btn-blue">싱글 미션</button>
+            <button id="lobbySingle" class="btn btn-blue" hidden>싱글 미션</button>
             <button id="lobbyDetail" class="btn btn-ghost">상세 보기</button>
-            <button id="lobbyStart" class="btn btn-gold">선택</button>
+            <button id="lobbyPlay" class="btn btn-gold">게임 시작</button>
+            <!-- 배틀로얄 바로 시작 (모드 선택의 PvP → 배틀로얄 이 누름. 테스트도 사용) -->
+            <button id="lobbyStart" class="btn btn-gold" hidden>배틀로얄 시작</button>
           </div>
         </div>
       </div>
@@ -126,13 +128,44 @@
       </div>
     </section>
 
+    <!-- 게임 모드 선택: 싱글 / 웨이브 / PvP (UI 시안 V1) -->
+    <section id="modePanel" class="screen" hidden aria-label="게임 모드 선택">
+      <div class="mode-wrap">
+        <div class="mode-head"><button id="modeBack" class="btn btn-ghost">◀ 캐릭터 선택</button></div>
+        <h2 class="mode-title">게임 모드 선택</h2>
+        <p class="mode-sub">플레이할 모드를 선택하세요</p>
+        <div class="mode-row">
+          <button class="mode-card single" id="modeSingle"><img id="modeImgSingle" alt=""><b>싱글 모드</b><span>스토리 · 동료 영입</span></button>
+          <button class="mode-card wave" id="modeWave"><img id="modeImgWave" alt=""><b>웨이브 모드</b><span>무한 생존 · 성장</span></button>
+          <button class="mode-card pvp" id="modePvp"><img id="modeImgPvp" alt=""><b>PvP 모드</b><span>배틀로얄 · 대전</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 웨이브 모드: 무한 생존 -->
+    <section id="wavePanel" class="screen" hidden aria-label="웨이브 모드">
+      <div class="panel single-card">
+        <div class="single-head"><h3>웨이브 모드 · 무한 생존 <small>영입한 캐릭터로 최고 웨이브 도전</small></h3><button id="waveClose" class="btn btn-ghost">◀ 모드 선택</button></div>
+        <div id="endlessList" class="endless-list"></div>
+      </div>
+    </section>
+
+    <!-- PvP 모드 -->
+    <section id="pvpPanel" class="screen" hidden aria-label="PvP 모드">
+      <div class="panel single-card">
+        <div class="single-head"><h3>PvP 모드</h3><button id="pvpClose" class="btn btn-ghost">◀ 모드 선택</button></div>
+        <div class="pvp-list">
+          <button id="pvpBR" class="mode-sub-btn"><b>배틀로얄</b><span>8명 중 마지막 1명 · 자기장</span></button>
+          <button class="mode-sub-btn" disabled><b>1:1 대전</b><span>준비 중</span></button>
+        </div>
+      </div>
+    </section>
+
     <!-- 싱글 미션 선택 + 스토리 극장 -->
     <section id="singlePanel" class="screen" hidden aria-label="싱글 미션">
       <div class="panel single-card">
-        <div class="single-head"><h3>싱글 미션</h3><button id="singleClose" class="btn btn-ghost">닫기</button></div>
+        <div class="single-head"><h3>싱글 모드 · 스토리</h3><button id="singleClose" class="btn btn-ghost">◀ 모드 선택</button></div>
         <div id="missionList" class="mission-list"></div>
-        <h4>무한 생존 <small>영입한 캐릭터로 최고 웨이브 도전</small></h4>
-        <div id="endlessList" class="endless-list"></div>
         <h4>스토리 극장</h4>
         <div id="theaterList" class="theater-list"></div>
       </div>

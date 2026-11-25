@@ -517,3 +517,25 @@ body.lobbyOpen #lobby { display: flex; }
 .cs-vol input { width: 140px; vertical-align: middle; }
 .theater-list .btn.test { opacity: .75; border-style: dashed; }
 #csSkip { z-index: 6; }
+
+/* ===== 게임 모드 선택 (UI 시안 V1) ===== */
+#modePanel, #wavePanel, #pvpPanel { z-index: 12; }
+#modePanel { background: radial-gradient(ellipse at 50% 40%, #13204aee, #05070cf5); }
+.mode-wrap { width: min(94cqw, 860px); display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 1.4cqh, 10px); }
+.mode-head { align-self: stretch; display: flex; }
+body.mobile .mode-title, .mode-title { display: block; margin: 0; color: #ffd86b; font-size: clamp(22px, 7cqh, 40px); text-shadow: 0 3px 0 #6b3d00, 0 0 18px #000; }
+.mode-sub { margin: 0; color: #dfe7ff; font-size: clamp(11px, 3cqh, 15px); }
+.mode-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 2cqw, 18px); width: 100%; margin-top: clamp(4px, 1.5cqh, 10px); }
+.mode-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: clamp(10px, 3cqh, 22px) 8px; border-radius: 14px; border: 1.5px solid #ffffff55; color: #fff; cursor: pointer; box-shadow: 0 8px 24px #0008; transition: transform .12s, border-color .12s; }
+.mode-card.single { background: linear-gradient(160deg, #2a5d93ee, #1a2f55ee); }
+.mode-card.wave { background: linear-gradient(160deg, #2c3d74ee, #1c2348ee); }
+.mode-card.pvp { background: linear-gradient(160deg, #6b3a3aee, #3b2430ee); }
+.mode-card:hover, .mode-card:focus-visible { transform: translateY(-3px); border-color: #c9a7ff; }
+.mode-card img { width: clamp(56px, 22cqh, 110px); aspect-ratio: 1; object-fit: contain; border-radius: 14px; background: #2f6fe0; }
+.mode-card b { font-size: clamp(15px, 5cqh, 24px); font-weight: 700; }
+.mode-card span { font-size: clamp(11px, 3cqh, 14px); color: #d7def5; }
+.pvp-list { display: grid; gap: 8px; }
+.mode-sub-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 16px; border-radius: 12px; border: 1px solid #5a78b8; background: #18264acc; color: #fff; text-align: left; cursor: pointer; }
+.mode-sub-btn b { font-size: 16px; }
+.mode-sub-btn span { font-size: 12px; color: #9fb4dc; }
+.mode-sub-btn:disabled { opacity: .5; cursor: default; }

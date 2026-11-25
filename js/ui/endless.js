@@ -16,6 +16,7 @@ function renderEndlessList() {
 }
 function startEndless(k) {
   el("singlePanel").hidden = true;
+  el("wavePanel").hidden = true;
   beginEndless(k);
   sfx("ui_click");
   document.querySelector("#character").value = k;

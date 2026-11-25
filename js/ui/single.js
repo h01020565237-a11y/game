@@ -15,7 +15,6 @@ function openSinglePanel() {
   sfx("ui_click");
 }
 function renderSinglePanel() {
-  renderEndlessList();
   const list = el("missionList");
   list.innerHTML = "";
   for (const ms of SINGLE_MISSIONS) {
@@ -68,6 +67,51 @@ el("lobbySingle").onclick = openSinglePanel;
 el("singleClose").onclick = () => {
   el("singlePanel").hidden = true;
   sfx("ui_click");
+  if (!el("lobby").hidden) openModePanel(); // 로비에서 왔으면 모드 선택으로 되돌아감
+};
+
+// ----- 게임 모드 선택: 로비 "게임 시작" → 싱글 / 웨이브 / PvP → 각 하위 메뉴 -----
+function openModePanel() {
+  el("modeImgSingle").src = lobbyArt.suit.face.src;
+  el("modeImgWave").src = lobbyArt.bear.face.src;
+  el("modeImgPvp").src = lobbyArt.soccer.face.src;
+  el("modePanel").hidden = false;
+}
+function closeModePanels() {
+  for (const id of ["modePanel", "wavePanel", "pvpPanel", "singlePanel"]) el(id).hidden = true;
+}
+el("lobbyPlay").onclick = () => {
+  sfx("ui_click");
+  openModePanel();
+};
+el("modeBack").onclick = () => {
+  sfx("ui_click");
+  el("modePanel").hidden = true;
+};
+el("modeSingle").onclick = () => {
+  el("modePanel").hidden = true;
+  openSinglePanel();
+};
+el("modeWave").onclick = () => {
+  sfx("ui_click");
+  el("modePanel").hidden = true;
+  renderEndlessList();
+  el("wavePanel").hidden = false;
+};
+el("modePvp").onclick = () => {
+  sfx("ui_click");
+  el("modePanel").hidden = true;
+  el("pvpPanel").hidden = false;
+};
+for (const id of ["waveClose", "pvpClose"]) el(id).onclick = () => {
+  sfx("ui_click");
+  el(id.replace("Close", "Panel")).hidden = true;
+  openModePanel();
+};
+el("pvpBR").onclick = () => {
+  closeModePanels();
+  el("lobbyErr").textContent = "";
+  el("lobbyStart").click(); // 고른 캐릭터로 배틀로얄 (기존 시작 규칙·검사 그대로). 못 하면 로비에 이유 표시
 };
 
 // ----- 웨이브 HUD (전투 화면 위쪽) -----
