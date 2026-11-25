@@ -1,6 +1,6 @@
 """소환수 그래픽 팩 적용 테스트: python3 tests/summon_gfx.py [index.html] [비교할 이전 빌드.html]
-- 그래픽 매핑: 피카츄→라이트리, 파이리→파이리온, 꼬부기→아쿠론, 이상해씨→플로라곤, 고오스→가스트론, 잠만보→잠토리
-  라프라스·푸린은 기존 그대로, 바위론·윈드버드는 후보(게임에 안 나옴), 소환수 수 그대로
+- 그래픽 매핑 (V2): 피카츄→썬더리, 파이리→볼케론, 꼬부기→아쿠비, 이상해씨→플로라온, 고오스→팬텀랜턴, 잠만보→그라바크
+  라프라스·푸린은 기존 그대로, 크리스골렘·스카이런은 후보(게임에 안 나옴), 소환수 수 그대로
 - 능력치·스킬·공격 판정(맞는 시점)·쿨타임: 이전 빌드와 완전히 같음
 - 8방향: 이동·공격 방향에 맞는 시트 줄, 공격 모션 1번 재생 후 이동/대기로 복귀
 - 소환 버튼 아이콘 교체, 화면 크기(캐릭터와 비율), 성능, 그림이 없는 공개 빌드에서도 에러 없이 대체 표시"""
@@ -32,12 +32,12 @@ with sync_playwright() as pw:
         po.context.close()
     m = pg.evaluate("PET_DEX.map((d, i) => { const s = summonGfx(i); return s ? [s.key, +s.grow.toFixed(2)] : null; })")
     names = pg.evaluate("mons.map((x) => x[0])")
-    want = {'피카츄': 'lightri', '파이리': 'pyrion', '꼬부기': 'aquaron', '이상해씨': 'floragon', '고오스': 'gastron', '잠만보': 'jamtori'}
+    want = {'피카츄': 'thunderi', '파이리': 'bolkeron', '꼬부기': 'akubi', '이상해씨': 'floraon', '고오스': 'phantomlantern', '잠만보': 'gravak'}
     ok('기본 소환수 6종 그래픽 매핑', all(m[names.index(k)] and m[names.index(k)][0] == v for k, v in want.items()), m[:8])
     ok('라프라스·푸린은 기존 그림 그대로 (매핑 없음)', m[names.index('라프라스')] is None and m[names.index('푸린')] is None)
     evo = {n: m[i] for i, n in enumerate(names) if n in ('라이츄', '리자몽', '거북왕', '팬텀')}
-    ok('진화형은 기본형 그래픽 + 단계별 크게', evo['라이츄'][0] == 'lightri' and evo['리자몽'] == ['pyrion', 1.16] and evo['거북왕'][0] == 'aquaron' and evo['팬텀'][0] == 'gastron', evo)
-    ok('바위론·윈드버드: 후보 등록만, 게임 소환수 목록엔 없음', pg.evaluate("SUMMON_GFX.bawiron.candidate && SUMMON_GFX.windbird.candidate && !Object.values(SUMMON_BY_PET).some((k) => k === 'bawiron' || k === 'windbird')"))
+    ok('진화형은 기본형 그래픽 + 단계별 크게', evo['라이츄'][0] == 'thunderi' and evo['리자몽'] == ['bolkeron', 1.16] and evo['거북왕'][0] == 'akubi' and evo['팬텀'][0] == 'phantomlantern', evo)
+    ok('크리스골렘·스카이런: 후보 등록만, 게임 소환수 목록엔 없음', pg.evaluate("SUMMON_GFX.crystalgolem.candidate && SUMMON_GFX.skyreyon.candidate && !Object.values(SUMMON_BY_PET).some((k) => k === 'crystalgolem' || k === 'skyreyon')"))
     loaded = pg.evaluate("Object.keys(SUMMON_GFX).every((k) => ['idle','move','attack'].every((a) => !!summonImg(SUMMON_GFX[k].anims[a])) && !!summonImg(SUMMON_GFX[k].icon))")
     ok('8종 시트(대기·이동·공격)·아이콘 불러옴 (로컬)', loaded)
     # 실제 게임: 현곤 웨이브
@@ -64,10 +64,10 @@ with sync_playwright() as pw:
       out.size = +cw.toFixed(1);
       g.drawImage = orig; bots = []; return out; })()''')
     print('dir', r)
-    ok('이동 방향(E)에 맞는 이동 시트·줄', r['moveDir'] == 2 and r['moveSheet'] == 'lightri/move.webp' and r['moveRow'] == 2, r)
-    ok('공격 방향(NW)에 맞는 공격 시트·줄', r['atkDir'] == 7 and r['atkSheet'] == 'lightri/attack.webp' and r['atkRow'] == 7, r)
-    ok('공격 모션 1번 재생 후 대기로 복귀', r['after'] == 'lightri/idle.webp', r['after'])
-    ok('크기: 64칸 → 약 59px (몸 키 약 44px, 캐릭터 56~60px 의 3/4)', 55 <= r['size'] <= 62, r['size'])
+    ok('이동 방향(E)에 맞는 이동 시트·줄', r['moveDir'] == 2 and r['moveSheet'] == 'thunderi/move.webp' and r['moveRow'] == 2, r)
+    ok('공격 방향(NW)에 맞는 공격 시트·줄', r['atkDir'] == 7 and r['atkSheet'] == 'thunderi/attack.webp' and r['atkRow'] == 7, r)
+    ok('공격 모션 1번 재생 후 대기로 복귀', r['after'] == 'thunderi/idle.webp', r['after'])
+    ok('크기: 64칸 × 1.2 → 약 77px 칸 (몸 키 약 36~48px, 캐릭터 56~60px 의 약 3/4)', 74 <= r['size'] <= 80, r['size'])
     # 모든 방향 줄 사용
     rows = pg.evaluate('''(() => { const rows = []; const orig = g.drawImage.bind(g); g.drawImage = (...a) => { rows.push(a[2] / 64); return orig(...a); };
       for (let d = 0; d < 8; d++) drawPetSprite({ x: p.x, y: p.y, id: 3, dir: d, moving: true }); g.drawImage = orig; return rows; })()''')
@@ -79,8 +79,8 @@ with sync_playwright() as pw:
     # 현곤 보스가 부르는 포켓몬(적)도 같은 그래픽
     used = pg.evaluate('''(() => { const calls = []; const orig = g.drawImage.bind(g); g.drawImage = (...a) => { calls.push(a[0].src || ''); return orig(...a); };
       const e = makeEnemy('pk_char', { x: p.x + 90, y: p.y }, { noExp: true }); e.spawnT = 0; draw(); g.drawImage = orig; bots = bots.filter((b) => b !== e);
-      return calls.filter((s) => s.includes('summons/')).map((s) => s.split('/').slice(-2).join('/')); })()''')
-    ok('현곤 보스가 부르는 소환수(적)도 같은 그래픽', 'pyrion/idle.webp' in used or 'pyrion/move.webp' in used, used[:3])
+      return calls.filter((s) => s.includes('summons_v2/')).map((s) => s.split('/').slice(-2).join('/')); })()''')
+    ok('현곤 보스가 부르는 소환수(적)도 같은 그래픽', 'bolkeron/idle.webp' in used or 'bolkeron/move.webp' in used, used[:3])
     # 성능: 소환수 4 + 궁극기 3 + 적 소환수 6 + 적 20 상태에서 그리기 시간
     perf = pg.evaluate('''(() => { document.body.classList.add('menuOpen'); bots = [];
       for (let i = 0; i < 20; i++) { const e = makeEnemy(['melee','ranged','tank'][i % 3], { x: p.x + 120 + (i % 5) * 40, y: p.y - 80 + Math.floor(i / 5) * 40 }, { noExp: true }); e.spawnT = 0; }
@@ -88,7 +88,7 @@ with sync_playwright() as pw:
       ultPets = [0, 1, 2].map((id, i) => ({ ...actor(p.x - 60 + i * 40, p.y - 50), id, hp: 1, max: 1, life: 9, moving: i % 2 === 0, dir: i * 2 }));
       const run = () => { for (let i = 0; i < 20; i++) draw(); const t = performance.now(); for (let i = 0; i < 120; i++) { elapsed += 1/60; draw(); } return (performance.now() - t) / 120; };
       const withGfx = run();
-      const keep = SUMMON_BY_PET; for (const k in SUMMON_BY_PET) delete SUMMON_BY_PET[k]; const without = run(); Object.assign(SUMMON_BY_PET, { 0: 'lightri', 1: 'pyrion', 2: 'aquaron', 3: 'floragon', 4: 'gastron', 5: 'jamtori' });
+      const keep0 = { ...SUMMON_BY_PET }; for (const k in SUMMON_BY_PET) delete SUMMON_BY_PET[k]; const without = run(); Object.assign(SUMMON_BY_PET, keep0);
       ultPets = []; bots = []; return { withGfx: +withGfx.toFixed(2), without: +without.toFixed(2) }; })()''')
     print('perf', perf)
     ok('성능: 그리기 시간 증가 0.5ms 이하 (프레임 16.7ms 기준)', perf['withGfx'] - perf['without'] < 0.5, perf)

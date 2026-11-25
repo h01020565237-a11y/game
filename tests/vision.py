@@ -129,7 +129,7 @@ with sync_playwright() as pw:
     r2 = pg.evaluate('''(() => { const pt = { ...actor(p.x + 40, p.y), id: 0, hp: 800, max: 800, life: 10, dir: 2, moving: false };
       const src = () => petAnimState(pt).im.src.split('/').slice(-2).join('/');
       // 소환수 그래픽 팩(2026-11-25)이 있으면 그것 우선: 대기 / 이동 / 공격 + 피격은 하얗게 번쩍(두 번 그림)
-      const a = !!drawPetSprite(pt) && src() === 'lightri/idle.webp'; pt.moving = true; const b2 = src() === 'lightri/move.webp'; pt.atkAt = elapsed; const c = src() === 'lightri/attack.webp'; pt.atkAt = undefined;
+      const a = !!drawPetSprite(pt) && src() === 'thunderi/idle.webp'; pt.moving = true; const b2 = src() === 'thunderi/move.webp'; pt.atkAt = elapsed; const c = src() === 'thunderi/attack.webp'; pt.atkAt = undefined;
       pt.hitT = 0.1; let n = 0; const o = g.drawImage.bind(g); g.drawImage = (...x) => (n++, o(...x)); drawPetSprite(pt); g.drawImage = o; const d = n === 2;
       // 그래픽 팩이 없으면 기존 PMD 스프라이트로 (대기·이동·공격·피격)
       const keep = SUMMON_BY_PET[0]; delete SUMMON_BY_PET[0]; pt.hitT = 0; pt.moving = false;
