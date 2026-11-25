@@ -26,7 +26,7 @@ with sync_playwright() as pw:
     check('영입 장면 2초·전환 0.15초', pg.evaluate('Object.values(RECRUIT_STORIES).every((s) => s.scenes.filter((x) => x.unlock).every((x) => x.t === 2)) && CUTSCENE_RULES.fade === 0.15'))
     check('정용 컷신: 7장면, 보상 곰(정용), 정용 음성 pitch 0.72 / 현곤 1.25·1.09 유지', pg.evaluate('RECRUIT_STORIES.jeongyong.scenes.length === 7 && RECRUIT_STORIES.jeongyong.reward === "bear" && CUTSCENE_VOICES.jeongyong.pitch === 0.72 && CUTSCENE_VOICES.jeongyong.rate === 1 && CUTSCENE_VOICES.hyeongon.pitch === 1.25 && CUTSCENE_VOICES.hyeongon.rate === 1.09'))
     check('정용 음성 파일 없음 → 임시 TTS (파일 경로 null)', pg.evaluate('RECRUIT_STORIES.jeongyong.scenes.every((x) => x.voice.every((v) => v[3] === null))'))
-    pg.evaluate('CUTSCENE_RULES.ttsFallback = false') # 헤드리스: 음성 없이 길이만
+    pg.evaluate('CUTSCENE_RULES.ttsFallback = false; CUTSCENE_RULES.voiceHold = 0') # 헤드리스: 음성 기다림 없이 장면 흐름만
     pg.evaluate('for (const st of Object.values(RECRUIT_STORIES)) for (const sc of st.scenes) { sc.t = 0.25; sc.sfx = sc.sfx.map(([a,i]) => [a/20, i]); sc.voice = sc.voice.map((v) => [v[0]/20, v[1], v[2], v[3]]); }')
     for k in ['hyeongon', 'eunsuk', 'giseop', 'sanghun', 'gyeongsu', 'jeongyong']:
         pg.evaluate(f'window.__d = 0; window.__seen=[]; const _s = csShowScene; playCutscene("{k}", () => window.__d = 1)')
