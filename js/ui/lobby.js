@@ -175,6 +175,7 @@ function basicText(k) {
   return B ? `${B.name} · 피해 ${B.dmg} · 사거리 ${B.range} · ${B.kind === "lob" ? "곡사(벽 넘어감)" : "원거리"}` : `근접 공격 · 피해 ${w[1]} · 사거리 ${w[3]}`;
 }
 function renderLobbyInfo() {
+  if (typeof JuyeopRankingUI !== "undefined") JuyeopRankingUI.syncLobby();
   if (!lobbyReady) return;
   const info = CHARACTER_INFO[lobbySel], st = CHARACTER_STATS[lobbySel] || {};
   for (const t of el("charGrid").querySelectorAll(".char-tile")) t.classList.toggle("sel", t.dataset.k === lobbySel);
