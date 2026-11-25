@@ -342,7 +342,7 @@ function openPause() {
   if (singleRun?.phase === "cards") return; // 카드 고르는 중은 이미 멈춰 있음
   document.body.classList.add("paused");
   el("pauseMenu").hidden = false;
-  el("pauseOpt").hidden = true;
+  pauseView("main");
   if (typeof releaseSticks === "function") releaseSticks();
   if (typeof releaseAttack === "function") releaseAttack(false);
   aiming = false;
@@ -364,7 +364,26 @@ function syncPauseAudio() {
   el("pVolBgm").value = Math.round(audio.settings.bgm * 100);
   el("pVolSfx").value = Math.round(audio.settings.sfx * 100);
   el("pVolVoice").value = Math.round((audio.settings.voice ?? 0.9) * 100);
+  for (const id of ["pVolBgm", "pVolSfx", "pVolVoice"]) el(id + "N").textContent = el(id).value;
   el("pMute").textContent = audio.settings.muted ? "소리 켜기" : "음소거";
+}
+// 일시정지 창 화면 전환: main(세 버튼) / opt(사운드) / confirm(나가기 확인). 어느 화면이든 게임은 계속 멈춤
+function pauseView(v) {
+  el("pauseMain").hidden = v !== "main";
+  el("pauseOpt").hidden = v !== "opt";
+  el("pauseConfirm").hidden = v !== "confirm";
+  el("pauseTitle").textContent = v === "opt" ? "옵션 (사운드)" : v === "confirm" ? "나가기" : "일시정지";
+  if (v === "opt") syncPauseAudio();
+  const f = { main: "pauseResume", opt: "pOptBack", confirm: "pauseExitNo" }[v];
+  setTimeout(() => el(f)?.focus?.({ preventScroll: true }), 0);
+}
+// 버튼 누르는 순간 눌림 효과음 (눌림 모양은 CSS :active / .down)
+for (const b of document.querySelectorAll("#pauseMenu .pbtn")) {
+  b.addEventListener("pointerdown", () => {
+    b.classList.add("down");
+    sfx("ui_click");
+  });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, () => b.classList.remove("down"));
 }
 el("menuBtn").onpointerdown = (e) => {
   e.preventDefault();
@@ -372,24 +391,19 @@ el("menuBtn").onpointerdown = (e) => {
   isPaused() ? closePause() : openPause();
 };
 el("menuBtn").onclick = (e) => e.preventDefault(); // 키보드(Enter/Space) 접근은 아래 keydown 으로
-el("pauseResume").onclick = () => {
-  sfx("ui_click");
-  closePause();
-};
-el("pauseOptBtn").onclick = () => {
-  sfx("ui_click");
-  el("pauseOpt").hidden = !el("pauseOpt").hidden;
-  syncPauseAudio();
-};
-el("pVolBgm").oninput = (e) => setAudio("bgm", e.target.value / 100);
-el("pVolSfx").oninput = (e) => setAudio("sfx", e.target.value / 100);
-el("pVolVoice").oninput = (e) => setAudio("voice", e.target.value / 100);
+el("pauseResume").onclick = () => closePause();
+el("pauseOptBtn").onclick = () => pauseView("opt");
+el("pOptBack").onclick = () => pauseView("main");
+el("pVolBgm").oninput = (e) => (setAudio("bgm", e.target.value / 100), syncPauseAudio());
+el("pVolSfx").oninput = (e) => (setAudio("sfx", e.target.value / 100), syncPauseAudio());
+el("pVolVoice").oninput = (e) => (setAudio("voice", e.target.value / 100), syncPauseAudio());
 el("pMute").onclick = () => {
   setAudio("muted", !audio.settings.muted);
   syncPauseAudio();
 };
-el("pauseExit").onclick = () => { // 나가기: 진행 중인 판을 정리하고 바로 전 화면으로 (웨이브 → 캐릭터 선택, 싱글 → 그 미션 출전 준비)
-  sfx("ui_click");
+el("pauseExit").onclick = () => pauseView("confirm"); // 먼저 확인창
+el("pauseExitNo").onclick = () => pauseView("main");
+el("pauseExitYes").onclick = () => { // 나가기: 진행 중인 판을 정리하고 바로 전 화면으로 (웨이브 → 캐릭터 선택, 싱글 → 그 미션 출전 준비)
   const missionId = singleRun && !singleRun.endless ? singleRun.id : singleRun?.story ? singleRun.id : null;
   document.body.classList.remove("paused");
   el("pauseMenu").hidden = true;
@@ -401,7 +415,8 @@ el("pauseExit").onclick = () => { // 나가기: 진행 중인 판을 정리하�
 };
 addEventListener("keydown", (e) => {
   if (e.code !== "Escape" || e.repeat) return;
-  if (isPaused()) closePause();
+  if (isPaused() && el("pauseMain").hidden) pauseView("main"); // 옵션·확인창에서 Esc → 메뉴로
+  else if (isPaused()) closePause();
   else openPause();
 });
 // 앱 전환·창 이탈 시 자동 일시정지 (전투 중일 때만)

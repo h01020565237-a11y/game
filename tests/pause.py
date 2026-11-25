@@ -49,10 +49,13 @@ with sync_playwright() as pw:
             ok(T + '일시정지 중 시간·적·플레이어·타이머·쿨타임 전부 정지', s1 == s2, (s1, s2) if s1 != s2 else '')
             # 옵션
             pg.click('#pauseOptBtn'); pg.wait_for_timeout(100)
+            ok(T + '옵션 화면에서도 일시정지 유지', pg.evaluate("!el('pauseOpt').hidden && el('pauseMain').hidden && document.body.classList.contains('paused')"))
+            sz = pg.evaluate("(() => { el('pauseOpt').hidden = true; el('pauseMain').hidden = false; const r = [...document.querySelectorAll('#pauseMain .pbtn')].map((b) => { const q = b.getBoundingClientRect(), c = getComputedStyle(b), i = b.querySelector('svg').getBoundingClientRect(); return [Math.round(q.width), Math.round(q.height), c.borderRadius, c.fontSize, Math.round(i.width), Math.round(i.left - q.left)]; }); const bs = [...document.querySelectorAll('#pauseMain .pbtn')].map((b) => b.getBoundingClientRect()); el('pauseMain').hidden = true; el('pauseOpt').hidden = false; return [r, Math.round(bs[1].top - bs[0].bottom), Math.round(bs[2].top - bs[1].bottom)]; })()")
+            ok(T + '세 버튼 크기·곡률·글자·아이콘 크기/위치·간격 동일', sz[0][0] == sz[0][1] == sz[0][2] and sz[1] == sz[2] and sz[0][0][0] > 0, sz)
             pg.evaluate("el('pVolSfx').value = 40; el('pVolSfx').dispatchEvent(new Event('input'))")
             ok(T + '옵션: 효과음 조절 저장', abs(pg.evaluate('audio.settings.sfx') - 0.4) < 1e-6 and '"sfx":0.4' in (pg.evaluate("localStorage.getItem('battlelab.audio')") or ''))
             # 계속하기
-            pg.click('#pauseResume'); pg.wait_for_timeout(50)
+            pg.click('#pOptBack'); pg.click('#pauseResume'); pg.wait_for_timeout(50)
             e0 = pg.evaluate('elapsed'); pg.wait_for_timeout(500); e1 = pg.evaluate('elapsed')
             ok(T + '계속하기 → 재개 (멈춘 시간 한꺼번에 안 흐름)', not pg.evaluate("document.body.classList.contains('paused')") and 0.3 < e1 - e0 < 0.8 and e0 - s2['el'] < 0.3, (round(e0 - s2['el'], 3), round(e1 - e0, 3)))
             # Esc (PC)
@@ -63,7 +66,12 @@ with sync_playwright() as pw:
                 ok(T + 'Esc 다시 → 계속', not pg.evaluate("document.body.classList.contains('paused')"))
             # 나가기
             (pg.tap if mob else pg.click)('#menuBtn'); pg.wait_for_timeout(100)
-            pg.click('#pauseExit'); pg.wait_for_timeout(400)
+            pg.click('#pauseExit'); pg.wait_for_timeout(200)
+            c = pg.evaluate("[!el('pauseConfirm').hidden, el('pauseMain').hidden, document.body.classList.contains('paused'), !!singleRun]")
+            ok(T + '나가기 → 확인창 (일시정지 유지, 판 그대로)', all(c), c)
+            pg.click('#pauseExitNo'); pg.wait_for_timeout(100)
+            ok(T + '취소 → 메뉴로', pg.evaluate("!el('pauseMain').hidden && el('pauseConfirm').hidden && document.body.classList.contains('paused')"))
+            pg.click('#pauseExit'); pg.click('#pauseExitYes'); pg.wait_for_timeout(400)
             st = pg.evaluate("[!el('lobby').hidden && document.body.classList.contains('lobbyOpen'), !el('missionPrep').hidden, el('title').hidden, !singleRun, mvX, mvY, aiming, document.body.classList.contains('paused'), Object.values(keys).some(Boolean), getComputedStyle(el('menuBtn')).display]")
             where = st[0] if mode == 'wave' else st[1]
             ok(T + ('나가기 → 바로 전 화면(캐릭터 선택)' if mode == 'wave' else '나가기 → 바로 전 화면(미션 출전 준비)') + ', 타이틀 아님', where and st[2], st)
