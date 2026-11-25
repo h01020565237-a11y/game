@@ -89,32 +89,44 @@
     </section>
 
     <section id="lobby" class="screen" aria-label="캐릭터 선택">
+      <!-- 공통: 왼쪽 위 뒤로가기(=모드 선택), 오른쪽 위 설정. 모드 화면에서만 보임 -->
+      <button id="lobbyBack" class="screen-back" type="button">◀ 모드 선택</button>
+      <button id="lobbySet" class="screen-gear" type="button" aria-label="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
       <div class="panel lobby-card">
-        <div class="lobby-grid" id="charGrid"></div>
+        <div class="lobby-left">
+          <div class="roster-view" id="rosterView">
+            <div class="roster-track" id="charGrid"></div>
+            <button id="rosterPrev" class="pg-arrow prev" type="button" aria-label="이전 페이지">‹</button>
+            <button id="rosterNext" class="pg-arrow next" type="button" aria-label="다음 페이지">›</button>
+          </div>
+          <div class="lobby-left-foot"><span id="rosterDots" class="roster-dots"></span><span id="rosterCount" class="roster-count"></span></div>
+        </div>
         <div class="lobby-info">
           <p id="lobbyModeTag" class="lobby-mode-tag"></p>
-          <div class="ci-head"><h3 id="ciName"></h3><span id="ciRole"></span><span id="ciStatus" hidden></span></div>
+          <div class="ci-head"><h3 id="ciName"></h3><span id="ciRole"></span><span id="ciStatus" hidden></span><button id="lobbyDetail" class="btn btn-ghost ci-detail" type="button">전신 보기</button></div>
+          <p id="ciIntro" class="ci-intro"></p>
+          <div id="ciStats" class="ci-stats"></div>
+          <p id="ciBasic" class="ci-line"></p>
+          <p id="ciPassive" class="ci-line"></p>
           <ul id="ciSkills"></ul>
-          <p id="ciPassive"></p>
           <div id="lobbyDeck"></div>
           <p id="lobbyRecord" class="lobby-record"></p>
+          <div id="ciLocked" class="ci-locked" hidden></div>
           <p id="lobbyErr" role="alert"></p>
-          <div class="lobby-actions">
-            <button id="lobbySingle" class="btn btn-blue" hidden>싱글 미션</button>
-            <button id="lobbyDetail" class="btn btn-ghost">상세 보기</button>
-            <button id="lobbyBack" class="btn btn-ghost">◀ 모드 선택</button>
-            <button id="lobbyPlay" class="btn btn-gold">미션 선택</button>
-            <!-- 배틀로얄 바로 시작 (모드 선택의 PvP → 배틀로얄 이 누름. 테스트도 사용) -->
-            <button id="lobbyStart" class="btn btn-gold" hidden>배틀로얄 시작</button>
-          </div>
         </div>
       </div>
-      <div class="lobby-foot">
+      <div class="lobby-cta">
+        <button id="lobbyPlay" class="btn btn-cta" type="button"><i id="lobbyPlayIcon" aria-hidden="true"></i><span id="lobbyPlayText">미션 선택</span></button>
+        <button id="lobbySingle" class="btn btn-blue" hidden>싱글 미션</button>
+        <!-- 배틀로얄 바로 시작 (PvP 준비 중이라 화면에는 없음. 테스트용) -->
+        <button id="lobbyStart" class="btn btn-gold" hidden>배틀로얄 시작</button>
+      </div>
+      <div id="lobbyFoot" class="panel lobby-foot" hidden>
+        <h3>설정</h3>
         <label>배경음 <input type="range" id="volBgm" min="0" max="100"></label>
         <label>효과음 <input type="range" id="volSfx" min="0" max="100"></label>
         <label>음성 <input type="range" id="volVoice" min="0" max="100"></label>
-        <button id="muteBtn" class="btn btn-ghost">음소거</button>
-        <button id="lobbyTouch" class="btn btn-ghost">터치 조작 전환</button>
+        <div class="row"><button id="muteBtn" class="btn btn-ghost">음소거</button><button id="lobbySetClose" class="btn btn-blue" type="button">닫기</button></div>
       </div>
     </section>
 
@@ -136,7 +148,6 @@
       <img class="mode-bg" src="assets/ui/mode_select.webp" alt="">
       <div class="mode-stage">
         <img class="mode-art" src="assets/ui/mode_select.webp" alt="플레이 모드 선택" draggable="false">
-        <button id="modeBack" class="mode-hit" style="left:1.5%;top:2.7%;width:12.9%;height:7.4%" aria-label="뒤로가기"></button>
         <button id="modeSettings" class="mode-hit" style="left:89.1%;top:2.7%;width:9.3%;height:7.4%" aria-label="설정"></button>
         <button id="modeSingle" class="mode-hit card" data-mode="single" style="left:4.5%;top:25.5%;width:29.3%;height:52.6%" aria-label="싱글 모드: 스토리 · 영입 미션"></button>
         <button id="modeWave" class="mode-hit card" data-mode="wave" style="left:35.6%;top:25.5%;width:29.2%;height:52.6%" aria-label="웨이브 모드: 무한 생존 · 성장"></button>
@@ -149,14 +160,14 @@
           <label class="qa">QA 전체 해금 (테스트 전용) <input type="checkbox" id="mQa"></label>
           <div class="row"><button id="mMute" class="btn btn-ghost">음소거</button><button id="mClose" class="btn btn-blue">닫기</button></div>
         </div>
-        <button id="modeNext" class="mode-hit" style="left:31.4%;top:84%;width:37.1%;height:9.3%" aria-label="다음: 캐릭터 선택"></button>
       </div>
     </section>
 
     <!-- 싱글 미션 선택 + 스토리 극장 -->
     <section id="singlePanel" class="screen" hidden aria-label="싱글 미션">
+      <button id="singleClose" class="screen-back" type="button">◀ 모드 선택</button>
       <div class="panel single-card">
-        <div class="single-head"><h3>싱글 모드 · 스토리</h3><button id="singleClose" class="btn btn-ghost">◀ 모드 선택</button></div>
+        <div class="single-head"><h3>싱글 모드 · 스토리</h3></div>
         <div id="missionList" class="mission-list"></div>
         <h4>스토리 극장</h4>
         <div id="theaterList" class="theater-list"></div>
@@ -254,6 +265,7 @@
   <script src="js/data/waves.js"></script>
   <script src="js/data/story_missions.js"></script>
   <script src="js/data/endless.js"></script>
+  <script src="js/data/wave_maps.js"></script>
   <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>
   <script src="js/engine/assets.js"></script>
@@ -285,6 +297,7 @@
   <script src="js/ui/endless.js"></script>
   <script src="js/game/pokemon.js"></script>
   <script src="js/game/story.js"></script>
+  <script src="js/game/wave_maps.js"></script>
   <script src="js/ui/title.js"></script>
   <script src="js/main.js"></script>
 </body>

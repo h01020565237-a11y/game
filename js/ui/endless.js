@@ -43,7 +43,8 @@ function updateEndlessHUD() {
   }
   // 배너·카운트다운
   const bn = el("waveBanner");
-  const txt = R.phase === "count" ? `${R.story ? R.spec?.stage?.label ?? "" : "W" + R.wave} 시작까지 ${Math.ceil(R.t)}` : R.bannerT > 0 ? R.banner : "";
+  const map = R.mapNameT > 0 && R.mapName ? `🗺 ${R.mapName} · ` : "";
+  const txt = R.mapSwap ? "" : R.phase === "count" ? `${map}${R.story ? R.spec?.stage?.label ?? "" : "W" + R.wave} 시작까지 ${Math.ceil(R.t)}` : R.bannerT > 0 ? R.banner : "";
   if (bn.hidden !== !txt) bn.hidden = !txt;
   if (txt && bn.textContent !== txt) bn.textContent = txt;
   // 카드

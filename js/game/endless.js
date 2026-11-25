@@ -52,6 +52,10 @@ function setupEndless() {
   loot = [];
   if (R.story) setupStory(); // 싱글 영입 미션 (js/game/story.js)
   nextEndlessWave();
+  if (R.mapSwap) { // 첫 맵은 암전 없이 바로 (js/game/wave_maps.js)
+    applyWaveMap(R.mapSwap.def);
+    R.mapSwap = null;
+  }
 }
 function endlessNeedExp(level) {
   return ENDLESS.exp.base + ENDLESS.exp.per * (level - 1);
@@ -76,6 +80,7 @@ function nextEndlessWave() {
   R.phase = "count";
   R.t = ENDLESS.countdown;
   if (ENDLESS.resetSkillCD && p.skcd) for (const k in p.skcd) p.skcd[k] = 0; // 웨이브 전환: 일반 스킬 쿨타임 초기화
+  planWaveMap(); // 5의 배수마다 맵 교체 예약 (무한 생존만)
 }
 function startEndlessFight() {
   const R = singleRun, S = R.spec;
@@ -109,7 +114,9 @@ function endlessPaused(dt) {
     openEndlessCards();
     return true;
   }
+  if (R.mapNameT > 0) R.mapNameT -= dt;
   if (R.phase === "count") {
+    if (updateMapSwap(dt)) return true; // 맵 교체 암전 중: 카운트다운 정지
     if ((R.t -= dt) <= 0) startEndlessFight();
     return true;
   }
@@ -123,7 +130,7 @@ function endlessPaused(dt) {
 // ----- 적 만들기 -----
 let hazards = []; // 예고 후 터지는 범위 공격 (적 투척·보스 함정 등)
 function endlessSpawnPoint() {
-  return spawnPoint(ENDLESS.spawnMinDist);
+  return (waveMapsOn() && waveMapSpawn(ENDLESS.spawnMinDist)) || spawnPoint(ENDLESS.spawnMinDist);
 }
 function makeEnemy(kind, at, opts = {}) {
   const R = singleRun, sc = waveScale(R.wave);
@@ -374,14 +381,11 @@ function updateHazards(dt) {
 // ----- 보스 -----
 function spawnEndlessBoss() {
   const R = singleRun, sc = waveScale(R.wave);
-  if (!R.bossCycle.length) { // 8명 무작위 순환, 한 순환 안에서 중복 없음
-    R.bossCycle = Object.keys(ENDLESS_BOSSES);
-    for (let i = R.bossCycle.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [R.bossCycle[i], R.bossCycle[j]] = [R.bossCycle[j], R.bossCycle[i]];
-    }
-  }
-  const id = R.bossCycle.shift(), B = BOSS_BASE, q = spawnPoint(300);
+  peekEndlessBoss(); // 8명 무작위 순환, 한 순환 안에서 중복 없음 (맵 선택이 미리 본 보스와 같음)
+  const id = R.bossCycle.shift(), B = BOSS_BASE;
+  let q = null;
+  if (waveMapsOn() && activeMap.bossSpawn) q = freeSpot(activeMap.bossSpawn[0], activeMap.bossSpawn[1], B.r);
+  if (!q || Math.hypot(q.x - p.x, q.y - p.y) < 220) q = spawnPoint(300);
   const a = actor(q.x, q.y), hp = B.hp * sc.hp;
   Object.assign(a, {
     mob: "boss", endless: true, bossId: id, hp, max: hp, spd: B.spd * sc.spd, dmgMul: sc.atk, r: B.r, exp: ENEMY_TYPES.boss?.exp ?? 200,
@@ -678,8 +682,8 @@ function openEndlessCards() {
   R.cards = drawEndlessCards(mode);
   R.cardRarity = mode;
   if (!R.cards.length) return; // 받을 카드가 없으면 넘어감
+  R.phaseAfterCards = R.phase; // 카드 고른 뒤 원래 단계로 (웨이브를 일찍 끝내도 남은 시간 때문에 전투로 넘어가지 않게)
   R.phase = "cards";
-  R.phaseAfterCards = R.phaseAfterCards || null;
 }
 function pickEndlessCard(i) {
   const R = singleRun;
@@ -688,7 +692,8 @@ function pickEndlessCard(i) {
   applyEndlessCard(card, card.tiers[rarity]);
   R.stacks[card.id] = cardCount(card.id) + 1;
   R.cards = [];
-  R.phase = R.boss ? "boss" : R.timer > 0 ? "fight" : "count";
+  R.phase = R.phaseAfterCards || (R.boss ? "boss" : R.timer > 0 ? "fight" : "count");
+  R.phaseAfterCards = null;
   sfx("pickup", p);
 }
 function cardText(c, v) {

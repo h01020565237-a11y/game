@@ -105,10 +105,15 @@ function draw() {
   // 성능: 맵 전체(2472×1392) 대신 카메라에 보이는 영역만 그림
   g.fillStyle = "#789b65";
   g.fillRect(camX, camY, VW, VH);
-  if (jungle.naturalWidth) {
-    const sx = jungle.naturalWidth / W, sy = jungle.naturalHeight / H;
-    g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
-  } else scenery();
+  const mapImg = mapImage();
+  if (mapImg.naturalWidth) {
+    const sx = mapImg.naturalWidth / W, sy = mapImg.naturalHeight / H;
+    g.drawImage(mapImg, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
+  } else if (activeMap === MAP_JUNGLE) scenery();
+  else { // 웨이브 맵 그림을 아직 못 불러옴: 벽만 단순하게 (충돌과 같은 위치)
+    g.fillStyle = "#5b6470";
+    for (const [x, y, w, h] of walls) g.fillRect(x, y, w, h);
+  }
   if (summonAim && p.hp > 0) drawSummonAim();
   drawUltGround();
   drawSkillPreview();
@@ -478,6 +483,10 @@ function draw() {
   g.stroke();
   g.restore();
   // 자기장 남은 시간은 HTML 전투 HUD(#topHud)에 표시
+  if (singleRun?.fadeA > 0) { // 무한 생존 맵 교체 암전
+    g.fillStyle = `rgba(0,0,0,${singleRun.fadeA.toFixed(3)})`;
+    g.fillRect(0, 0, VW, VH);
+  }
   if (over) {
     // 결과 화면 뒤 배경만 어둡게 (문구는 결과 화면이 표시)
     g.fillStyle = "#0007";

@@ -17,6 +17,19 @@ const CHARACTER_INFO = {
   soccer: { name: "축구 선수", role: "", skills: [["드리블", "앞으로 돌진해 주변에 300 피해 · 7초"], ["강슛", "500 피해 공, 벽에 3번 튕기며 강해짐 · 9초"]], passive: "4번째 공격마다 피해 ×1.3" },
   support: { name: "정장 여성", role: "", skills: [["회복", "최대 HP 20% 즉시 회복 · 7초"], ["둔화탄", "250 피해와 2.5초 둔화 · 9초"]], passive: "매초 최대 HP 0.3% 재생" },
 };
+// 캐릭터 능력치 (로비 표시 + 게임 규칙). sight: 시야 반경(싱글·웨이브, 2026-11-25 초기값). 체력·이동은 전원 같음
+const CHARACTER_STATS = {
+  suit: { hp: 3000, speed: 1, sight: 300 },
+  summoner: { hp: 3000, speed: 1, sight: 350 },
+  support: { hp: 3000, speed: 1, sight: 380 },
+  runner: { hp: 3000, speed: 1, sight: 350 },
+  octo: { hp: 3000, speed: 1, sight: 320 },
+  stripe: { hp: 3000, speed: 1, sight: 400 },
+  soccer: { hp: 3000, speed: 1, sight: 420 },
+  bear: { hp: 3000, speed: 1, sight: 280 },
+};
+// 로비 캐릭터 선택: 한 페이지 칸 수 (4열 × 2행). 캐릭터가 늘면 페이지가 자동으로 늘어남
+const LOBBY_PAGE = { cols: 4, rows: 2 };
 const CHARACTER_ORDER = ["summoner", "bear", "runner", "suit", "octo", "stripe", "soccer", "support"];
 
 // ===== 공격 모션 스프라이트 (교체 가능, 지금은 비어 있음) =====

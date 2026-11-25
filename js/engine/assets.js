@@ -65,6 +65,12 @@ for (const [k, v] of Object.entries(ATTACK_SPRITES)) attackSheets[k] = loadImage
 // 곰 Q 질주 전용 시트 (ChatGPT 인계 후보). CHARACTER_ART.bearSprint 가 true 일 때만 사용
 const bearSprintImg = loadImage("assets/characters/bear-sprint-sheet.webp");
 const jungle = loadImage(MAP_JUNGLE.background);
+// 무한 생존 맵 그림: 처음 쓸 때 불러옴 (모바일 첫 로딩 부담 줄임)
+const mapImgs = { jungle };
+function mapImage() {
+  const id = activeMap.id;
+  return mapImgs[id] || (mapImgs[id] = loadImage(activeMap.background));
+}
 // 로비 그림
 const lobbyArt = {};
 for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: loadImage(v.face), full: loadImage(v.full) };

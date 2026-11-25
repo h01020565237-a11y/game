@@ -82,7 +82,7 @@ function spawnPoint(minDist) {
     if (terrain(x, y) || blocked(x, y, 20) || nearBox(x, y, 40)) continue;
     return { x, y };
   }
-  const s = MAP_JUNGLE.botSpawns[Math.floor(Math.random() * MAP_JUNGLE.botSpawns.length)];
+  const list = activeMap.botSpawns || activeMap.enemySpawns, s = list[Math.floor(Math.random() * list.length)];
   return { x: s[0], y: s[1] };
 }
 function makeMob(type, at) {

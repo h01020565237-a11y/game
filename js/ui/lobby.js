@@ -28,84 +28,178 @@ function closeLobby() {
   document.body.classList.remove("lobbyOpen");
 }
 
+// ----- 캐릭터 선택: 4열×2행 페이지 (8명 넘으면 페이지 자동 추가). PC 화살표·키보드 ←→, 모바일 좌우 스와이프 -----
+let rosterPage = 0;
+const rosterPages = () => Math.max(1, Math.ceil(LOBBY_ORDER.length / (LOBBY_PAGE.cols * LOBBY_PAGE.rows)));
+const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#1b2550"/></svg>';
 function buildLobby() {
-  const grid = el("charGrid");
-  grid.innerHTML = "";
-  for (const k of LOBBY_ORDER) {
-    const b = document.createElement("button");
-    const locked = !isRecruited(k), soon = ROSTER.comingSoon.includes(k);
-    b.className = "char-tile" + (locked ? " locked" : "");
-    b.dataset.k = k;
-    b.setAttribute("aria-label", CHARACTER_INFO[k].name + (locked ? (soon ? " (출시 예정)" : " (미영입)") : ""));
-    // 이미지 영역과 이름 영역을 분리: [얼굴 칸] 아래에 [이름 칸]
-    const face = document.createElement("span");
-    face.className = "char-face";
-    const im = document.createElement("img");
-    im.src = lobbyArt[k].face.src;
-    im.alt = "";
-    im.draggable = false;
-    face.append(im);
-    if (locked) {
-      const lock = document.createElement("i");
-      lock.className = "char-lock";
-      lock.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#1b2550"/></svg>';
-      face.append(lock);
-      if (soon) {
-        const tag = document.createElement("em");
-        tag.className = "char-soon";
-        tag.textContent = "출시 예정";
-        face.append(tag);
-      }
-    }
-    const n = document.createElement("span");
-    n.className = "char-name";
-    n.textContent = CHARACTER_INFO[k].name;
-    b.append(face, n);
-    b.onclick = () => {
-      lobbySel = k;
-      el("lobbyErr").textContent = "";
-      renderLobbyInfo();
-      sfx("ui_click");
-    };
-    grid.append(b);
+  const track = el("charGrid"), per = LOBBY_PAGE.cols * LOBBY_PAGE.rows, n = rosterPages();
+  track.innerHTML = "";
+  track.style.setProperty("--pages", n);
+  for (let pg = 0; pg < n; pg++) {
+    const page = document.createElement("div");
+    page.className = "roster-page";
+    page.style.setProperty("--cols", LOBBY_PAGE.cols);
+    page.style.setProperty("--rows", LOBBY_PAGE.rows);
+    for (const k of LOBBY_ORDER.slice(pg * per, pg * per + per)) page.append(charTile(k));
+    track.append(page);
   }
+  if (!canPlay(lobbySel)) lobbySel = LOBBY_ORDER.find(canPlay) || "suit"; // 미영입 캐릭터는 고를 수 없음
+  rosterPage = Math.min(rosterPage, n - 1);
+  const got = LOBBY_ORDER.filter(isRecruited).length;
+  el("rosterCount").textContent = `영입 완료 ${got}/${LOBBY_ORDER.length}`;
   lobbyReady = true;
+  setRosterPage(Math.floor(LOBBY_ORDER.indexOf(lobbySel) / per), true);
   renderLobbyInfo();
 }
+function charTile(k) {
+  const b = document.createElement("button");
+  const locked = !isRecruited(k), soon = ROSTER.comingSoon.includes(k); // QA 전체 해금이면 잠금 표시는 그대로, 고를 수만 있음
+  b.type = "button";
+  b.className = "char-tile" + (locked ? " locked" : "") + (locked && canPlay(k) ? " qa" : "");
+  b.dataset.k = k;
+  b.setAttribute("aria-label", CHARACTER_INFO[k].name + (locked ? (soon ? " (출시 예정)" : " (미영입)") : ""));
+  // 이미지 영역과 이름 영역을 분리: [얼굴 칸] 아래에 [이름 칸]
+  const face = document.createElement("span"), fin = document.createElement("span");
+  face.className = "char-face";
+  fin.className = "face-in"; // 그림 비율(256×225) 상자: 자물쇠가 항상 얼굴 가운데
+  const im = document.createElement("img");
+  im.src = lobbyArt[k].face.src;
+  im.alt = "";
+  im.draggable = false;
+  fin.append(im);
+  face.append(fin);
+  if (locked) {
+    const lock = document.createElement("i");
+    lock.className = "char-lock";
+    lock.innerHTML = LOCK_SVG;
+    fin.append(lock);
+    if (soon) {
+      const tag = document.createElement("em");
+      tag.className = "char-soon";
+      tag.textContent = "출시 예정";
+      face.append(tag);
+    }
+  }
+  const nm = document.createElement("span");
+  nm.className = "char-name";
+  nm.textContent = CHARACTER_INFO[k].name;
+  b.append(face, nm);
+  b.onclick = () => {
+    if (rosterSwiped) return; // 스와이프 끝의 손 뗌은 선택이 아님
+    sfx("ui_click");
+    if (!canPlay(k)) { // 미영입: 선택·상세 열람 불가, 영입 조건만 보여 줌
+      showRosterLock(k);
+      return;
+    }
+    lobbySel = k;
+    el("lobbyErr").textContent = "";
+    renderLobbyInfo();
+  };
+  return b;
+}
+let rosterToastT = 0;
+function showRosterLock(k) {
+  const t = el("ciLocked");
+  t.innerHTML = `<i>${LOCK_SVG}</i><b>${DISPLAY_NAMES[k]} · 미영입</b><span></span>`;
+  t.querySelector("span").textContent = lockReason(k).replace(`${DISPLAY_NAMES[k]}: `, "");
+  t.hidden = false;
+  t.classList.remove("pop");
+  void t.offsetWidth;
+  t.classList.add("pop");
+  for (const x of el("charGrid").querySelectorAll(".char-tile")) x.classList.toggle("peek", x.dataset.k === k);
+  clearTimeout(rosterToastT);
+  rosterToastT = setTimeout(() => {
+    t.hidden = true;
+    for (const x of el("charGrid").querySelectorAll(".char-tile.peek")) x.classList.remove("peek");
+  }, 4000);
+}
+function setRosterPage(i, instant) {
+  const n = rosterPages();
+  rosterPage = clamp(i, 0, n - 1);
+  const track = el("charGrid");
+  track.style.transition = instant ? "none" : "";
+  track.style.transform = `translateX(${-rosterPage * 100 / n}%)`;
+  el("rosterView").classList.toggle("paged", n > 1);
+  el("rosterPrev").disabled = rosterPage === 0;
+  el("rosterNext").disabled = rosterPage === n - 1;
+  const dots = el("rosterDots");
+  dots.hidden = n <= 1;
+  dots.innerHTML = n <= 1 ? "" : Array.from({ length: n }, (_, j) => `<i class="${j === rosterPage ? "on" : ""}"></i>`).join("") + `<small>${rosterPage + 1}/${n}</small>`;
+}
+el("rosterPrev").onclick = () => { sfx("ui_click"); setRosterPage(rosterPage - 1); };
+el("rosterNext").onclick = () => { sfx("ui_click"); setRosterPage(rosterPage + 1); };
+addEventListener("keydown", (e) => {
+  if (!isLobbyOpen() || rosterPages() <= 1 || !el("singlePanel").hidden || !el("charDetail").hidden) return;
+  if (e.key === "ArrowLeft") setRosterPage(rosterPage - 1);
+  else if (e.key === "ArrowRight") setRosterPage(rosterPage + 1);
+});
+// 스와이프: 가로로 12px 넘게 끌면 스와이프로 판정 (그 손가락의 탭은 캐릭터 선택으로 치지 않음), 50px 넘으면 페이지 넘김
+let rosterSwipe = null, rosterSwiped = false;
+el("rosterView").addEventListener("pointerdown", (e) => {
+  rosterSwiped = false;
+  if (rosterPages() <= 1) return;
+  rosterSwipe = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, on: false };
+});
+el("rosterView").addEventListener("pointermove", (e) => {
+  const S = rosterSwipe;
+  if (!S || S.id !== e.pointerId) return;
+  S.dx = e.clientX - S.x;
+  if (!S.on && Math.abs(S.dx) > 12 && Math.abs(S.dx) > Math.abs(e.clientY - S.y)) {
+    S.on = true;
+    rosterSwiped = true;
+    el("rosterView").setPointerCapture?.(e.pointerId);
+  }
+  if (S.on) {
+    const n = rosterPages(), w = el("rosterView").clientWidth || 1, track = el("charGrid");
+    track.style.transition = "none";
+    track.style.transform = `translateX(${(-rosterPage * w + clamp(S.dx, -w, w)) / (w * n) * 100}%)`;
+  }
+});
+const endRosterSwipe = (e) => {
+  const S = rosterSwipe;
+  if (!S || S.id !== e.pointerId) return;
+  rosterSwipe = null;
+  if (S.on) setRosterPage(rosterPage + (S.dx < -50 ? 1 : S.dx > 50 ? -1 : 0));
+  setTimeout(() => (rosterSwiped = false), 0); // 바로 뒤따르는 click 만 무시
+};
+el("rosterView").addEventListener("pointerup", endRosterSwipe);
+el("rosterView").addEventListener("pointercancel", endRosterSwipe);
 
+// 오른쪽 정보: 소개·능력치·기본 공격·패시브·Q/E·궁극기 (영역 안에서 스크롤)
+function basicText(k) {
+  const B = SKILL_DATA[k]?.basic, w = weapons[0];
+  return B ? `${B.name} · 피해 ${B.dmg} · 사거리 ${B.range} · ${B.kind === "lob" ? "곡사(벽 넘어감)" : "원거리"}` : `근접 공격 · 피해 ${w[1]} · 사거리 ${w[3]}`;
+}
 function renderLobbyInfo() {
   if (!lobbyReady) return;
-  const info = CHARACTER_INFO[lobbySel];
-  for (const t of el("charGrid").children) t.classList.toggle("sel", t.dataset.k === lobbySel);
+  const info = CHARACTER_INFO[lobbySel], st = CHARACTER_STATS[lobbySel] || {};
+  for (const t of el("charGrid").querySelectorAll(".char-tile")) t.classList.toggle("sel", t.dataset.k === lobbySel);
   el("ciName").textContent = info.name;
   el("ciRole").textContent = info.role;
   el("ciRole").hidden = !info.role;
-  const ul = el("ciSkills");
-  ul.innerHTML = "";
-  info.skills.forEach(([n, d], i) => {
-    const li = document.createElement("li");
-    const kb = document.createElement("b");
-    kb.textContent = (i ? "E" : "Q") + " " + n;
-    const sp = document.createElement("span");
-    sp.textContent = d;
-    li.append(kb, sp);
-    ul.append(li);
-  });
-  el("ciPassive").textContent = "패시브 · " + info.passive;
-  const st = el("ciStatus");
-  if (st) {
-    const soon = ROSTER.comingSoon.includes(lobbySel);
-    st.hidden = isRecruited(lobbySel);
-    st.textContent = (soon ? "영입 미션 준비 중" : "미영입") + (ROSTER.testMode ? " · QA 전체 해금으로 플레이 가능" : "");
-  }
+  el("ciIntro").textContent = info.intro || "";
+  el("ciIntro").hidden = !info.intro;
+  el("ciStats").innerHTML = `<span><b>체력</b>${st.hp ?? 3000}</span><span><b>이동</b>${Math.round((st.speed ?? 1) * 100)}%</span><span><b>시야</b>${st.sight ?? "-"}</span>`;
+  el("ciBasic").innerHTML = "<b>기본 공격</b> ";
+  el("ciBasic").append(basicText(lobbySel));
+  el("ciPassive").innerHTML = "<b>패시브</b> ";
+  el("ciPassive").append(info.passive);
+  fillSkills(el("ciSkills"), info);
+  const stt = el("ciStatus");
+  stt.hidden = isRecruited(lobbySel);
+  stt.textContent = "QA 해금";
   el("lobbyStart").disabled = !canPlay(lobbySel);
-  // 모드별: 싱글 = 미션 선택 / 웨이브 = 무한 생존 시작 (+ 최고 기록). 잠긴 캐릭터는 영입 조건 안내
-  const play = el("lobbyPlay");
-  play.textContent = lobbyMode === "wave" ? "웨이브 시작" : "미션 선택";
-  play.classList.toggle("off", !canPlay(lobbySel));
+  // 모드별 큰 버튼: 싱글 = 미션 선택 / 웨이브 = 웨이브 시작 (+ 최고 기록)
+  const wave = lobbyMode === "wave";
+  el("lobbyPlayText").textContent = wave ? "웨이브 시작" : "미션 선택";
+  el("lobbyPlayIcon").innerHTML = wave
+    ? '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" d="M12 12c-2.4-3.2-4.6-4.2-6.4-4.2a4.2 4.2 0 0 0 0 8.4c1.8 0 4-1 6.4-4.2s4.6-4.2 6.4-4.2a4.2 4.2 0 0 1 0 8.4c-1.8 0-4-1-6.4-4.2z"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 2.5h9.5L20 7v12.5A2 2 0 0 1 18 21.5H6a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2zm8.5 1.5v4h4zM7.5 10h9v2h-9zm0 4h9v2h-9zm0 4h6v2h-6z"/></svg>';
+  el("lobbyPlay").classList.toggle("off", !canPlay(lobbySel));
   el("lobbyErr").textContent = canPlay(lobbySel) ? "" : lockReason(lobbySel);
-  el("lobbyModeTag").textContent = lobbyMode === "wave" ? "웨이브 모드 · 영입한 캐릭터만 출전" : "싱글 모드 · 스토리 · 영입 미션";
-  const rec = lobbyMode === "wave" && typeof endlessSave !== "undefined" ? endlessSave.best[lobbySel] : null;
+  el("lobbyModeTag").textContent = wave ? "웨이브 모드 · 영입한 캐릭터만 출전" : "싱글 모드 · 스토리 · 영입 미션";
+  const rec = wave && typeof endlessSave !== "undefined" ? endlessSave.best[lobbySel] : null;
   el("lobbyRecord").textContent = rec ? `최고 기록 W${rec.wave} · ${fmtTime(rec.time)} · 처치 ${rec.kills}` : "";
   renderDeckPicker();
 }
@@ -214,7 +308,15 @@ el("detailClose").onclick = () => {
   el("charDetail").hidden = true;
   sfx("ui_click");
 };
-el("lobbyTouch").onclick = () => document.querySelector("#mobileToggle").click();
+// 설정(소리): 오른쪽 위 톱니
+el("lobbySet").onclick = () => {
+  sfx("ui_click");
+  el("lobbyFoot").hidden = !el("lobbyFoot").hidden;
+};
+el("lobbySetClose").onclick = () => {
+  sfx("ui_click");
+  el("lobbyFoot").hidden = true;
+};
 el("resLobby").onclick = () => {
   sfx("ui_click");
   openLobby();

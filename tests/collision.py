@@ -10,9 +10,10 @@ url = pathlib.Path(f).resolve().as_uri()
 JS = r'''
 window.T = {};
 T.inside = (a) => { const r = (a.r || 16) - 3; return terrain(a.x, a.y, r) || blocked(a.x, a.y, r) || nearBox(a.x, a.y, r + 11); };
-T.run = (spots, kinds, secs) => {
+T.run = (spots, kinds, secs, mapId) => {
   startEndless("suit"); document.body.classList.add("menuOpen"); god = true;
   singleRun.t = 0.01; for (let i = 0; i < 10; i++) update(1 / 60);
+  if (mapId) applyWaveMap(WAVE_MAPS[mapId]); else { setActiveMap(MAP_JUNGLE); boxes = MAP_JUNGLE.crates.map(([x, y]) => ({ x, y, hp: 1e3 })); resetNav(); }
   singleRun.plan = []; singleRun.spawnQ = []; // 자동 스폰 끔
   const out = [];
   for (const [px, py, name] of spots) {
@@ -35,14 +36,14 @@ T.run = (spots, kinds, secs) => {
       for (const m of ms) { m.atkT = 99; m.stealth = 0; }
       update(1 / 60);
       ms.forEach((m, i) => {
-        if (T.inside(m)) insideFrames++;
+        if (T.inside(m)) insideFrames++; if (activeMap.id === 'rooftop' && f % 10 === 0 && Math.hypot(m.x - 392, m.y - 176) < 40) console.log('M0', f, m.x.toFixed(1), m.y.toFixed(1), m._nav && m._nav.i, JSON.stringify(m._nav && m._nav.path && m._nav.path[m._nav.i]));
         const s = st[i], d = Math.hypot(m.x - px, m.y - py);
         s.best = Math.min(s.best, d);
         const keeps = !!(ENEMY_TYPES[m.mob] && ENEMY_TYPES[m.mob].keep); // 원거리형은 일부러 거리 유지
-        if (!keeps && Math.hypot(m.x - s.x, m.y - s.y) < 2 && d > 90) { s.t += 1 / 60; maxStuck = Math.max(maxStuck, s.t); } else { s.t = 0; s.x = m.x; s.y = m.y; }
+        if (!keeps && Math.hypot(m.x - s.x, m.y - s.y) < 2 && d > 90) { s.t += 1 / 60; if (s.t > 2.5 && !s.info) s.info = { mob: m.mob, x: Math.round(m.x), y: Math.round(m.y), d: Math.round(d), near: Math.round(Math.min(...ms.filter((o) => o !== m).map((o) => Math.hypot(o.x - m.x, o.y - m.y) - (o.r || 16) - (m.r || 16)))), path: !!(m._nav && m._nav.path), los: walkLine(m.x, m.y, px, py, m.r || 16), map: activeMap.id, r: m.r, i: m._nav && m._nav.i, plen: m._nav && m._nav.path && m._nav.path.length, wp: m._nav && m._nav.path && m._nav.path[m._nav.i], sp: m.spd, mv: m.moving, slow: m.slow, stun: m.stun, kb: m.kb, spawnT: m.spawnT, f }; maxStuck = Math.max(maxStuck, s.t); } else { s.t = 0; s.x = m.x; s.y = m.y; }
       });
     }
-    out.push({ name, n: ms.length, insideFrames, maxStuck: +maxStuck.toFixed(2), reached: st.filter((s, i) => s.best < 110 || (ENEMY_TYPES[ms[i].mob] && ENEMY_TYPES[ms[i].mob].keep)).length, stuckKinds: ms.filter((m, i) => st[i].t > 2).map((m) => m.mob), navMsPerFrame: +((navStats.ms - navMs0) / frames).toFixed(3) });
+    out.push({ name, n: ms.length, insideFrames, maxStuck: +maxStuck.toFixed(2), reached: st.filter((s, i) => s.best < 110 || (ENEMY_TYPES[ms[i].mob] && ENEMY_TYPES[ms[i].mob].keep)).length, stuckKinds: ms.filter((m, i) => st[i].t > 2).map((m) => m.mob), stuckInfo: st.filter((s) => s.info).map((s) => s.info), navMsPerFrame: +((navStats.ms - navMs0) / frames).toFixed(3) });
   }
   return out;
 };
@@ -61,6 +62,7 @@ with sync_playwright() as pw:
     pg.goto(url); pg.wait_for_timeout(2000)
     pg.evaluate("closeTitle(); setQaUnlock(true); el('modePanel').hidden = true; document.body.classList.remove('modeOpen')")
     pg.evaluate(JS)
+    pg.evaluate("setActiveMap(MAP_JUNGLE)")
     # 플레이어 자리: 맵 가운데 광장 / 돌담 뒤 / 강가·다리 / 풀숲 모서리 / 좁은 통로 근처
     spots = pg.evaluate('''(() => { const c = [[1236, 690, "가운데 광장"]];
       const pick = (name, test) => { for (let y = 80; y < H - 80; y += 24) for (let x = 80; x < W - 80; x += 24) if (!terrain(x, y) && !blocked(x, y) && !nearBox(x, y, 30) && test(x, y)) return [x, y, name]; return null; };
@@ -77,6 +79,21 @@ with sync_playwright() as pw:
         ok(f"[{r['name']}] 몬스터가 벽·물·상자 안에 들어간 프레임 0", r['insideFrames'] == 0, r['insideFrames'])
         ok(f"[{r['name']}] 3초 넘게 끼인 몬스터 없음", r['maxStuck'] < 3, r['maxStuck'])
         ok(f"[{r['name']}] 근접 도달 {r['reached']}/{r['n']} (원거리형은 사거리 유지)", r['reached'] >= r['n'] - 2, r['reached'])
+    # 무한 생존 웨이브 맵 5종 + 현곤 경기장
+    for mid in pg.evaluate('Object.keys(WAVE_MAPS)'):
+        sp = pg.evaluate(f'''(() => {{ setActiveMap(WAVE_MAPS["{mid}"]); const M = activeMap; const c = [[...M.playerSpawn, "플레이어 시작"], [...M.bossSpawn, "보스 자리"]];
+          for (let y = 100; y < H - 100; y += 20) for (let x = 100; x < W - 100; x += 20) if (!blocked(x, y, 18) && blocked(x + 34, y, 2) && blocked(x + 34, y - 20, 2)) {{ c.push([x, y, "벽 바로 뒤"]); return c; }}
+          return c; }})()''')
+        res = pg.evaluate(f'T.run({json.dumps(sp)}, {json.dumps(kinds)}, 12, "{mid}")')
+        for r in res:
+            print(mid, r)
+            ok(f"[{mid}·{r['name']}] 벽 안 프레임 0", r['insideFrames'] == 0, r['insideFrames'])
+            ok(f"[{mid}·{r['name']}] 3초 넘게 끼인 몬스터 없음", r['maxStuck'] < 3, r['maxStuck'])
+            ok(f"[{mid}·{r['name']}] 근접 도달 {r['reached']}/{r['n']}", r['reached'] >= r['n'] - 2, r['reached'])
+        reach = pg.evaluate(f'''(() => {{ setActiveMap(WAVE_MAPS["{mid}"]); const M = activeMap, out = [];
+          for (const r of [16, 34]) for (const s of [M.bossSpawn, ...M.enemySpawns]) {{ const path = findPath(M.playerSpawn[0], M.playerSpawn[1], s[0], s[1], r); const last = path && path[path.length - 1]; out.push(!!last && Math.hypot(last[0] - s[0], last[1] - s[1]) < 40); }}
+          return out; }})()''')
+        ok(f"[{mid}] 플레이어 시작 → 보스·적 스폰 9곳 길 연결 (반경 16·34)", all(reach), reach)
     perf = pg.evaluate('T.run([[1236, 690, "24마리"]], Array(24).fill("melee"), 8)')[0]
     print(perf)
     ok('24마리 동시 추적: 프레임당 길찾기 1ms 미만', perf['navMsPerFrame'] < 1, perf['navMsPerFrame'])

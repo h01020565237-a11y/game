@@ -1,16 +1,34 @@
 // 월드: 전역 상태, 지형/충돌, 이동
 
-const waterBits = atob(MAP_JUNGLE.water.bits);
+// 지금 쓰는 맵 (정글: 배틀로얄·스토리 미션 / WAVE_MAPS: 무한 생존). setActiveMap 으로만 바꿈
+let activeMap = MAP_JUNGLE, waterBits = atob(MAP_JUNGLE.water.bits), waterCols = 412, waterN = 95584;
 function wet(x, y) {
-  let i = Math.floor(y / 6) * 412 + Math.floor(x / 6);
-  return i >= 0 && i < 95584 && !!(waterBits.charCodeAt(i >> 3) & 128 >> (i & 7));
+  if (!waterBits) return false;
+  let i = Math.floor(y / 6) * waterCols + Math.floor(x / 6);
+  return i >= 0 && i < waterN && !!(waterBits.charCodeAt(i >> 3) & 128 >> (i & 7));
 }
 let character = "summoner";
 // VW, VH: 화면에 보이는 월드 크기 (PC 1000×650 고정, 모바일은 화면 비율에 맞춰 view.js 가 조정)
 let VW = c.width, VH = c.height;
-const W = MAP_JUNGLE.width, H = MAP_JUNGLE.height, keys = {}, mouse = { x: 500, y: 300, down: false };
+let W = MAP_JUNGLE.width, H = MAP_JUNGLE.height;
+const keys = {}, mouse = { x: 500, y: 300, down: false };
 let p, bots, boxes, boxRespawns = [], loot, shots, fx, last = 0, god = false, freeze = false, over = "", notice = "", nt = 0;
-const walls = MAP_JUNGLE.walls, bushes = MAP_JUNGLE.bushes;
+let walls = MAP_JUNGLE.walls, bushes = MAP_JUNGLE.bushes;
+// 맵 교체: 크기·벽·풀숲·물·길찾기 격자를 한꺼번에 바꿈 (그림은 renderer 의 mapImage)
+function setActiveMap(def) {
+  if (activeMap === def) return false;
+  activeMap = def;
+  W = def.width;
+  H = def.height;
+  walls = def.walls || [];
+  bushes = def.bushes || [];
+  waterBits = def.water ? atob(def.water.bits) : null;
+  waterCols = def.water?.cols || Math.ceil(W / 6);
+  waterN = def.water?.cells || 0;
+  if (typeof resetNav === "function") resetNav();
+  if (typeof fitCanvas === "function") fitCanvas(); // 모바일 화면 폭 상한이 맵 폭
+  return true;
+}
 let camX = 0, camY = 0, elapsed = 0, zone = 1450;
 function inBushXY(px, py) {
   for (let i = 0; i < bushes.length; i++) {
@@ -96,7 +114,15 @@ function move(a, dx, dy, dt) {
   const r = a.r || 16, steps = Math.max(1, Math.ceil(s / 8)), st = s / steps;
   for (let k = 0; k < steps; k++) {
     const x = clamp(a.x + dx * st, r + 2, W - r - 2), y = clamp(a.y + dy * st, r + 2, H - r - 2);
-    if (!terrain(x, a.y, r) && !blocked(x, a.y, r) && !nearBox(x, a.y, r + 14)) a.x = x;
-    if (!terrain(a.x, y, r) && !blocked(a.x, y, r) && !nearBox(a.x, y, r + 14)) a.y = y;
+    const free = (px, py) => !terrain(px, py, r) && !blocked(px, py, r) && !nearBox(px, py, r + 14);
+    const mx = x !== a.x && free(x, a.y), my = y !== a.y && free(mx ? x : a.x, y);
+    if (mx) a.x = x;
+    if (my) a.y = y;
+    // 모서리 미끄러짐: 한 축이 벽 모서리에 몇 px 걸려 막히면 다른 축으로 살짝 비켜서 지나감 (제자리 떨림 방지)
+    if (!mx && Math.abs(dx) > 0.3 && !my) {
+      for (const o of [1, -1, 2, -2, 3, -3, 4, -4]) if (free(a.x, a.y + o) && free(x, a.y + o)) { a.y += Math.sign(o) * Math.min(Math.abs(o), st); break; }
+    } else if (!my && Math.abs(dy) > 0.3 && !mx) {
+      for (const o of [1, -1, 2, -2, 3, -3, 4, -4]) if (free(a.x + o, a.y) && free(a.x + o, y)) { a.x += Math.sign(o) * Math.min(Math.abs(o), st); break; }
+    }
   }
 }

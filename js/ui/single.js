@@ -85,7 +85,6 @@ let lobbyMode = "single";
 function openModePanel() {
   el("modePanel").hidden = false;
   document.body.classList.add("modeOpen");
-  for (const b of document.querySelectorAll(".mode-hit.card")) b.classList.toggle("sel", b.dataset.mode === lobbyMode);
 }
 function chooseMode(mode) {
   if (mode === "pvp") { // 준비 중: 들어가지 않음
@@ -104,14 +103,6 @@ function chooseMode(mode) {
   if (mode === "single") openSinglePanel(); // 싱글: 미션마다 출전 캐릭터가 정해져 있어 미션 목록으로 바로
 }
 for (const b of document.querySelectorAll(".mode-hit.card")) b.onclick = () => chooseMode(b.dataset.mode);
-el("modeNext").onclick = () => chooseMode(lobbyMode);
-el("modeBack").onclick = () => { // 타이틀로
-  sfx("ui_click");
-  el("modePanel").hidden = true;
-  document.body.classList.remove("modeOpen");
-  el("title").hidden = false;
-  document.body.classList.add("titleOpen");
-};
 // 설정: 소리 3종 + QA 전체 해금(일반 저장과 분리된 테스트 전용 스위치)
 el("modeSettings").onclick = () => {
   sfx("ui_click");

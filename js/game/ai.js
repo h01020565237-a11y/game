@@ -24,7 +24,7 @@ function navOf(r = 16) {
   const N = { r, cell: cs, cols, rows, walk: new Uint8Array(n), g: new Float32Array(n), from: new Int32Array(n), stamp: new Int32Array(n), closed: new Int32Array(n), run: 0 };
   for (let row = 0; row < rows; row++) for (let c2 = 0; c2 < cols; c2++) {
     const x = (c2 + 0.5) * cs, y = (row + 0.5) * cs;
-    N.walk[row * cols + c2] = x >= r + 2 && x <= W - r - 2 && y >= r + 2 && y <= H - r - 2 && !terrain(x, y, r) && !blocked(x, y, r) && !nearBox(x, y, r + 14) ? 1 : 0;
+    N.walk[row * cols + c2] = x >= r + 2 && x <= W - r - 2 && y >= r + 2 && y <= H - r - 2 && !terrain(x, y, r) && !blocked(x, y, r + 3) && !nearBox(x, y, r + 14) ? 1 : 0; // 벽과 3px 여유: 경로 지점이 벽에 딱 붙으면 축별 이동이 막혀 제자리 떨림
   }
   return (NAVS[r] = N);
 }
@@ -186,13 +186,14 @@ function steer(a, tx, ty, dt) {
     nav.direct = !stuck && walkLine(a.x, a.y, tx, ty, rad);
     nav.path = nav.direct ? null : findPath(a.x, a.y, tx, ty, rad);
     nav.i = 0;
+    if (stuck) nav.raw = elapsed + 1.2; // 끼였으면 잠시 경로 다듬기 없이 격자 지점을 하나씩 따라감 (격자 지점끼리는 항상 지나갈 수 있음)
   }
   let gx = tx, gy = ty;
   const path = nav.path;
   if (!nav.direct && path) {
     while (nav.i < path.length - 1 && Math.hypot(path[nav.i][0] - a.x, path[nav.i][1] - a.y) < 8) nav.i++;
     // 경로 다듬기: 앞쪽 지점 중 직선으로 보이는 가장 먼 곳을 바로 향함
-    for (let j = Math.min(path.length - 1, nav.i + 6); j > nav.i; j--) {
+    if (!(nav.raw > elapsed)) for (let j = Math.min(path.length - 1, nav.i + 6); j > nav.i; j--) {
       if (walkLine(a.x, a.y, path[j][0], path[j][1], rad)) {
         nav.i = j;
         break;

@@ -1,7 +1,14 @@
 // 모바일 터치 조작
 
-const touchMode = matchMedia("(pointer:coarse)").matches;
+// 조작 방식 자동: 주 입력이 터치(휴대폰·태블릿)면 터치 조작, 아니면 키보드·마우스. 전환 버튼 없음
+// 마우스 기기인데 화면을 직접 터치하면(터치 노트북 등) 그때 터치 조작으로 바뀜
+const touchMode = matchMedia("(pointer:coarse)").matches || (matchMedia("(hover:none)").matches && navigator.maxTouchPoints > 0);
 document.body.classList.toggle("mobile", touchMode);
+addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "touch" || document.body.classList.contains("mobile")) return;
+  document.body.classList.add("mobile");
+  if (typeof fitCanvas === "function") fitCanvas();
+}, { capture: true });
 let mvX = 0, mvY = 0, aiming = false;
 const sb = document.querySelector("#summonBtn");
 // 화면 회전 모드(세로로 든 폰에서 게임을 90도 돌려 가로로 표시)일 때

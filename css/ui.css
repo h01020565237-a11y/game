@@ -552,3 +552,121 @@ body.modeOpen #lobby { visibility: hidden; }
 .rs-card b { font-size: clamp(22px, 7cqh, 40px); color: #ffe07a; text-shadow: 0 3px 0 #6b3d00; }
 .rs-card span { font-size: clamp(12px, 3.2cqh, 16px); }
 @keyframes rsPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ===== 로비 V3 (2026-11-25 UI 수정 요청): 왼쪽 목록 : 오른쪽 정보 = 50:50, 4열×2행 페이지, 하단 가운데 큰 진행 버튼 ===== */
+/* 공통 화면 버튼: 왼쪽 위 뒤로가기(◀ 모드 선택) · 오른쪽 위 설정. 모든 모드 화면에서 같은 자리·크기 */
+.screen-back, .screen-gear {
+  position: absolute; top: clamp(6px, 2.4cqh, 16px); z-index: 3;
+  height: clamp(34px, 9.5cqh, 48px); box-sizing: border-box;
+  font-family: var(--bl-font); font-size: clamp(13px, 3.8cqh, 18px); color: #fff;
+  background: linear-gradient(180deg, #2a429a, #1a2a66); border: 2px solid var(--bl-edge); border-radius: 999px;
+  box-shadow: 0 3px 0 var(--bl-deep); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.screen-back { left: clamp(8px, 2cqw, 20px); padding: 0 clamp(12px, 2.4cqw, 20px); }
+.screen-gear { right: clamp(8px, 2cqw, 20px); width: clamp(34px, 9.5cqh, 48px); padding: 0; display: grid; place-items: center; }
+.screen-gear svg { width: 62%; height: 62%; }
+.screen-back:active, .screen-gear:active { transform: translateY(2px); }
+.screen-back::after, .screen-gear::after { content: ""; position: absolute; inset: -8px; } /* 터치 판정 넓게 */
+
+#lobby { justify-content: center; gap: 0; padding: calc(clamp(6px, 2.4cqh, 16px) + clamp(34px, 9.5cqh, 48px) + clamp(4px, 1.6cqh, 10px)) clamp(8px, 2cqw, 20px) clamp(10px, 3.4cqh, 22px); box-sizing: border-box; }
+#lobby .lobby-card {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: min(100%, 1040px); flex: 1 1 auto; height: auto; min-height: 0;
+  /* 넓은 화면(PC)에서 타일이 세로로 길어져 그림 위가 비지 않게: 카드 높이를 폭에 맞춰 제한 (4×2 타일 ≈ 그림 비율) */
+  max-height: min(620px, calc(min(100cqw - 40px, 1040px) * 0.4));
+}
+.lobby-left { display: flex; flex-direction: column; min-height: 0; min-width: 0; gap: clamp(3px, 1cqh, 6px); background: #0f183866; border-radius: 14px; padding: clamp(4px, 1.2cqh, 8px); box-sizing: border-box; }
+.roster-view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: pan-y; }
+.roster-track { display: flex; width: calc(var(--pages, 1) * 100%); height: 100%; transition: transform .28s ease; }
+.roster-page {
+  width: calc(100% / var(--pages, 1)); height: 100%; box-sizing: border-box;
+  display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 2), minmax(0, 1fr));
+  gap: clamp(4px, 1.4cqh, 10px); padding: 2px clamp(2px, 0.6cqw, 6px);
+}
+/* 타일이 칸을 꽉 채움 (빈 공간 없음). 얼굴 그림은 contain 이라 비율 그대로 */
+#lobby .char-tile { max-width: none; width: 100%; height: 100%; min-height: 0; }
+#lobby .char-face { flex: 1 1 auto; min-height: 0; aspect-ratio: auto; padding: 5% 5% 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+#lobby .face-in { position: relative; display: block; width: 100%; max-height: 100%; aspect-ratio: 256 / 225; } /* 그림 비율 그대로, 이름 칸 위에 세움 */
+#lobby .face-in img { width: 100%; height: 100%; object-fit: contain; display: block; }
+#lobby .char-tile.locked .face-in img { filter: brightness(.3) saturate(.35); }
+#lobby .char-name { flex: none; font-size: clamp(10px, 3cqh, 14px); line-height: 1.6; }
+#lobby .char-lock { width: min(34%, 40px); }
+#lobby .char-tile.locked:not(.qa) { cursor: not-allowed; }
+#lobby .char-tile.locked .char-face { background: linear-gradient(180deg, #3b4b78, #222d55); }
+#lobby .char-tile.peek { border-color: #ffb0a8; }
+#lobby .char-tile.qa .char-name::after { content: " · QA"; color: #ffd27a; }
+#lobby .char-tile.qa .face-in img { filter: brightness(.6) saturate(.6); }
+.pg-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; display: none;
+  width: clamp(28px, 4cqw, 40px); height: clamp(48px, 16cqh, 80px); border-radius: 12px;
+  border: 2px solid var(--bl-edge); background: #0f1838cc; color: #fff; font-size: clamp(22px, 6cqh, 32px); line-height: 1; cursor: pointer;
+}
+.pg-arrow.prev { left: 0; } .pg-arrow.next { right: 0; }
+.pg-arrow:disabled { opacity: .25; cursor: default; }
+body:not(.mobile) .roster-view.paged .pg-arrow { display: block; } /* PC 만 화살표, 모바일은 스와이프 */
+.lobby-left-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: clamp(16px, 4.4cqh, 22px); padding: 0 4px; }
+.roster-dots { display: flex; align-items: center; gap: 5px; }
+.roster-dots[hidden] { display: none; }
+.roster-dots i { width: 8px; height: 8px; border-radius: 50%; background: #ffffff40; }
+.roster-dots i.on { background: var(--bl-gold); }
+.roster-dots small { color: #cfe1ff; font-size: clamp(10px, 2.8cqh, 12px); margin-left: 4px; }
+.roster-count { margin-left: auto; color: #ffd27a; font-size: clamp(11px, 3.2cqh, 15px); }
+/* 미영입 캐릭터를 누르면: 영입 조건만 (왼쪽 목록 아래쪽에 겹쳐 표시, 4초 뒤 사라짐) */
+#lobby .ci-locked {
+  position: absolute; left: clamp(8px, 2cqh, 18px); bottom: calc(clamp(8px, 2cqh, 18px) + clamp(18px, 5cqh, 26px));
+  width: calc(50% - clamp(16px, 3cqh, 30px)); box-sizing: border-box; z-index: 4;
+  display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: center;
+  background: #0d1636f2; border: 2px solid #ffb0a8; border-radius: 12px; padding: 6px 10px; text-align: left;
+}
+#lobby .ci-locked[hidden] { display: none; }
+#lobby .ci-locked.pop { animation: bl-pop .2s ease-out; }
+#lobby .ci-locked i { grid-row: span 2; width: 22px; color: #ffb0a8; } #lobby .ci-locked i svg { width: 100%; display: block; }
+#lobby .ci-locked b { font-weight: normal; color: #fff; font-size: clamp(12px, 3.4cqh, 15px); }
+#lobby .ci-locked span { color: #ffd6d0; font-size: clamp(10px, 3cqh, 13px); }
+/* 오른쪽 정보: 영역 안에서 스크롤 */
+#lobby .lobby-info { min-height: 0; overflow-y: auto; padding-right: 4px; gap: clamp(3px, 1.1cqh, 7px); }
+#lobby .ci-head { align-items: center; }
+#lobby .ci-detail { margin-left: auto; font-size: clamp(11px, 3cqh, 13px); padding: 3px 10px; }
+#ciStatus { font-size: 12px; }
+.ci-intro { margin: 0; color: #dbe9ff; font-size: clamp(11px, 3.2cqh, 14px); }
+.ci-intro[hidden] { display: none; }
+.ci-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+.ci-stats span { background: #0f183899; border-radius: 8px; padding: 2px 8px; font-size: clamp(11px, 3.1cqh, 14px); color: #fff; }
+.ci-stats b, .ci-line b { font-weight: normal; color: #9fd0ff; margin-right: 4px; }
+.ci-line { margin: 0; font-size: clamp(11px, 3.2cqh, 14px); color: #cfe1ff; }
+/* 하단 가운데 큰 진행 버튼 (금색 + 아이콘). 정보 영역 아래 공간에 따로 있어서 가리지 않음 */
+.lobby-cta { flex: none; margin-top: clamp(8px, 2.6cqh, 18px); z-index: 3; }
+.btn-cta {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-width: clamp(200px, 34cqw, 340px); height: clamp(48px, 13cqh, 66px); padding: 0 clamp(20px, 3cqw, 36px);
+  font-size: clamp(19px, 6.4cqh, 30px); color: #3b2700; border-radius: 999px;
+  background: linear-gradient(180deg, #fff2a8 0%, #ffd23f 40%, #ffa90f 100%);
+  box-shadow: 0 5px 0 var(--bl-gold-edge), 0 0 0 3px #fff6 inset, 0 0 22px #ffd23f99;
+  animation: bl-cta 1.8s ease-in-out infinite;
+}
+.btn-cta::after { content: ""; position: absolute; inset: -10px -14px; } /* 실제 터치 판정도 크게 */
+.btn-cta { position: relative; }
+.btn-cta i { display: block; width: 1.2em; height: 1.2em; } .btn-cta i svg { width: 100%; height: 100%; display: block; }
+.btn-cta.off { filter: grayscale(.85) brightness(.75); animation: none; }
+@keyframes bl-cta { 50% { box-shadow: 0 5px 0 var(--bl-gold-edge), 0 0 0 3px #fff6 inset, 0 0 34px #ffe07cdd; } }
+@media (prefers-reduced-motion: reduce) { .btn-cta { animation: none; } }
+/* 설정(소리) 팝업 */
+#lobby .lobby-foot { position: absolute; right: clamp(8px, 2cqw, 20px); top: calc(clamp(6px, 2.4cqh, 16px) + clamp(34px, 9.5cqh, 48px) + 6px); z-index: 5; flex-direction: column; align-items: stretch; padding: 12px 16px; gap: 8px; }
+#lobby .lobby-foot[hidden] { display: none; }
+#lobby .lobby-foot h3 { margin: 0; font-weight: normal; }
+#lobby .lobby-foot label { justify-content: space-between; }
+#lobby .lobby-foot .row { display: flex; gap: 8px; justify-content: flex-end; }
+#lobby .lobby-foot .btn-blue { font-size: 15px; padding: 6px 16px; }
+/* 싱글 미션 목록: 같은 뒤로가기 자리, 패널은 그 아래 */
+#singlePanel { justify-content: flex-start; padding-top: calc(clamp(6px, 2.4cqh, 16px) + clamp(34px, 9.5cqh, 48px) + clamp(4px, 1.6cqh, 10px)); padding-bottom: clamp(6px, 2cqh, 14px); box-sizing: border-box; }
+#singlePanel .single-card { max-height: 100%; }
+/* 터치 조작 전환 버튼: 화면에서 제거 (환경에 따라 자동). 요소는 QA 용으로 남김 */
+#mobileToggle { display: none !important; }
+/* 모바일 공통 button 12px 규칙(game.css)보다 우선: 큰 진행 버튼·뒤로가기 크기 유지 */
+body.mobile .btn-cta { font-size: clamp(19px, 6.4cqh, 30px); }
+body.mobile .screen-back { font-size: clamp(13px, 3.8cqh, 18px); }
+body.mobile #lobby .char-name { font-size: clamp(10px, 3cqh, 14px); }
+/* 싱글 미션 목록이 열려 있으면 뒤의 캐릭터 선택 화면은 감춤 (뒤로가기 버튼이 겹치지 않게) */
+body:has(#singlePanel:not([hidden])) #lobby { visibility: hidden; }
