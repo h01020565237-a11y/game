@@ -11,9 +11,12 @@ const JuyeopRankingUI = (() => {
   };
   const style = make("style");
   style.textContent = `
-    #lobbyRankBtn[hidden],#waveRanking[hidden],#waveRanking [hidden]{display:none!important}
+    #lobbyRankBtn[hidden],#resultRankBtn[hidden],#waveRanking[hidden],#waveRanking [hidden]{display:none!important}
     #lobbyRankBtn{position:absolute;top:clamp(6px,2.4cqh,16px);right:calc(clamp(8px,2cqw,20px) + clamp(34px,9.5cqh,48px) + 14px);z-index:3;height:clamp(34px,9.5cqh,48px);padding:0 clamp(12px,2cqw,20px);border:2px solid #ffe8a0;border-radius:999px;background:linear-gradient(#ffe57c,#ecad2c);color:#392600;font:inherit;font-size:clamp(13px,3.8cqh,18px);box-shadow:0 3px 0 #81561e;cursor:pointer;display:flex;align-items:center;gap:6px}
-    #waveRanking{z-index:45;inset:0;box-sizing:border-box;padding:2.2%;background:radial-gradient(ellipse at 50% 0%,#375fac,#172c69 50%,#0d1636);gap:0;justify-content:stretch}
+    #waveRanking{z-index:70;inset:0;box-sizing:border-box;padding:2.2%;background:radial-gradient(ellipse at 50% 0%,#375fac,#172c69 50%,#0d1636);gap:0;justify-content:stretch}
+    #modeRankBtn{position:absolute;top:3%;left:4%;z-index:3;padding:0 clamp(10px,2cqw,18px);height:clamp(32px,8cqh,45px);background:linear-gradient(#ffe57c,#ecad2c);border:2px solid #ffe8a0;border-radius:999px;color:#392600;font-family:inherit;font-size:clamp(13px,3.7cqh,18px);box-shadow:0 3px 0 #81561e;cursor:pointer}
+    #resultRankBtn{background:linear-gradient(#ffe57c,#ecad2c);color:#392600;border:2px solid #ffe8a0;font-size:clamp(14px,4.5cqh,20px);padding:8px 14px;white-space:nowrap}
+    #results .res-btns{flex-wrap:wrap;justify-content:center;gap:clamp(6px,1.8cqw,14px)}
     #waveRanking .rank-card{width:min(96%,980px);height:100%;min-height:0;box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(4px,1.3cqh,10px);padding:clamp(8px,2.1cqh,17px);overflow:hidden}
     #waveRanking .rank-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;flex:none}
     #waveRanking .rank-head h2{display:block;margin:0;font-size:clamp(19px,5.3cqh,30px);color:#ffdc75;text-shadow:0 2px #725019;text-align:center}
@@ -49,6 +52,14 @@ const JuyeopRankingUI = (() => {
   launch.type = "button"; launch.id = "lobbyRankBtn"; launch.hidden = true;
   launch.setAttribute("aria-haspopup","dialog");
   el("lobby").append(launch);
+  const modeLaunch=make("button","","🏆 랭킹");
+  modeLaunch.id="modeRankBtn"; modeLaunch.type="button";
+  modeLaunch.setAttribute("aria-haspopup","dialog");
+  el("modePanel").querySelector(".mode-stage").append(modeLaunch);
+  const resultLaunch=make("button","btn btn-gold","🏆 랭킹");
+  resultLaunch.id="resultRankBtn"; resultLaunch.type="button"; resultLaunch.hidden=true;
+  resultLaunch.setAttribute("aria-haspopup","dialog");
+  el("results").querySelector(".res-btns").append(resultLaunch);
   const screen = make("section","screen");
   screen.id = "waveRanking"; screen.hidden = true;
   screen.setAttribute("role","dialog"); screen.setAttribute("aria-modal","true");
@@ -73,7 +84,7 @@ const JuyeopRankingUI = (() => {
       <div class="rank-foot"><span id="rankAccount">온라인 랭킹 · TOP 100</span><span class="rank-personal" id="rankPersonal"></span></div>
     </div>`;
   el("arena").append(screen);
-  let category = "all", selectedChar = "suit", nickname = "", requestId = 0, controller = null, savedInert = false, lastRows = [];
+  let category = "all", selectedChar = "suit", nickname = "", requestId = 0, controller = null, savedInert = false, lastRows = [], sourceNode=null, sourceButton=null;
   const ids = () => LOBBY_ORDER.filter(k => Object.prototype.hasOwnProperty.call(DISPLAY_NAMES,k));
   const name = k => DISPLAY_NAMES[k] || "캐릭터";
   const face = k => {
@@ -157,19 +168,34 @@ const JuyeopRankingUI = (() => {
       if (seq===requestId) { el("rankRefresh").disabled=false; controller=null; }
     }
   }
-  function open() {
-    if (lobbyMode!=="wave" || !isLobbyOpen() || !screen.hidden) return;
-    el("lobbyFoot").hidden=true;
+  function open(origin="lobby") {
+    if (!screen.hidden) return;
+    const sources={
+      lobby:[el("lobby"),launch,lobbyMode==="wave" && isLobbyOpen()],
+      mode:[el("modePanel"),modeLaunch,!el("modePanel").hidden],
+      result:[el("results"),resultLaunch,!!singleRun?.endless && !singleRun?.m && !el("results").hidden],
+      pause:[el("battlePause"),el("pauseRank"),!!el("battlePause") && !el("battlePause").hidden && document.body.classList.contains("menuOpen")]
+    };
+    const entry=sources[origin];
+    if(!entry || !entry[0] || !entry[2]) return;
+    if(origin==="lobby") el("lobbyFoot").hidden=true;
+    if(origin==="mode") el("modeSet").hidden=true;
     category="all"; selectedChar=ids().includes(lobbySel)?lobbySel:ids()[0];
-    savedInert=el("lobby").inert; el("lobby").inert=true;
+    [sourceNode,sourceButton]=entry;
+    savedInert=sourceNode.inert; sourceNode.inert=true;
     screen.hidden=false; buildFilters(); load(); el("rankClose").focus({preventScroll:true}); sfx("ui_click");
   }
   function close() {
+    if(screen.hidden)return;
     ++requestId; if (controller) controller.abort(); controller=null;
-    screen.hidden=true; el("lobby").inert=savedInert;
-    launch.focus({preventScroll:true}); sfx("ui_click");
+    screen.hidden=true;
+    if(sourceNode)sourceNode.inert=savedInert;
+    sourceButton?.focus({preventScroll:true}); sourceNode=sourceButton=null;
+    sfx("ui_click");
   }
-  launch.onclick=open;
+  launch.onclick=()=>open("lobby");
+  modeLaunch.onclick=()=>open("mode");
+  resultLaunch.onclick=()=>open("result");
   el("rankClose").onclick=close; el("rankRefresh").onclick=load;
   el("rankAll").onclick=()=>{category="all";syncTabs();load();};
   el("rankByChar").onclick=()=>{category="character";syncTabs();load();};
@@ -188,6 +214,7 @@ const JuyeopRankingUI = (() => {
   },true);
   return {
     syncLobby(){launch.hidden=lobbyMode!=="wave";},
+    syncResult(){resultLaunch.hidden=!(singleRun?.endless && !singleRun?.m);},
     setNickname(value){nickname=typeof value==="string"?value:"";if(!screen.hidden)renderRows(lastRows);},
     open,close
   };
