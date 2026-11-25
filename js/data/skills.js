@@ -38,7 +38,7 @@ const SKILL_DATA = {
   runner: { // 기섭
     q: { name: "나 좀 봐라!", cd: 6, dur: 2, cost: 50, speed: 1.6, aim: "none", text: "자신감 게이지 {cost} 사용, {dur}초간 이동속도 ×{speed}" },
     e: { name: "비켜 내가 간다", cd: 8, dmg: 400, dmgRun: 600, dashT: 0.22, range: 124, aim: "dir", move: true, preview: "line", width: 76, text: "돌진 태클 {dmg} 피해와 넉백 (질주 중 {dmgRun}), 벽에 부딪히면 멈춤" },
-    r: { name: "나란 남자", pose: 0.6, dur: 5, tick: 0.3, hearts: 6, dmg: 90, slow: 1, range: 300, speed: 420, homing: 1, homeTurn: 2.2, homeRange: 320, aim: "none", text: "하트 포즈 후 {dur}초간 사방으로 하트 발사 (매번 {homing}발은 가까운 적을 약하게 추적), 한 발 {dmg} 피해와 둔화 (이동·공격 가능)" },
+    r: { name: "나란 남자", pose: 0.6, dur: 5, tick: 0.3, hearts: 6, dmg: 90, slow: 1, range: 300, speed: 420, homing: 2, homeTurn: 2.2, homeRange: 320, aim: "none", text: "하트 포즈 후 {dur}초간 사방으로 하트 발사 (매번 {homing}발은 가까운 적을 약하게 추적), 한 발 {dmg} 피해와 둔화 (이동·공격 가능)" },
     passive: { name: "역시 나야", per: 6, max: 100, text: "{per}px 이동할 때마다 자신감 게이지 1 충전 (최대 {max})" },
   },
   octo: { // 상훈

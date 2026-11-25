@@ -400,3 +400,17 @@ body.mobile #skillBar, body.lobbyOpen #skillBar, body.titleOpen #skillBar { disp
 #touch #ultBtn.ready { background: radial-gradient(circle at 50% 45%, #7a3fe0 0 58%, transparent 60%), conic-gradient(#ffd23f 100%, #ffd23f 0); box-shadow: 0 0 16px #ffd23f, 0 0 4px #fff; animation: ult-ready 1s ease-in-out infinite; }
 @keyframes ult-ready { 50% { box-shadow: 0 0 26px #ffd23f, 0 0 8px #fff; } }
 #touch #summonBtn, #touch #bearHeal { white-space: pre-line; line-height: 1.15; }
+
+/* ===== 게임 조작 영역: 브라우저 기본 동작 막기 (iOS Safari · Android Chrome) =====
+   - 두 번 탭 확대·핀치 확대: touch-action (조작부 none, 나머지 manipulation) + iOS gesture* 이벤트 (js/ui/touch.js)
+   - 텍스트 선택·복사 메뉴·길게 누르기 콜아웃·이미지 저장/끌기: user-select, -webkit-touch-callout, -webkit-user-drag
+   - 스크롤·당겨서 새로고침·튕김: overscroll-behavior + 조작부 touchmove 기본 동작 막기 */
+html, body { touch-action: manipulation; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+#arena, #arena canvas, #touch, #touch * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#arena canvas, #touch, #touch button, #touch .stick { touch-action: none; }
+#arena img, #touch img, .btn img { -webkit-user-drag: none; user-drag: none; -webkit-touch-callout: none; pointer-events: none; }

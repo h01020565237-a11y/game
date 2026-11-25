@@ -11,7 +11,7 @@ import json, pathlib, sys
 from playwright.sync_api import sync_playwright
 f = sys.argv[1] if len(sys.argv) > 1 else 'dist/index.html'
 url = pathlib.Path(f).resolve().as_uri()
-CH = ['suit', 'summoner', 'support', 'runner', 'octo', 'stripe', 'soccer', 'bear']
+CH = sys.argv[3].split(',') if len(sys.argv) > 3 else ['suit', 'summoner', 'support', 'runner', 'octo', 'stripe', 'soccer', 'bear']
 JS = r'''
 window.M = {};
 M.setup = (ch, n, mode = "static") => {
@@ -69,6 +69,7 @@ M.boss = (ch, bossId) => {
   for (let i = 0; i < 400 && singleRun.phase !== "boss"; i++) update(1 / 60);
   const B = singleRun.boss; B.hp = B.max = 1e8; B.dummy = false; B.track = true;
   bots = bots.filter((b) => b === B);
+  B.x = 1236; B.y = 640; // 맵 가장자리 등장 위치 대신 가운데 (플레이어가 맵 밖으로 나가지 않게)
   p.x = B.x - 120; p.y = B.y; pet = null; ultPets = []; clones = [];
   M.cx = B.x; M.cy = B.y; M.mode = "boss";
   M.log = { dmg: 0, hits: 0, byTarget: new Map(), stun: 0 };
@@ -131,7 +132,8 @@ with sync_playwright() as pw:
             out[ch][n] = pg.evaluate('M.ult()')
         pg.evaluate(f'M.setup("{ch}", 5, "move")'); out[ch]['move5'] = pg.evaluate('M.ult()')
         pg.evaluate(f'M.setup("{ch}", 1, "far")'); out[ch]['far1'] = pg.evaluate('M.ult()')
-        out[ch]['boss'] = pg.evaluate(f'M.boss("{ch}", "bear")')
+        runs = [pg.evaluate(f'(Math.random = (() => {{ let s = {seed}; return () => (s = (s * 16807) % 2147483647) / 2147483647; }})(), M.boss("{ch}", "bear"))') for seed in (11, 22, 33, 44, 55)]
+        out[ch]['boss'] = {'avg': round(sum(r['dmg'] for r in runs) / len(runs)), 'min': min(r['dmg'] for r in runs), 'max': max(r['dmg'] for r in runs), 'runs': [r['dmg'] for r in runs]}
         pg.evaluate('endSingle(); reset()')
         if ch == 'summoner':
             for n in [1, 5, 10]:

@@ -86,5 +86,5 @@ for (const d of PET_DEX) {
 // 버튼·카드용: 그림이 있으면 <img>, 없으면 아이콘 글자
 function petIconHTML(id, cls = "pet-art") {
   const im = petArt[id];
-  return im ? `<img class="${cls}" src="${im.src}" alt="">` : `<strong>${mons[id][1]}</strong>`;
+  return im ? `<img class="${cls}" src="${im.src}" alt="" draggable="false">` : `<strong>${mons[id][1]}</strong>`;
 }

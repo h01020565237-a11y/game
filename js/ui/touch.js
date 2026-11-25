@@ -352,11 +352,26 @@ document.querySelector("#charApply").onclick = () => {
 };
 
 // 길게 누르기 메뉴(복사·붙여넣기·이미지 저장)와 텍스트 선택 막기. 메뉴 패널의 선택 상자는 그대로 동작
-const allowNative = (t) => t && t.closest && t.closest("select, option, input, #menuPanel");
-for (const ev of ["contextmenu", "selectstart"]) {
+const allowNative = (t) => t && t.closest && t.closest("select, option, input, textarea, #menuPanel");
+const inGameArea = (t) => t && t.closest && t.closest("#arena, #touch");
+for (const ev of ["contextmenu", "selectstart", "dragstart"]) {
   document.addEventListener(ev, (e) => {
-    if (document.body.classList.contains("mobile") && !allowNative(e.target)) e.preventDefault();
+    if ((document.body.classList.contains("mobile") || inGameArea(e.target)) && !allowNative(e.target)) e.preventDefault();
   });
+}
+// iOS Safari: 핀치 확대 제스처 (viewport 설정을 무시하므로 직접 막음)
+for (const ev of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+// 두 번 탭 확대 (iOS 일부 버전은 touch-action 만으로 안 막힘)
+document.addEventListener("dblclick", (e) => {
+  if (inGameArea(e.target) && !allowNative(e.target)) e.preventDefault();
+}, { passive: false });
+// 조작 버튼·조이스틱·캔버스: 터치 기본 동작(길게 누르기 메뉴·돋보기·스크롤·확대) 막기. 포인터 이벤트(조작)는 그대로 옴
+const isControl = (t) => t && t.closest && t.closest("#touch button, #touch .stick, #arena canvas");
+for (const ev of ["touchstart", "touchmove"]) {
+  document.addEventListener(ev, (e) => {
+    if (isControl(e.target) && e.cancelable) e.preventDefault();
+    else if (ev === "touchmove" && e.touches.length > 1 && e.cancelable) e.preventDefault(); // 두 손가락 확대
+  }, { passive: false });
 }
 
 // 수류탄 버튼 (소모품, 최대 3개)
