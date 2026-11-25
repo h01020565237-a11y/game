@@ -52,4 +52,4 @@ const BGM = { srcs: [["assets/audio/bgm/jungle_loop.ogg", "audio/ogg"], ["assets
 const AUDIO_SYNTH_FALLBACK = false;
 
 // 기본 음량 설정 (사용자가 바꾸면 브라우저에 저장)
-const AUDIO_DEFAULTS = { bgm: 0.35, sfx: 0.8, muted: false };
+const AUDIO_DEFAULTS = { bgm: 0.35, sfx: 0.8, voice: 0.9, muted: false }; // voice: 컷신 음성

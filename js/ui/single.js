@@ -42,12 +42,15 @@ function renderSinglePanel() {
   // 스토리 극장: 본 적 있는(영입 완료한) 컷신 다시 보기. 진행도는 바뀌지 않음
   const th = el("theaterList");
   th.innerHTML = "";
-  const seen = SINGLE_MISSIONS.filter((ms) => CUTSCENES[ms.id] && singleSave.cleared[ms.id]);
+  // 영입한 캐릭터의 컷신만. (테스트 모드: 아직 영입 전인 컷신도 미리 보기 가능, 영입은 안 됨)
+  const story = (id) => RECRUIT_STORIES[id] || CUTSCENES[id];
+  const seen = SINGLE_MISSIONS.filter((ms) => story(ms.id) && (singleSave.cleared[ms.id] || singleSave.recruited.includes(ms.reward) || ROSTER.testMode));
   if (!seen.length) th.textContent = "영입을 완료하면 컷신을 다시 볼 수 있어요.";
   for (const ms of seen) {
     const b = document.createElement("button");
-    b.className = "btn btn-ghost";
-    b.textContent = "▶ " + CUTSCENES[ms.id].title;
+    const got = singleSave.cleared[ms.id] || singleSave.recruited.includes(ms.reward);
+    b.className = "btn btn-ghost" + (got ? "" : " test");
+    b.textContent = "▶ " + DISPLAY_NAMES[ms.reward] + " · " + story(ms.id).title + (got ? "" : " (테스트)");
     b.onclick = () => playCutscene(ms.id, null);
     th.append(b);
   }
@@ -150,6 +153,7 @@ const CUTSCENES = {
 };
 let csTimer = null, csDone = null, csId = null;
 function playCutscene(id, done) {
+  if (RECRUIT_STORIES[id]) return playStory(id, done); // 승인된 그림 컷 컷신 (js/ui/cutscene.js)
   const cs = CUTSCENES[id];
   csId = id;
   csDone = done;
@@ -190,6 +194,7 @@ function showShot(s) {
 }
 function endCutscene() {
   clearTimeout(csTimer);
+  if (cs.story) csCloseStory();
   if (csId && !singleSave.seen[csId]) {
     singleSave.seen[csId] = true;
     writeSingleSave();

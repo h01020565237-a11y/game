@@ -32,6 +32,7 @@ function setAudio(key, value) {
   saveAudioSettings();
   applyVolumes();
   if (key === "muted" || key === "bgm") syncBgm();
+  if (typeof csApplyVolumes === "function") csApplyVolumes();
 }
 
 function unlockAudio() {
@@ -194,6 +195,7 @@ function synth(kind, v) {
 // 배경음악: 파일이 있으면 반복 재생, 없으면 합성 루프 (정글 느낌의 부드러운 마림바 + 베이스)
 function syncBgm(force) {
   if (!audio.ctx) return;
+  if (audio.holdBgm) return stopBgm(); // 컷신 중: 게임 BGM 멈춤 (컷신 BGM 따로)
   const want = !audio.settings.muted && audio.settings.bgm > 0;
   if (!want) return stopBgm();
   if (audio.bgmEl) audio.bgmEl.volume = clamp(audio.settings.bgm * BGM.vol, 0, 1); // file:// 재생 음량

@@ -1,0 +1,753 @@
+{
+  "version": 1,
+  "voices": {
+    "donggi": {
+      "name": "동기",
+      "pitch": 0.72,
+      "rate": 0.94,
+      "direction": "매력적이고 안정적인 남성 저음"
+    },
+    "hyeongon": {
+      "name": "현곤",
+      "pitch": 1.25,
+      "rate": 1.09,
+      "direction": "얇은 남성 하이톤, 여성 음색 아님, 취하면 실없이 웃음"
+    },
+    "eunsuk": {
+      "name": "은숙",
+      "pitch": 1.17,
+      "rate": 1.0,
+      "direction": "하이톤, 단단하고 또렷한 발음"
+    },
+    "giseop": {
+      "name": "기섭",
+      "pitch": 0.68,
+      "rate": 0.96,
+      "direction": "묵직한 저음, 자신감; 상훈 편은 비웃는 톤"
+    },
+    "sanghun": {
+      "name": "상훈",
+      "pitch": 1.17,
+      "rate": 1.04,
+      "direction": "얇고 능청스러운 얍삽한 음색"
+    },
+    "gyeongsu": {
+      "name": "경수",
+      "pitch": 0.82,
+      "rate": 0.97,
+      "direction": "낮고 얍삽한 음색"
+    },
+    "church": {
+      "name": "교회 사람",
+      "pitch": 1.0,
+      "rate": 0.92,
+      "direction": "태연하게, 성별/연령 고정하지 않음"
+    }
+  },
+  "stories": {
+    "hyeongon": {
+      "name": "현곤",
+      "title": "대화역 사건",
+      "scenes": [
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "street"
+            ],
+            [
+              0.5,
+              "steps"
+            ]
+          ],
+          "voice": [
+            [
+              1,
+              "donggi",
+              "대화역은 이쪽이지!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/hyeongon/01.webp",
+          "size": [
+            825,
+            311
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.1,
+              "rustle"
+            ]
+          ],
+          "voice": [],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/hyeongon/02.webp",
+          "size": [
+            825,
+            311
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "pop"
+            ]
+          ],
+          "voice": [
+            [
+              0.4,
+              "hyeongon",
+              "대화역은 저쪽이지!"
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/hyeongon/03.webp",
+          "size": [
+            825,
+            303
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              1,
+              "impact"
+            ]
+          ],
+          "voice": [
+            [
+              1,
+              "hyeongon",
+              "너 맞을래?!"
+            ]
+          ],
+          "motion": "shake",
+          "unlock": false,
+          "image": "scenes/hyeongon/04.webp",
+          "size": [
+            825,
+            303
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0.2,
+              "awkward"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": false,
+          "image": "scenes/hyeongon/05.webp",
+          "size": [
+            825,
+            300
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/hyeongon/06.webp",
+          "size": [
+            825,
+            300
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        }
+      ],
+      "duration": 19
+    },
+    "eunsuk": {
+      "name": "은숙",
+      "title": "새벽별교회 사건",
+      "scenes": [
+        {
+          "duration": 5,
+          "sfx": [
+            [
+              0.2,
+              "paper"
+            ]
+          ],
+          "voice": [
+            [
+              0.5,
+              "hyeongon",
+              "우리 새벽별교회 놀러 와!"
+            ],
+            [
+              3,
+              "eunsuk",
+              "네, 오빠!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/eunsuk/01.webp",
+          "size": [
+            824,
+            310
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0.2,
+              "steps"
+            ]
+          ],
+          "voice": [],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/eunsuk/02.webp",
+          "size": [
+            824,
+            310
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [],
+          "voice": [
+            [
+              0.3,
+              "eunsuk",
+              "현곤 오빠 어딨어요?"
+            ],
+            [
+              2.4,
+              "church",
+              "현곤이?"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/eunsuk/03.webp",
+          "size": [
+            824,
+            298
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2.5,
+          "sfx": [
+            [
+              0.2,
+              "impact"
+            ]
+          ],
+          "voice": [
+            [
+              0.3,
+              "church",
+              "걔 군대 갔어."
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/eunsuk/04.webp",
+          "size": [
+            824,
+            298
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": false
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "march"
+            ]
+          ],
+          "voice": [
+            [
+              0.4,
+              "hyeongon",
+              "하나! 둘! 하나! 둘!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/eunsuk/05.webp",
+          "size": [
+            759,
+            305
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0.2,
+              "awkward"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": false,
+          "image": "scenes/eunsuk/06.webp",
+          "size": [
+            332,
+            305
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/eunsuk/07.webp",
+          "size": [
+            557,
+            305
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": false
+        }
+      ],
+      "duration": 24.5
+    },
+    "giseop": {
+      "name": "기섭",
+      "title": "매트리스 사건",
+      "scenes": [
+        {
+          "duration": 4,
+          "sfx": [],
+          "voice": [],
+          "motion": "still",
+          "unlock": false,
+          "image": "scenes/giseop/01.webp",
+          "size": [
+            823,
+            287
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "drag"
+            ]
+          ],
+          "voice": [
+            [
+              0.3,
+              "hyeongon",
+              "헤헤헤! 캬하하!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/giseop/02.webp",
+          "size": [
+            822,
+            287
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [],
+          "voice": [
+            [
+              0.1,
+              "donggi",
+              "크크크!"
+            ],
+            [
+              1.3,
+              "hyeongon",
+              "헤헤헤!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/giseop/03.webp",
+          "size": [
+            823,
+            269
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0,
+              "impact"
+            ]
+          ],
+          "voice": [
+            [
+              0.2,
+              "giseop",
+              "웃기냐?"
+            ]
+          ],
+          "motion": "shake",
+          "unlock": false,
+          "image": "scenes/giseop/04.webp",
+          "size": [
+            822,
+            269
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.1,
+              "huff"
+            ]
+          ],
+          "voice": [
+            [
+              0.2,
+              "hyeongon",
+              "캬하하하!"
+            ]
+          ],
+          "motion": "still",
+          "unlock": false,
+          "image": "scenes/giseop/05.webp",
+          "size": [
+            823,
+            293
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/giseop/06.webp",
+          "size": [
+            822,
+            293
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        }
+      ],
+      "duration": 20
+    },
+    "sanghun": {
+      "name": "상훈",
+      "title": "섬 사건",
+      "scenes": [
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "car"
+            ]
+          ],
+          "voice": [],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/sanghun/01.webp",
+          "size": [
+            823,
+            287
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "car"
+            ]
+          ],
+          "voice": [
+            [
+              0.4,
+              "sanghun",
+              "어! 저기 바다에 땅이 떠 있다!"
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/sanghun/02.webp",
+          "size": [
+            823,
+            269
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "pop"
+            ]
+          ],
+          "voice": [
+            [
+              0.3,
+              "giseop",
+              "저게 섬이라는 거야!!"
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/sanghun/03.webp",
+          "size": [
+            822,
+            269
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.2,
+              "ding"
+            ]
+          ],
+          "voice": [],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/sanghun/04.webp",
+          "size": [
+            823,
+            293
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/sanghun/05.webp",
+          "size": [
+            822,
+            293
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        }
+      ],
+      "duration": 18
+    },
+    "gyeongsu": {
+      "name": "경수",
+      "title": "커플룩 사건",
+      "scenes": [
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "street"
+            ],
+            [
+              0.5,
+              "steps"
+            ]
+          ],
+          "voice": [],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/gyeongsu/01.webp",
+          "size": [
+            712,
+            285
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "street"
+            ],
+            [
+              0.4,
+              "steps"
+            ]
+          ],
+          "voice": [],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/gyeongsu/02.webp",
+          "size": [
+            712,
+            285
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.2,
+              "pop"
+            ]
+          ],
+          "voice": [],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/gyeongsu/03.webp",
+          "size": [
+            712,
+            304
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.2,
+              "ding"
+            ]
+          ],
+          "voice": [],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/gyeongsu/04.webp",
+          "size": [
+            712,
+            304
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 4,
+          "sfx": [
+            [
+              0,
+              "steps"
+            ],
+            [
+              3,
+              "shutter"
+            ]
+          ],
+          "voice": [],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/gyeongsu/05.webp",
+          "size": [
+            712,
+            397
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/gyeongsu/06.webp",
+          "size": [
+            712,
+            397
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        }
+      ],
+      "duration": 21
+    }
+  },
+  "audio": {
+    "mode": "browser Korean speechSynthesis placeholder, replace with recorded voice assets",
+    "sfx": "sfx/{id}.wav",
+    "bgm": "sfx/bgm_loop.wav (original synthetic demo loop; replace with game music if desired)"
+  }
+}

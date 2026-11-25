@@ -222,16 +222,18 @@ document.querySelector("#menuBtn").onpointerdown = (e) => {
 
 // 사운드 설정 (로비 안)
 function bindAudioUI() {
-  const bgm = el("volBgm"), sf = el("volSfx"), mute = el("muteBtn");
+  const bgm = el("volBgm"), sf = el("volSfx"), vo = el("volVoice"), mute = el("muteBtn");
   const sync = () => {
     bgm.value = Math.round(audio.settings.bgm * 100);
     sf.value = Math.round(audio.settings.sfx * 100);
+    vo.value = Math.round((audio.settings.voice ?? 0.9) * 100);
     mute.textContent = audio.settings.muted ? "소리 켜기" : "음소거";
     mute.classList.toggle("on", audio.settings.muted);
   };
   bgm.oninput = () => setAudio("bgm", bgm.value / 100);
   sf.oninput = () => setAudio("sfx", sf.value / 100);
   sf.onchange = () => sfx("ui_click");
+  vo.oninput = () => setAudio("voice", vo.value / 100);
   mute.onclick = () => {
     setAudio("muted", !audio.settings.muted);
     sync();

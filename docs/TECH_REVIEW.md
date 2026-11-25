@@ -632,3 +632,14 @@ export default {
 - 렌더/UI: `js/render/endlessfx.js`(예고 범위, 장판, 칼날), `js/ui/endless.js`(목록, HUD, 카드, 결과). 보스전에는 경험치 바를 보스 바 아래로 이동.
 - 회귀: rules / skilltip / dist_check ALL PASS, sim errors=0, 스토리 웨이브 미션 수치 변화 없음.
 - 미구현/보류: 보스 BGM(에셋 없음), 무기 보상, 배틀로얄 봇의 V2 스킬·궁극기.
+
+## 영입 컷신 5편 (Juyeop_Recruitment_Pack)
+- 원본 패키지 보관: `docs/recruitment_pack/` (timeline.json, README, preview.html, 승인 원본 originals/)
+- 게임용: 장면 그림 `assets/cutscenes/<스토리>/NN.webp`(수정 없이 복사), 효과음 `assets/audio/cutscene/*.wav`, 컷신 BGM `cs_bgm.wav`
+- 데이터: `js/data/cutscenes.js` ← `python3 tools/import_cutscenes.py docs/recruitment_pack/timeline.json` 로 다시 생성. 연출 수치 `CUTSCENE_RULES` 는 손으로 조정(재생성해도 유지)
+- 플레이어: `js/ui/cutscene.js` — 장면 순서 재생, 그림 잘림 없음(화면 92% 안에 맞춤 + 흐린 배경), 카메라(pan/zoom/still), impact 효과음 시점 화면 흔들림, 겹쳐 바뀌는 전환, 영입 화면 번쩍임, BGM play/stop(툭 끊김 코믹), 원본 타임코드는 장면 번호 표시로 가림
+- 음성: 줄마다 녹음 파일 경로 칸(현재 null) → 넣으면 파일 재생, 없으면 브라우저 한국어 음성(임시, 성별 힌트로 목소리 고름). 미지원이어도 컷신 정상 진행
+- 음량: 음성/배경음/효과음 따로 (로비 + 컷신 안 🔊). 컷신 중 게임 BGM 정지 후 끝나면 복귀
+- 저장: 기존 그대로(클리어 → 영입 저장 → 컷신). 극장 다시 보기는 영입·저장 변화 없음. 테스트 모드에서는 영입 전 컷신도 극장에서 미리 보기
+- 재한·정용 컷신은 아직 없음 → 기존 방식 유지
+- 테스트: `tests/cutscene.py`
