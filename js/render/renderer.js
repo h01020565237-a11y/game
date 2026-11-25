@@ -271,7 +271,7 @@ function draw() {
     g.fillStyle = "white";
     g.font = "12px sans-serif";
     g.textAlign = "center";
-    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual] + " · " + weapons[a.w][0], a.x, a.y + 28);
+    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual], a.x, a.y + 28); // 이름만 (장착 무기 이름은 2026-11-25 요청으로 제거, 무기는 공격 버튼·HUD 아이콘)
   }
   for (const pt of [...(pet ? [pet] : []), ...ultPets]) drawPetActor(pt);
   drawBlades();

@@ -90,6 +90,7 @@ function loop(t) {
   if (n === MAX_STEPS) acc = 0;
   const lerped = applyInterp(Math.min(1, acc / STEP)); // 계산은 1/60초 고정, 그림은 그 사이를 이어서 (120Hz·프레임 흔들림에서 끊김 방지)
   draw();
+  drawMinimap(); // 보간된 위치로 같이
   restoreInterp(lerped);
   touchHUD();
   uiFrame();

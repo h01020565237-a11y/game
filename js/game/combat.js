@@ -317,7 +317,7 @@ function attack(a, x, y) {
   if (a === p && WEAPON_FEEL[a.w].kick) shake(WEAPON_FEEL[a.w].kick);
   // 탄창 1발 소모, 다음 발까지 짧은 간격만 둠 (충전은 reloadTime 마다 1발)
   a.ammo -= 1;
-  a.cd = AMMO.fireGap;
+  a.cd = Math.max(AMMO.fireGap, WEAPON_RULES[a.w]?.gap || 0); // 확정 무기는 공격 간격 고정
   d *= hasGear(a, 2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;
@@ -334,12 +334,15 @@ function attack(a, x, y) {
   }
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
-    for (let b of hitTargets(a)) { // 휘두른 범위 안이면 은신해도 맞음
+    let inArc = hitTargets(a).filter((b) => { // 휘두른 범위 안이면 은신해도 맞음
       let delta = Math.atan2(Math.sin(Math.atan2(b.y - a.y, b.x - a.x) - ang), Math.cos(Math.atan2(b.y - a.y, b.x - a.x) - ang));
-      if (dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b)) {
-        hit(a, b, d, { basic: true });
-        if (a === p && character === "suit" && p.comboStep === 2 && a.w === 0) knock(b, b.x - a.x, b.y - a.y, SKILL_DATA.suit.combo.hookPush);
-      }
+      return dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b);
+    });
+    const cap = WEAPON_RULES[a.w]?.maxTargets; // 검·망치: 가까운 대상 최대 2명
+    if (cap) inArc = inArc.sort((u, v) => dist(a, u) - dist(a, v)).slice(0, cap);
+    for (const b of inArc) {
+      hit(a, b, d, { basic: true });
+      if (a === p && character === "suit" && p.comboStep === 2 && a.w === 0) knock(b, b.x - a.x, b.y - a.y, SKILL_DATA.suit.combo.hookPush);
     }
 
     fx.push({ x: a.x + Math.cos(ang) * r * 0.6, y: a.y + Math.sin(ang) * r * 0.6, t: 0.18, ring: r * 0.55 });

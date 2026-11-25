@@ -21,9 +21,9 @@ async () => {
   const fresh = (ch) => { document.querySelector('#character').value = ch; document.querySelector('#charApply').click(); freeze = true; god = false; window.__seed(99); };
   window.__t = window.__t || 0;
 
-  // 1) 무기 수치 보존 (V1.4 원본 값)
-  const orig = [["맨손",100,0.5,80],["검",250,0.6,120],["망치",600,1.5,100],["권총",250,0.6,240],["샷건",140,1.4,160],["저격총",800,2,380],["수류탄",500,2,260]];
-  ok("무기 수치 원본과 동일", JSON.stringify(weapons) === JSON.stringify(orig));
+  // 1) 무기 수치 (2026-11-25 확정: 검 250·0.8 / 망치 700·2.0 / 권총 450·1.2, 나머지 V1.4 원본)
+  const orig = [["맨손",100,0.5,80],["검",250,0.8,120],["망치",700,2,100],["권총",450,1.2,240],["샷건",140,1.4,160],["저격총",800,2,380],["수류탄",500,2,260]];
+  ok("무기 수치 = 확정값(검·망치·권총) + 나머지 원본", JSON.stringify(weapons) === JSON.stringify(orig));
   ok("근접 부채꼴 각도 원본과 동일", JSON.stringify(angles) === JSON.stringify([90,120,160,30,75,12,60]));
 
   // 2) 액세서리 비활성
@@ -76,20 +76,20 @@ async () => {
   ok("체력이 가득하면 회복약 안 주움", loot.length === 1);
   loot = [];
 
-  // 6) 탄창: 3칸, 순차 충전 (권총 0.6초 = 36프레임에 1칸)
-  p.w = 3; p.ammo = 3; p.cd = 0; p.reload = 0;
+  // 6) 탄창: 3칸, 순차 충전 (샷건 1.4초 = 84프레임에 1칸. 권총은 확정값으로 공격 간격 1.2초라 연사 시험은 샷건으로)
+  p.w = 4; p.ammo = 3; p.cd = 0; p.reload = 0;
   attack(p, p.x + 100, p.y); step(16); attack(p, p.x + 100, p.y); step(16); attack(p, p.x + 100, p.y);
   ok("3번 연속 공격 후 탄창 0", p.ammo === 0, p.ammo);
   p.ammo = 0; p.reload = 0; p.cd = 0;
   const nShots = shots.length;
   attack(p, p.x + 100, p.y);
   ok("탄창이 비면 공격 안 됨", p.ammo === 0 && shots.length === nShots);
-  step(35);
-  ok("0.6초 전에는 충전 안 됨", p.ammo === 0, [p.ammo, p.reload]);
+  step(83);
+  ok("1.4초 전에는 충전 안 됨", p.ammo === 0, [p.ammo, p.reload]);
   step(2);
-  ok("0.6초에 1칸 충전", p.ammo === 1, [p.ammo, p.reload]);
-  step(36);
-  ok("다음 0.6초에 1칸 더 (순차 충전)", p.ammo === 2, p.ammo);
+  ok("1.4초에 1칸 충전", p.ammo === 1, [p.ammo, p.reload]);
+  step(84);
+  ok("다음 1.4초에 1칸 더 (순차 충전)", p.ammo === 2, p.ammo);
   step(200);
   ok("최대 3칸까지만 충전", p.ammo === 3, p.ammo);
 

@@ -61,6 +61,22 @@ with sync_playwright() as pw:
       out.weaveHits = hw; god = true; return out; })()''')
     ok('7. 몸이 닿으면 피해, 2초 동안 0.8초 간격으로 2~3번만', 2 <= r['hits'] <= 3 and r['dmg'] > 0, r)
     ok('7. 위빙(무적 회피) 중엔 접촉 피해 없음', r['weaveHits'] == 0, r)
+    # 무기 밸런스 (검 250·0.8초·2명 / 망치 700·2.0초·2명·160도 / 권총 450·1.2초·1명)
+    r = pg.evaluate('''(() => { openLobby(); startEndless("suit"); document.body.classList.add("menuOpen"); god = true; const R = singleRun; R.t = 0.01; for (let i = 0; i < 5; i++) update(1/60); R.plan = 0; R.timer = 1e9;
+      const out = {};
+      for (const [w, name] of [[1, "검"], [2, "망치"], [3, "권총"]]) {
+        bots = []; p.w = w; p.ammo = 3; p.cd = 0; p.comboStep = 0;
+        const es = [[50, -8], [56, 8], [62, -16], [68, 16]].map(([dx, dy]) => { const e = makeEnemy("tank", { x: p.x + dx, y: p.y + dy }, { noExp: true }); e.x = p.x + dx; e.y = p.y + dy; e.spawnT = 0; e.hp = e.max = 1e5; return e; });
+        attack(p, p.x + 100, p.y); for (let i = 0; i < 30; i++) { for (const e of es) { e.x = e.x; } update(1/60); }
+        const hitN = es.filter((e) => e.hp < e.max).length, dmg = Math.round(Math.max(...es.map((e) => e.max - e.hp)));
+        p.cd = 0; p.ammo = 3; attack(p, p.x + 100, p.y); const cd = +p.cd.toFixed(2);
+        out[name] = { hitN, dmg, cd, def: weapons[w].slice(1) };
+      }
+      return out; })()''')
+    print('weapons', r)
+    ok('검: 250 피해·간격 0.8초·최대 2명', r['검']['hitN'] == 2 and r['검']['cd'] == 0.8 and r['검']['def'][0] == 250, r['검'])
+    ok('망치: 700 피해·간격 2초·최대 2명·160도', r['망치']['hitN'] == 2 and r['망치']['cd'] == 2 and r['망치']['def'][0] == 700 and pg.evaluate('angles[2]') == 160, r['망치'])
+    ok('권총: 450 피해·간격 1.2초·1명', r['권총']['hitN'] == 1 and r['권총']['cd'] == 1.2 and r['권총']['def'][0] == 450, r['권총'])
     ok('에러 없음', not errs, errs[:3])
     b.close()
 print('ALL PASS' if not fails else f'{fails} FAIL')

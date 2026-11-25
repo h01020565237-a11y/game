@@ -406,8 +406,17 @@ const ammoText = (a) => "●".repeat(a.ammo) + "○".repeat(Math.max(0, AMMO.max
 function touchHUD() {
   checkHoldAttack();
   tickSkillAim();
-  setText("atk", "공격\n" + ammoText(p));
-  setText("grenBtn", "수류탄\n" + (p.grenades || 0) + "/" + GRENADE.max);
+  // 공격 버튼: 장착 무기 아이콘(없으면 주먹) + 탄창. 무기가 바뀌면 바로 갱신
+  const wKey = p.w + "|" + (basicOf(p)?.name || "");
+  if (atkBtn._w !== wKey) {
+    atkBtn._w = wKey;
+    const art = WEAPON_ART[p.w];
+    atkBtn.style.setProperty("--wicon", art ? `url("${weaponIcons[p.w].src}")` : "none");
+    atkBtn.classList.toggle("fist", !art);
+    atkBtn.dataset.w = basicOf(p)?.name || weapons[p.w][0];
+  }
+  setText("atkAmmo", ammoText(p));
+  setText("grenCount", String(p.grenades || 0));
   const gOn = (p.grenades || 0) > 0;
   if (grenBtn._on !== gOn) {
     grenBtn._on = gOn;
@@ -445,13 +454,18 @@ function touchHUD() {
     ub._ready = ready;
     ub.classList.toggle("ready", ready);
   }
-  // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
+  // 무기 교체 버튼: 바꿀 수 있는 무기 위에 있을 때만 (금빛 팝 등장 / 페이드 사라짐). 자리는 고정이라 다른 버튼이 안 흔들림
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
-  let label = swapL ? "교체\n" + lootName(swapL) : "";
-  setText("pickBtn", label);
-  if (pick._show !== !!swapL) {
-    pick._show = !!swapL;
-    pick.style.visibility = swapL ? "visible" : "hidden";
+  const sKey = swapL ? swapL.type + ":" + swapL.id : "";
+  if (pick._k !== sKey) {
+    pick._k = sKey;
+    if (swapL) {
+      const ic = swapL.type === LOOT.weapon ? weaponIcons[swapL.id] : null;
+      pick.style.setProperty("--wicon", ic ? `url("${ic.src}")` : "none");
+      setText("pickName", lootName(swapL));
+    }
+    pick.classList.toggle("show", !!swapL);
+    pick.setAttribute("aria-hidden", String(!swapL));
   }
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
@@ -495,6 +509,7 @@ for (const ev of ["touchstart", "touchmove"]) {
 // - 탭: 가장 가까운 적에게 자동 조준 투척 (적이 없으면 바라보는 방향 최대 거리)
 // - 끌기: 방향과 거리를 직접 조준 (화면에 낙하 지점과 폭발 범위 표시), 손을 떼면 투척, 가운데로 되돌리면 취소
 const grenBtn = document.querySelector("#grenBtn");
+grenBtn.style.setProperty("--gicon", weaponIcons[GRENADE.weaponId] ? `url("${weaponIcons[GRENADE.weaponId].src}")` : "none"); // 수류탄 아이콘 (사용해도 장착 무기는 그대로)
 let grenPress = null, grenAim = null;
 grenBtn.onpointerdown = (e) => {
   e.preventDefault();
