@@ -313,14 +313,7 @@ document.querySelector("#mobileToggle").onclick = () => {
   aiming = false;
   fitCanvas();
 };
-// 모바일 메뉴 (캐릭터·덱 선택). 열려 있는 동안 게임은 멈춤
-document.querySelector("#menuBtn").onpointerdown = (e) => {
-  e.preventDefault();
-  document.body.classList.toggle("menuOpen");
-  releaseSticks();
-  aiming = false;
-  closeSwipe();
-};
+// 메뉴 버튼(일시정지)은 js/ui/lobby.js 한 곳에서만 처리 (예전엔 여기와 lobby.js 가 서로 덮어씀)
 window.addEventListener("blur", () => {
   releaseSticks();
   releaseAttack(false);

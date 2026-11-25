@@ -328,10 +328,90 @@ el("overBtn").onclick = () => {
   sfx("ui_click");
   reset();
 };
-document.querySelector("#menuBtn").onpointerdown = (e) => {
+// ===== 인게임 일시정지 메뉴 (2026-11-25 버그: 메뉴 버튼이 안 눌리던 문제) =====
+// 원인: touch.js·lobby.js 두 곳에서 같은 버튼 onpointerdown 을 덮어써서 '메뉴'가 로비로 바로 나가 버렸고, PC 에선 버튼이 숨겨져 있었음
+// 이제: 메뉴 버튼(PC·모바일 공통, Esc) → 일시정지(시뮬레이션 전체 정지: main.js 루프가 paused 면 update 안 함) → 계속하기 / 옵션 / 나가기
+function isPaused() {
+  return document.body.classList.contains("paused");
+}
+function canPause() {
+  return !isLobbyOpen() && el("title").hidden && el("modePanel").hidden && !over && el("cutscene").hidden && !document.body.classList.contains("csOpen") && el("results").hidden && el("recruitResult").hidden;
+}
+function openPause() {
+  if (isPaused() || !canPause()) return;
+  if (singleRun?.phase === "cards") return; // 카드 고르는 중은 이미 멈춰 있음
+  document.body.classList.add("paused");
+  el("pauseMenu").hidden = false;
+  el("pauseOpt").hidden = true;
+  if (typeof releaseSticks === "function") releaseSticks();
+  if (typeof releaseAttack === "function") releaseAttack(false);
+  aiming = false;
+  for (const k in keys) keys[k] = false; // 눌린 키가 남지 않게
+  syncPauseAudio();
+  sfx("ui_click");
+  setTimeout(() => el("pauseResume").focus?.({ preventScroll: true }), 0);
+}
+function closePause() {
+  if (!isPaused()) return;
+  document.body.classList.remove("paused");
+  el("pauseMenu").hidden = true;
+  if (typeof releaseSticks === "function") releaseSticks();
+  for (const k in keys) keys[k] = false;
+  last = performance.now(); // 멈춘 시간만큼 한꺼번에 흐르지 않게 (js/main.js)
+  acc = 0;
+}
+function syncPauseAudio() {
+  el("pVolBgm").value = Math.round(audio.settings.bgm * 100);
+  el("pVolSfx").value = Math.round(audio.settings.sfx * 100);
+  el("pVolVoice").value = Math.round((audio.settings.voice ?? 0.9) * 100);
+  el("pMute").textContent = audio.settings.muted ? "소리 켜기" : "음소거";
+}
+el("menuBtn").onpointerdown = (e) => {
   e.preventDefault();
-  openLobby();
+  e.stopPropagation();
+  isPaused() ? closePause() : openPause();
 };
+el("menuBtn").onclick = (e) => e.preventDefault(); // 키보드(Enter/Space) 접근은 아래 keydown 으로
+el("pauseResume").onclick = () => {
+  sfx("ui_click");
+  closePause();
+};
+el("pauseOptBtn").onclick = () => {
+  sfx("ui_click");
+  el("pauseOpt").hidden = !el("pauseOpt").hidden;
+  syncPauseAudio();
+};
+el("pVolBgm").oninput = (e) => setAudio("bgm", e.target.value / 100);
+el("pVolSfx").oninput = (e) => setAudio("sfx", e.target.value / 100);
+el("pVolVoice").oninput = (e) => setAudio("voice", e.target.value / 100);
+el("pMute").onclick = () => {
+  setAudio("muted", !audio.settings.muted);
+  syncPauseAudio();
+};
+el("pauseExit").onclick = () => { // 나가기: 진행 중인 판을 정리하고 타이틀로 (입력·타이머·소리 남지 않게)
+  sfx("ui_click");
+  document.body.classList.remove("paused");
+  el("pauseMenu").hidden = true;
+  openLobby(); // 판 정리 (적·투사체·타이머·BGM 상태)
+  document.body.classList.remove("lobbyOpen", "modeOpen");
+  el("lobby").hidden = true;
+  el("modePanel").hidden = true;
+  el("singlePanel").hidden = true;
+  if (typeof buildTitle === "function") buildTitle(); // 타이틀 다시 표시
+  else {
+    el("title").hidden = false;
+    document.body.classList.add("titleOpen");
+  }
+};
+addEventListener("keydown", (e) => {
+  if (e.code !== "Escape" || e.repeat) return;
+  if (isPaused()) closePause();
+  else openPause();
+});
+// 앱 전환·창 이탈 시 자동 일시정지 (전투 중일 때만)
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && canPause() && singleRun?.phase !== "cards") openPause();
+});
 
 // 사운드 설정 (로비 안)
 function bindAudioUI() {

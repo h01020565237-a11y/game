@@ -118,7 +118,7 @@
 #ammoPips { color: var(--bl-gold); letter-spacing: 2px; font-size: 13px; }
 #grenHud { font-size: 13px; color: #cfe1ff; padding-left: 8px; border-left: 1px solid #7fb3ff66; }
 body.lobbyOpen #topHud, body.lobbyOpen #weaponHud, body.lobbyOpen #touch { visibility: hidden; }
-body.mobile #topHud { left: 70px; }          /* 왼쪽 위 메뉴 버튼 자리 */
+#topHud, body.mobile #topHud { left: 78px; }   /* 왼쪽 위 메뉴 버튼 자리 (PC·모바일 공통) */
 body.mobile #weaponHud { bottom: 6px; transform: translateX(-50%) scale(.9); transform-origin: bottom center; }
 
 /* ---------- 화면(로비·결과) 공통 ---------- */
@@ -728,3 +728,25 @@ body.mobile .prep-pick span { font-size: clamp(11px, 3cqh, 13px); }
 /* 미션 안내·웨이브 배너: 글자보다 배경이 작아 보이던 문제 → 줄 높이·여백을 글자 크기에 맞추고, 길면 두 줄로 (2026-11-25) */
 #waveBanner { line-height: 1.35; padding: .45em 1.2em; box-sizing: border-box; width: max-content; max-width: 88%; white-space: normal; text-align: center; border-radius: 18px; font-size: clamp(15px, 1.6vw + 8px, 26px); box-shadow: 0 4px 14px #0008; }
 body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
+
+/* ===== 인게임 메뉴 버튼 + 일시정지 메뉴 (2026-11-25) ===== */
+#menuBtn, body.mobile #menuBtn {
+  display: block; position: absolute; left: 10px; top: 8px; z-index: 6; bottom: auto;
+  width: auto; min-width: 52px; height: clamp(30px, 6.4%, 42px); padding: 0 12px; box-sizing: border-box;
+  font-family: var(--bl-font); font-size: clamp(12px, 2.4vmin, 16px); color: #fff; cursor: pointer;
+  background: linear-gradient(180deg, var(--bl-navy-2), var(--bl-navy)); border: 2px solid var(--bl-edge); border-radius: 10px;
+  box-shadow: 0 3px 0 var(--bl-deep); pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+#menuBtn::after { content: ""; position: absolute; inset: -8px; } /* 터치 판정 넓게 */
+#menuBtn:active { transform: translateY(2px); }
+body.lobbyOpen #menuBtn, body.titleOpen #menuBtn, body.modeOpen #menuBtn, body.csOpen #menuBtn { display: none; }
+#pauseMenu { z-index: 14; background: #0d1636b3; backdrop-filter: blur(2px); }
+.pause-card { display: flex; flex-direction: column; align-items: stretch; gap: clamp(6px, 2cqh, 12px); width: min(84cqw, 340px); padding: clamp(12px, 3.4cqh, 22px) clamp(14px, 3cqw, 24px); box-sizing: border-box; max-height: 94cqh; overflow-y: auto; animation: bl-pop .2s ease-out; }
+.pause-card h3 { margin: 0; text-align: center; font-weight: normal; font-size: clamp(20px, 6.4cqh, 30px); color: #ffe07a; text-shadow: 0 3px 0 #6b3d00; }
+.pause-card .btn-cta { min-width: 0; width: 100%; }
+.pause-sub, body.mobile .pause-sub { font-size: clamp(14px, 4.2cqh, 18px); min-height: clamp(38px, 11cqh, 48px); }
+.pause-opt { display: flex; flex-direction: column; gap: 6px; background: #0f183899; border-radius: 12px; padding: 8px 12px; }
+.pause-opt[hidden] { display: none; }
+.pause-opt label { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #dbe9ff; font-size: clamp(12px, 3.6cqh, 15px); }
+.pause-opt input { flex: 1; max-width: 60%; }
+body.mobile .pause-opt .btn { font-size: 14px; }

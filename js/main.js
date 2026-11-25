@@ -37,7 +37,8 @@ function loop(t) {
   let n = 0;
   // 모바일 메뉴가 열려 있으면 게임 일시정지
   // 로비·메뉴가 열려 있으면 게임 일시정지
-  if (document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("csOpen")) acc = 0;
+  // 일시정지 메뉴(paused)·로비·컷신·(테스트용 menuOpen) 동안 시뮬레이션 전체 정지: 적 AI·이동·공격·웨이브 타이머·스킬 시간
+  if (document.body.classList.contains("paused") || document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("csOpen")) acc = 0;
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
     updateMouseWorld();
     update(STEP);

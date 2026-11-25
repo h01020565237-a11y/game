@@ -1,6 +1,8 @@
 // 키보드·마우스 입력
 
 onkeydown = (e) => {
+  if (document.body.classList.contains("paused")) return; // 일시정지 중엔 게임 입력 무시 (Esc 는 lobby.js)
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return; // 글자 입력 중 (닉네임 등)
   if (["SELECT", "BUTTON"].includes(document.activeElement?.tagName)) document.activeElement.blur();
   keys[e.code] = true;
   if (e.code === "Space") {
@@ -15,7 +17,7 @@ onkeydown = (e) => {
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
   if (e.code === "KeyG" && !over && !e.repeat) throwGrenade(p, mouse.x, mouse.y);
-  if (e.code === "Escape") openLobby();
+  if (e.code === "Escape") return; // Esc = 일시정지 메뉴 (js/ui/lobby.js)
   if (e.code === "KeyR") reset();
   if (e.code === "KeyF" && !over) pickup(p, isSwapLoot);
   if (e.code.startsWith("Arrow")) e.preventDefault();
