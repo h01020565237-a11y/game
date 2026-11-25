@@ -104,7 +104,7 @@ function hit(a, b, d, o = {}) {
   if (!b.max && b.hp <= 0) {
     fx.push({ x: b.x, y: b.y, t: 0.45, crateBurst: true });
     fx.push({ x: b.x, y: b.y, t: 2, debris: true }); // 바닥 잔해 (그림만, 충돌 없음)
-    boxes = boxes.filter((x) => x !== b);
+    b.opened = true; // 부서져 사라지지 않고 "열린 상자"로 남음 (위치·크기·충돌 유지, 다시 열 수 없음)
     const e = rollDrop();
     loot.push({ x: b.x, y: b.y, type: e.type, id: e.type === LOOT.accessory ? Math.floor(Math.random() * gear.length) : e.id || 0 });
     sfx("crate_break", b);

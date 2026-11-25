@@ -165,6 +165,16 @@ function draw() {
     g.save();
     g.globalAlpha = 1;
     // 새 상자 그림: HP 에 따라 멀쩡함 → 금 감 → 크게 부서짐, 맞는 순간은 피격 그림
+    if (b.opened) { // 열린 상자: 전용 그림이 오기 전까지는 멀쩡한 상자를 어둡게 (빛 없음)
+      if (chestArt.open?.naturalWidth) drawChest(chestArt.open, b.x, b.y);
+      else if (chestArt.intact.naturalWidth) {
+        g.filter = "grayscale(0.7) brightness(0.62)";
+        drawChest(chestArt.intact, b.x, b.y);
+        g.filter = "none";
+      }
+      g.restore();
+      continue;
+    }
     const art = b.flash > elapsed ? chestArt.hit : b.hp > 700 ? chestArt.intact : b.hp > 350 ? chestArt.cracked : chestArt.heavy;
     if (art.naturalWidth) drawChest(art, b.x, b.y);
     else if (crateArt.naturalWidth) {
