@@ -96,9 +96,17 @@ function renderLobbyInfo() {
   if (st) {
     const soon = ROSTER.comingSoon.includes(lobbySel);
     st.hidden = isRecruited(lobbySel);
-    st.textContent = (soon ? "출시 예정" : "미영입") + (ROSTER.testMode ? " · 테스트 모드로 플레이 가능" : "");
+    st.textContent = (soon ? "영입 미션 준비 중" : "미영입") + (ROSTER.testMode ? " · QA 전체 해금으로 플레이 가능" : "");
   }
   el("lobbyStart").disabled = !canPlay(lobbySel);
+  // 모드별: 싱글 = 미션 선택 / 웨이브 = 무한 생존 시작 (+ 최고 기록). 잠긴 캐릭터는 영입 조건 안내
+  const play = el("lobbyPlay");
+  play.textContent = lobbyMode === "wave" ? "웨이브 시작" : "미션 선택";
+  play.classList.toggle("off", !canPlay(lobbySel));
+  el("lobbyErr").textContent = canPlay(lobbySel) ? "" : lockReason(lobbySel);
+  el("lobbyModeTag").textContent = lobbyMode === "wave" ? "웨이브 모드 · 영입한 캐릭터만 출전" : "싱글 모드 · 스토리 · 영입 미션";
+  const rec = lobbyMode === "wave" && typeof endlessSave !== "undefined" ? endlessSave.best[lobbySel] : null;
+  el("lobbyRecord").textContent = rec ? `최고 기록 W${rec.wave} · ${fmtTime(rec.time)} · 처치 ${rec.kills}` : "";
   renderDeckPicker();
 }
 

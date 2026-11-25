@@ -14,7 +14,7 @@ with sync_playwright() as pw:
     pg = b.new_context(viewport={'width': 844, 'height': 390}, has_touch=True, is_mobile=True).new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle()')
+    pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
     def start(ch):
         pg.evaluate(f'openLobby(); lobbySel="{ch}"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(250)
         # 열린 곳 (정중앙 별 광장), 적은 왼쪽 가까이 (자동 조준이면 왼쪽으로 감)

@@ -414,3 +414,9 @@ html, body { touch-action: manipulation; overscroll-behavior: none; -webkit-text
 }
 #arena canvas, #touch, #touch button, #touch .stick { touch-action: none; }
 #arena img, #touch img, .btn img { -webkit-user-drag: none; user-drag: none; -webkit-touch-callout: none; pointer-events: none; }
+
+/* BUG-05: 현곤 소환 버튼 안 포켓몬 그림 = 버튼 지름의 최대 75%, 비율 유지·가운데·넘침 없음, 입력 가로채지 않음 (실제 소환수 크기와 무관) */
+#touch .petBtn { overflow: hidden; }
+#touch .petBtn .pet-art { flex: 0 1 auto; min-height: 0; display: block; max-width: 75%; max-height: 75%; width: auto; height: auto; object-fit: contain; margin: auto; pointer-events: none; }
+.pk-slot .pet-art, .pk-mon .pet-art { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
+.card-art { width: 64px; height: 64px; object-fit: contain; pointer-events: none; }

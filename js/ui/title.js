@@ -28,6 +28,7 @@ function closeTitle() {
   document.body.classList.remove("titleOpen");
   bindAudioUI(); // 로비 사운드 슬라이더에 타이틀에서 바꾼 값 반영
   sfx("ui_click");
+  if (typeof openModePanel === "function") openModePanel(); // 타이틀 → 플레이 모드 선택
 }
 el("titleStart").onclick = closeTitle;
 // 설정: 기존 사운드 설정(setAudio)을 그대로 사용

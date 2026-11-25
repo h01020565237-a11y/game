@@ -67,13 +67,27 @@ const LOBBY_ART = {
 // ===== 캐릭터 선택창 배치·영입 상태 (Portraits V2 README) =====
 // 배치 순서는 영입 여부와 관계없이 고정: 윗줄 동기·현곤·은숙·기섭 / 아랫줄 상훈·경수·재한·정용
 const LOBBY_ORDER = ["suit", "summoner", "support", "runner", "octo", "stripe", "soccer", "bear"];
+// 영입 상태의 기준은 싱글 저장(singleSave.recruited, localStorage "battlelab.single") 하나. 동기만 처음부터 영입
+// QA 전체 해금(testMode)은 일반 저장과 분리된 별도 키 "battlelab.qa" — 저장된 영입 상태는 바꾸지 않고 플레이만 허용
 const ROSTER = {
-  unlocked: ["suit"],            // 싱글 플레이 처음부터 영입된 캐릭터
-  comingSoon: ["soccer", "bear"], // 출시 예정 표시
-  testMode: true,                // 테스트 모드: 미영입 캐릭터도 선택·플레이 가능 (어둡게 + 자물쇠 표시는 유지)
+  unlocked: ["suit"],             // 처음부터 영입 (새 저장 기본값)
+  comingSoon: ["soccer", "bear"], // 영입 미션 준비 중
+  testMode: (() => {
+    try {
+      return localStorage.getItem("battlelab.qa") === "1";
+    } catch (e) {
+      return false;
+    }
+  })(),
 };
+function setQaUnlock(on) {
+  ROSTER.testMode = !!on;
+  try {
+    localStorage.setItem("battlelab.qa", on ? "1" : "0");
+  } catch (e) {}
+}
 function isRecruited(k) {
-  return ROSTER.unlocked.includes(k);
+  return typeof singleSave !== "undefined" ? singleSave.recruited.includes(k) : ROSTER.unlocked.includes(k);
 }
 function canPlay(k) {
   return ROSTER.testMode || isRecruited(k);

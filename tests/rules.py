@@ -217,7 +217,7 @@ def main(path='index.html'):
         b = pw.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--autoplay-policy=user-gesture-required'])
         pg = b.new_page()
         pg.on('pageerror', lambda e: errors.append(str(e)))
-        pg.add_init_script(INIT)
+        pg.add_init_script(INIT + ';try{localStorage.setItem("battlelab.qa","1")}catch(e){}')
         pg.goto(url)
         pg.wait_for_function('typeof assetsReady !== "undefined" && assetsReady() && !!window.__rafCb', polling=100, timeout=30000)
         for r in pg.evaluate(CHECKS):
@@ -245,10 +245,10 @@ def main(path='index.html'):
         fails += not set_ok
         print(('PASS ' if set_ok else 'FAIL ') + '타이틀: 설정 아이콘 위치 투명 버튼 → 설정 창')
         m.keyboard.press('Enter')
-        title_closed = m.evaluate("document.querySelector('#title').hidden && document.body.classList.contains('lobbyOpen')")
+        title_closed = m.evaluate("document.querySelector('#title').hidden && !document.querySelector('#modePanel').hidden")
         fails += not title_closed
-        print(('PASS ' if title_closed else 'FAIL ') + '타이틀: Enter 로 시작 → 로비')
-        m.evaluate("document.querySelector('#charApply').click(); freeze = true; god = true; p.w = 3;")
+        print(('PASS ' if title_closed else 'FAIL ') + '타이틀: Enter 로 시작 → 플레이 모드 선택')
+        m.evaluate("setQaUnlock(true); el('modePanel').hidden = true; document.body.classList.remove('modeOpen'); document.querySelector('#charApply').click(); freeze = true; god = true; p.w = 3;")
         cdp = ctx.new_cdp_session(m)
         r1 = m.evaluate("JSON.parse(JSON.stringify(document.querySelector('#mv').getBoundingClientRect()))")
         r2 = m.evaluate("JSON.parse(JSON.stringify(document.querySelector('#atk').getBoundingClientRect()))")

@@ -15,7 +15,7 @@ with sync_playwright() as pw:
         pg = b.new_context(viewport={'width': vp[0], 'height': vp[1]}, has_touch=True, is_mobile=True, device_scale_factor=2).new_page()
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle()')
+        pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
         pg.evaluate('openLobby(); lobbySel="suit"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(300)
         pg.evaluate('god=true; window.__ev={}; for (const ev of ["contextmenu","selectstart","dragstart","dblclick"]) document.addEventListener(ev, (e)=>{ __ev[ev]=e.defaultPrevented; }, {capture:false});')
         cdp = pg.context.new_cdp_session(pg)

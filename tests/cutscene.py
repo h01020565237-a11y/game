@@ -18,7 +18,7 @@ with sync_playwright() as pw:
     pg = b.new_context(viewport={'width': 844, 'height': 390}, has_touch=True, is_mobile=True).new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(url); pg.wait_for_timeout(2500); pg.evaluate('localStorage.clear(); closeTitle()')
+    pg.goto(url); pg.wait_for_timeout(2500); pg.evaluate('localStorage.clear(); closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
     pg.mouse.click(400, 200); pg.wait_for_timeout(300)
     # 시간 단축 (데이터만 바꿈)
     pg.evaluate('for (const st of Object.values(RECRUIT_STORIES)) for (const sc of st.scenes) { sc.t = 0.25; sc.sfx = sc.sfx.map(([a,i]) => [a/20, i]); sc.voice = sc.voice.map((v) => [v[0]/20, v[1], v[2], v[3]]); }')

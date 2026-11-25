@@ -123,7 +123,7 @@ with sync_playwright() as pw:
     pg = b.new_context(viewport={'width': 844, 'height': 390}).new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(url); pg.wait_for_timeout(2500); pg.evaluate('closeTitle()')
+    pg.goto(url); pg.wait_for_timeout(2500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
     pg.evaluate(JS)
     for ch in CH:
         out[ch] = {}

@@ -16,7 +16,7 @@ with sync_playwright() as pw:
         pg = b.new_context(viewport={'width': vp[0], 'height': vp[1]}, has_touch=True, is_mobile=True).new_page()
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle()')
+        pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
         cdp = pg.context.new_cdp_session(pg)
         def touch(t, x=0, y=0): cdp.send('Input.dispatchTouchEvent', {'type': t, 'touchPoints': [] if t == 'touchEnd' else [{'x': x, 'y': y}]})
         ctr = lambda sel: pg.evaluate('(s)=>{let r=document.querySelector(s).getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}', sel)
@@ -62,7 +62,7 @@ with sync_playwright() as pw:
         ok(f'[{mode}] 오류 없음', not errs, errs)
     # PC 마우스
     pg = b.new_context(viewport={'width': 1400, 'height': 860}).new_page()
-    pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle()')
+    pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
     for ch in ['stripe', 'summoner']:
         pg.evaluate(f'openLobby(); lobbySel="{ch}"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(300)
         n = pg.evaluate('document.querySelectorAll("#skillBar .sk-slot").length')

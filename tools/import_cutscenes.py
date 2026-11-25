@@ -13,6 +13,10 @@ tl = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
 REWARD = {'hyeongon': 'summoner', 'eunsuk': 'support', 'giseop': 'runner', 'sanghun': 'octo', 'gyeongsu': 'stripe'}
 # 원본 그림 왼쪽 위 번호/타임코드 표기 크기 (그림 픽셀). 이 영역을 UI 표시로 가림
 LABEL = {'hyeongon': [196, 35], 'eunsuk': [196, 35], 'giseop': [226, 40], 'sanghun': [226, 40], 'gyeongsu': [226, 40]}
+# 녹음 음성 (스토리, 장면 번호, 시작초, 화자) → 파일. 은숙: docs/recruitment_pack/eunsuk_voice_mapping.json (사용자 선택 4개, HeyGen 2개는 파일 없음 → TTS)
+VOICE_FILES = {}
+for e in json.loads((ROOT / 'docs/recruitment_pack/eunsuk_voice_mapping.json').read_text(encoding='utf-8')):
+    if e['included'] and (ROOT / e['asset']).exists(): VOICE_FILES[('eunsuk', e['scene'], e['start'], e['speaker'])] = e['asset']
 GENDER = {'donggi': 'm', 'hyeongon': 'm', 'eunsuk': 'f', 'giseop': 'm', 'sanghun': 'm', 'gyeongsu': 'm', 'church': None}
 q = lambda v: json.dumps(v, ensure_ascii=False)
 out = ['// ===== 영입 컷신 데이터 (tools/import_cutscenes.py 로 timeline.json 에서 생성) =====',
@@ -36,10 +40,10 @@ for k, st in tl['stories'].items():
     out.append(f'  {k}: {{')
     out.append(f'    name: {q(st["name"])}, title: {q(st["title"])}, reward: {q(REWARD[k])}, label: {q(LABEL[k])},')
     out.append('    scenes: [')
-    for sc in st['scenes']:
+    for i, sc in enumerate(st['scenes']):
         img = sc['image']
         assert (ROOT / 'assets/cutscenes' / img.split('/', 1)[1]).exists(), img
-        voice = [[a, w, t, None] for a, w, t in sc['voice']]
+        voice = [[a, w, t, VOICE_FILES.get((k, i + 1, a, w))] for a, w, t in sc['voice']]
         out.append(f'      {{ img: "assets/cutscenes/{img.split("/", 1)[1]}", size: {q(sc["size"])}, t: {sc["duration"]}, motion: {q(sc["motion"])}, bgm: {q(sc["bgm"])}, '
                    f'cover: {q(sc["hideSourceTimecode"])}, unlock: {q(sc["unlock"])}, sfx: {q(sc["sfx"])}, voice: {q(voice)} }},')
     out.append('    ],')

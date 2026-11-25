@@ -47,9 +47,9 @@ const RECRUIT_STORIES = {
     scenes: [
       { img: "assets/cutscenes/eunsuk/01.webp", size: [824, 310], t: 5, motion: "pan", bgm: "play", cover: true, unlock: false, sfx: [[0.2, "paper"]], voice: [[0.5, "hyeongon", "우리 새벽별교회 놀러 와!", null], [3, "eunsuk", "네, 오빠!", null]] },
       { img: "assets/cutscenes/eunsuk/02.webp", size: [824, 310], t: 4, motion: "pan", bgm: "play", cover: true, unlock: false, sfx: [[0.2, "steps"]], voice: [] },
-      { img: "assets/cutscenes/eunsuk/03.webp", size: [824, 298], t: 4, motion: "pan", bgm: "play", cover: true, unlock: false, sfx: [], voice: [[0.3, "eunsuk", "현곤 오빠 어딨어요?", null], [2.4, "church", "현곤이?", null]] },
-      { img: "assets/cutscenes/eunsuk/04.webp", size: [824, 298], t: 2.5, motion: "zoom", bgm: "stop", cover: false, unlock: false, sfx: [[0.2, "impact"]], voice: [[0.3, "church", "걔 군대 갔어.", null]] },
-      { img: "assets/cutscenes/eunsuk/05.webp", size: [759, 305], t: 4, motion: "pan", bgm: "stop", cover: true, unlock: false, sfx: [[0, "march"]], voice: [[0.4, "hyeongon", "하나! 둘! 하나! 둘!", null]] },
+      { img: "assets/cutscenes/eunsuk/03.webp", size: [824, 298], t: 4, motion: "pan", bgm: "play", cover: true, unlock: false, sfx: [], voice: [[0.3, "eunsuk", "현곤 오빠 어딨어요?", "assets/audio/cutscene/voice/eunsuk/03_eunsuk.wav"], [2.4, "church", "현곤이?", "assets/audio/cutscene/voice/eunsuk/03_church.wav"]] },
+      { img: "assets/cutscenes/eunsuk/04.webp", size: [824, 298], t: 2.5, motion: "zoom", bgm: "stop", cover: false, unlock: false, sfx: [[0.2, "impact"]], voice: [[0.3, "church", "걔 군대 갔어.", "assets/audio/cutscene/voice/eunsuk/04_church.wav"]] },
+      { img: "assets/cutscenes/eunsuk/05.webp", size: [759, 305], t: 4, motion: "pan", bgm: "stop", cover: true, unlock: false, sfx: [[0, "march"]], voice: [[0.4, "hyeongon", "하나! 둘! 하나! 둘!", "assets/audio/cutscene/voice/eunsuk/05_hyeongon.wav"]] },
       { img: "assets/cutscenes/eunsuk/06.webp", size: [332, 305], t: 2, motion: "still", bgm: "stop", cover: true, unlock: false, sfx: [[0.2, "awkward"]], voice: [] },
       { img: "assets/cutscenes/eunsuk/07.webp", size: [557, 305], t: 3, motion: "still", bgm: "stop", cover: false, unlock: true, sfx: [[0, "fanfare"]], voice: [] },
     ],

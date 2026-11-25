@@ -23,7 +23,7 @@ with sync_playwright() as pw:
         print(('PASS ' if not bad else 'FAIL ') + stage, bad[:6])
         fails += bool(bad)
     check('타이틀')
-    pg.evaluate("closeTitle()")
+    pg.evaluate("closeTitle(); setQaUnlock(true); el('modePanel').hidden = true; document.body.classList.remove('modeOpen')")
     pg.wait_for_timeout(500)
     check('캐릭터 선택')
     pg.evaluate("document.querySelector('#lobbyDetail').click()")

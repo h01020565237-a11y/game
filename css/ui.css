@@ -518,24 +518,26 @@ body.lobbyOpen #lobby { display: flex; }
 .theater-list .btn.test { opacity: .75; border-style: dashed; }
 #csSkip { z-index: 6; }
 
-/* ===== 게임 모드 선택 (UI 시안 V1) ===== */
-#modePanel, #wavePanel, #pvpPanel { z-index: 12; }
-#modePanel { background: radial-gradient(ellipse at 50% 40%, #13204aee, #05070cf5); }
-.mode-wrap { width: min(94cqw, 860px); display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 1.4cqh, 10px); }
-.mode-head { align-self: stretch; display: flex; }
-body.mobile .mode-title, .mode-title { display: block; margin: 0; color: #ffd86b; font-size: clamp(22px, 7cqh, 40px); text-shadow: 0 3px 0 #6b3d00, 0 0 18px #000; }
-.mode-sub { margin: 0; color: #dfe7ff; font-size: clamp(11px, 3cqh, 15px); }
-.mode-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 2cqw, 18px); width: 100%; margin-top: clamp(4px, 1.5cqh, 10px); }
-.mode-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: clamp(10px, 3cqh, 22px) 8px; border-radius: 14px; border: 1.5px solid #ffffff55; color: #fff; cursor: pointer; box-shadow: 0 8px 24px #0008; transition: transform .12s, border-color .12s; }
-.mode-card.single { background: linear-gradient(160deg, #2a5d93ee, #1a2f55ee); }
-.mode-card.wave { background: linear-gradient(160deg, #2c3d74ee, #1c2348ee); }
-.mode-card.pvp { background: linear-gradient(160deg, #6b3a3aee, #3b2430ee); }
-.mode-card:hover, .mode-card:focus-visible { transform: translateY(-3px); border-color: #c9a7ff; }
-.mode-card img { width: clamp(56px, 22cqh, 110px); aspect-ratio: 1; object-fit: contain; border-radius: 14px; background: #2f6fe0; }
-.mode-card b { font-size: clamp(15px, 5cqh, 24px); font-weight: 700; }
-.mode-card span { font-size: clamp(11px, 3cqh, 14px); color: #d7def5; }
-.pvp-list { display: grid; gap: 8px; }
-.mode-sub-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 16px; border-radius: 12px; border: 1px solid #5a78b8; background: #18264acc; color: #fff; text-align: left; cursor: pointer; }
-.mode-sub-btn b { font-size: 16px; }
-.mode-sub-btn span { font-size: 12px; color: #9fb4dc; }
-.mode-sub-btn:disabled { opacity: .5; cursor: default; }
+/* ===== 플레이 모드 선택 (Menu Flow V2, 사용자 시안 그림 + 투명 버튼) ===== */
+#modePanel { z-index: 28; padding: 0; gap: 0; background: #0a1a46; overflow: hidden; }
+#modePanel[hidden] { display: none; }
+.mode-bg { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover; filter: blur(16px) brightness(.55); pointer-events: none; }
+.mode-stage { position: relative; width: min(100cqw, calc(100cqh * 1.7768)); aspect-ratio: 1672 / 941; }
+.mode-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; }
+.mode-hit { position: absolute; padding: 0; margin: 0; border: 0; background: transparent; cursor: pointer; border-radius: 12px; font-size: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.mode-hit:active { background: #ffffff22; }
+.mode-hit:focus-visible { outline: 3px solid #ffe873; outline-offset: 2px; }
+.mode-hit.card { border-radius: 6% / 9%; }
+.mode-hit.card.sel { box-shadow: 0 0 0 3px #ffe873, 0 0 24px #ffe87388; }
+.mode-hit.card.off { background: #0a0f2499; cursor: not-allowed; }
+.mode-hit.card.off.shake { animation: modeShake .35s; }
+@keyframes modeShake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.mode-soon { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-8deg); padding: .35em 1em; border-radius: 10px; background: #1b1f33ee; border: 2px solid #ffd86b; color: #ffd86b; font: 700 clamp(14px, 4.4cqh, 30px) var(--bl-font, sans-serif); white-space: nowrap; display: flex; flex-direction: column; align-items: center; }
+.mode-soon small { font-size: .5em; letter-spacing: 2px; color: #ffe9b0; }
+.mode-settings { right: 2%; top: 12%; }
+.mode-settings .qa { font-size: 13px; color: #ffd27a; }
+.mode-settings .row { display: flex; gap: 8px; justify-content: flex-end; }
+.lobby-mode-tag { margin: 0 0 2px; color: #8fd0ff; font-size: clamp(11px, 2.8cqh, 14px); }
+.lobby-record { margin: 2px 0; color: #ffd27a; font-size: clamp(11px, 2.8cqh, 14px); }
+#lobbyPlay.off { filter: grayscale(.8) brightness(.8); }
+body.modeOpen #lobby { visibility: hidden; }

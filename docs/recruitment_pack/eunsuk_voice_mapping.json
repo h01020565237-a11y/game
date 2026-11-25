@@ -1,0 +1,74 @@
+[
+  {
+    "scene": 1,
+    "start": 0.5,
+    "speaker": "hyeongon",
+    "text": "우리 새벽별교회 놀러 와!",
+    "asset": "assets/audio/cutscene/voice/eunsuk/01_hyeongon.wav",
+    "source": "existing_heygen",
+    "candidate": null,
+    "included": false,
+    "source_url": "https://resource2.heygen.ai/text_to_speech/8df3cc82f65f49c7bf9a1d6cb9293b0a/1cc57a5ad85b417e96dc970831355967/id=921c4abcbba94c6691a17834aee8b747.wav",
+    "duration": 2.025
+  },
+  {
+    "scene": 1,
+    "start": 3,
+    "speaker": "eunsuk",
+    "text": "네, 오빠!",
+    "asset": "assets/audio/cutscene/voice/eunsuk/01_eunsuk.wav",
+    "source": "existing_heygen",
+    "candidate": null,
+    "included": false,
+    "source_url": "https://resource2.heygen.ai/text_to_speech/8df3cc82f65f49c7bf9a1d6cb9293b0a/9cc364c4dadc444b87b4230e1923b151/id=1a916c3a502f41588c58e6c78fb41dc4.wav",
+    "duration": 1.242
+  },
+  {
+    "scene": 3,
+    "start": 0.3,
+    "speaker": "eunsuk",
+    "text": "현곤 오빠 어딨어요?",
+    "asset": "assets/audio/cutscene/voice/eunsuk/03_eunsuk.wav",
+    "source": "user_selected_recording",
+    "candidate": 4,
+    "included": true,
+    "source_url": null,
+    "duration": 1.986
+  },
+  {
+    "scene": 3,
+    "start": 2.4,
+    "speaker": "church",
+    "text": "현곤이?",
+    "asset": "assets/audio/cutscene/voice/eunsuk/03_church.wav",
+    "source": "user_selected_recording",
+    "candidate": 13,
+    "included": true,
+    "source_url": null,
+    "duration": 0.785
+  },
+  {
+    "scene": 4,
+    "start": 0.3,
+    "speaker": "church",
+    "text": "걔 군대 갔어.",
+    "asset": "assets/audio/cutscene/voice/eunsuk/04_church.wav",
+    "source": "user_selected_recording",
+    "candidate": 14,
+    "included": true,
+    "source_url": null,
+    "duration": 1.594
+  },
+  {
+    "scene": 5,
+    "start": 0.4,
+    "speaker": "hyeongon",
+    "text": "하나! 둘! 하나! 둘!",
+    "asset": "assets/audio/cutscene/voice/eunsuk/05_hyeongon.wav",
+    "source": "user_selected_recording",
+    "candidate": 21,
+    "included": true,
+    "source_url": null,
+    "duration": 1.13
+  }
+]
