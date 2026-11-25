@@ -783,3 +783,52 @@ body.mobile #weaponHud { display: none; }
 body:not(.mobile) #weaponHud { left: 12px; transform: none; }
 #minimap { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); width: 17%; height: auto; opacity: .82; border-radius: 8px; border: 2px solid #7fb3ffaa; background: #0b143699; pointer-events: none; z-index: 4; }
 body.lobbyOpen #minimap, body.titleOpen #minimap, body.modeOpen #minimap { visibility: hidden; }
+
+/* ===== 닉네임 팝업 · 랭킹 (다크 네이비 + 골드) ===== */
+#nickPopup { z-index: 40; background: #0d1636cc; }
+body.mobile #nickPopup.kb { justify-content: flex-start; padding-top: 3cqh; } /* 키보드가 아래에서 올라오면 팝업을 위로 */
+body.mobile.rot #nickPopup.kb { align-items: flex-start; justify-content: center; padding: 0 0 0 4cqw; } /* 세로 폰(90° 회전 화면): 화면 오른쪽=실제 아래(키보드) → 왼쪽으로 */
+.nick-card { display: flex; flex-direction: column; align-items: center; gap: clamp(5px, 1.6cqh, 10px); width: auto; padding: clamp(10px, 3cqh, 20px) clamp(16px, 3cqw, 26px); }
+.nick-card h3 { margin: 0; font-weight: normal; color: #ffe07a; font-size: clamp(18px, 5.6cqh, 26px); text-shadow: 0 3px 0 #6b3d00; }
+.nick-sub { margin: 0; color: #cfe1ff; font-size: clamp(11px, 3.2cqh, 14px); }
+.nick-field { position: relative; width: clamp(200px, 30cqw, 240px); }
+#nickInput { width: 100%; box-sizing: border-box; height: 44px; font-size: 16px; /* 16px 미만이면 iOS 가 확대함 */ text-align: center; font-family: inherit; color: #fff; background: #0b1436; border: 2px solid var(--bl-edge); border-radius: 12px; outline: none; padding: 0 40px; }
+#nickInput::placeholder { color: #8fa6d8; text-align: center; }
+#nickInput:focus { border-color: var(--bl-gold); box-shadow: 0 0 0 3px #ffd23f44; }
+#nickCount { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #8fa6d8; font-size: 12px; pointer-events: none; }
+#nickCount.over { color: #ff8a80; }
+.nick-err { margin: 0; min-height: 1.2em; color: #ffb0a8; font-size: 13px; text-align: center; max-width: clamp(200px, 30cqw, 240px); }
+.nick-ok, body.mobile .nick-ok { width: clamp(200px, 30cqw, 240px); min-width: 0; height: 44px; font-size: 18px; }
+#nickOffline { font-size: 14px; }
+.nick-cancel, body.mobile .nick-cancel { width: clamp(200px, 30cqw, 240px); font-size: 14px; min-height: 36px; }
+.nick-row { display: flex; align-items: center; gap: 8px; color: #cfe1ff; }
+.nick-row b { color: #ffe07a; font-weight: normal; flex: 1; }
+.rank-btn { right: calc(clamp(8px, 2cqw, 20px) + clamp(34px, 9.5cqh, 48px) + 8px); color: #ffd23f; }
+.rank-btn[hidden] { display: none; }
+#rankPanel { z-index: 35; background: #070d24cc; }
+.rank-card { display: flex; flex-direction: column; width: min(96cqw, 880px); height: min(94cqh, 640px); padding: clamp(8px, 2cqh, 14px); box-sizing: border-box; gap: 6px; background: linear-gradient(180deg, #16224f, #0b1334); border-color: #d9a520; }
+.rank-head { display: flex; align-items: center; gap: 10px; }
+.rank-head h3 { margin: 0; font-weight: normal; color: #ffd23f; font-size: clamp(17px, 5cqh, 24px); }
+.rank-me { flex: 1; color: #cfe1ff; font-size: clamp(11px, 3.2cqh, 14px); }
+.rank-tabs { display: flex; gap: 4px; overflow-x: auto; flex: none; }
+.rank-tab { flex: none; font-family: inherit; font-size: clamp(11px, 3.2cqh, 14px); color: #cfe1ff; background: #0b1436; border: 1px solid #3b4f8a; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.rank-tab.on { color: #3b2700; background: linear-gradient(180deg, #fff2a8, #ffc93a); border-color: #ffd23f; }
+.rank-cols, .rank-row { display: grid; grid-template-columns: 3em minmax(0, 2.2fr) minmax(0, 1fr) 4em 4em 3em 4em; gap: 4px; align-items: center; padding: 0 8px; font-size: clamp(11px, 3.3cqh, 14px); }
+.rank-cols { color: #8fa6d8; font-size: clamp(10px, 2.8cqh, 12px); flex: none; }
+.rank-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.rank-row { min-height: clamp(24px, 7.4cqh, 34px); color: #fff; background: #0f1a44; border-radius: 8px; position: relative; }
+.rank-row .rk { text-align: center; color: #cfe1ff; }
+.rank-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-row.top1 { background: linear-gradient(90deg, #5c4400, #1b2350); } .rank-row.top2 { background: linear-gradient(90deg, #4a4f5c, #1b2350); } .rank-row.top3 { background: linear-gradient(90deg, #5a3315, #1b2350); }
+.rank-row .rk:not(:empty) { font-size: 1.05em; }
+.rank-row.mine { outline: 2px solid #ffd23f; background: #2b2a12; }
+.rank-row.gold { animation: rank-gold 1.6s ease-out; }
+@keyframes rank-gold { 0% { box-shadow: 0 0 0 0 #ffd23f; } 30% { box-shadow: 0 0 22px 6px #ffd23fcc; } 100% { box-shadow: 0 0 0 0 #ffd23f00; } }
+.rank-row.pin { flex: none; }
+.rank-row.pin.dim { visibility: hidden; height: 0; min-height: 0; padding: 0; outline: 0; }
+.rank-msg { flex: none; text-align: center; color: #cfe1ff; font-size: 13px; }
+.res-online { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; color: #ffe07a; font-size: clamp(12px, 3.4cqh, 15px); }
+.res-online[hidden] { display: none; }
+.res-online .btn { font-size: 13px; padding: 4px 12px; }
+.gold-burst { animation: rank-gold-text 1.6s ease-out 2; color: #ffd23f !important; }
+@keyframes rank-gold-text { 0%, 100% { text-shadow: 0 3px 0 #6b3d00; transform: scale(1); } 30% { text-shadow: 0 0 18px #ffd23f, 0 0 36px #ffb000, 0 3px 0 #6b3d00; transform: scale(1.08); } }

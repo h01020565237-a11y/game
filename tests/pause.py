@@ -18,9 +18,10 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(executable_path='/usr/bin/google-chrome')
     for name, mob in (('PC', False), ('모바일', True)):
         ctx = b.new_context(viewport={'width': 844, 'height': 390} if mob else {'width': 1280, 'height': 720}, has_touch=mob, is_mobile=mob)
+        ctx.add_init_script("localStorage.getItem('battlelab.profile') || localStorage.setItem('battlelab.profile', JSON.stringify({playerId: '00000000-0000-4000-8000-000000000000', token: 'x', nickname: '테스트', registered: true}))")
         pg = ctx.new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        pg.add_init_script("localStorage.clear()")
+        pg.add_init_script("localStorage.clear(); localStorage.setItem('battlelab.profile', JSON.stringify({playerId: '00000000-0000-4000-8000-000000000000', token: 'x', nickname: '테스트', registered: true}))")
         pg.goto(url); pg.wait_for_timeout(2500)
         pg.click('#titleStart'); pg.wait_for_timeout(400)
         for mode in ('wave', 'single'):

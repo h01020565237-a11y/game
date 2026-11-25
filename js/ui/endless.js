@@ -77,5 +77,7 @@ function showEndlessResult() {
   el("resTitle").classList.toggle("lose", !r.newBest);
   el("resRank").previousElementSibling.textContent = "웨이브 · 레벨";
   el("resRank").textContent = `W${r.wave} · Lv${r.level}`;
+  el("resKills").textContent = String(r.kills); // 랭킹에 올라가는 처치 수와 같게
   el("overBtn").textContent = "다시 도전";
+  if (typeof onWaveRunEnd === "function") onWaveRunEnd(r); // 온라인 랭킹 등록 (js/ui/ranking.js)
 }

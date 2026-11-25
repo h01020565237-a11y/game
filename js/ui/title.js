@@ -30,7 +30,7 @@ function closeTitle() {
   sfx("ui_click");
   if (typeof openModePanel === "function") openModePanel(); // 타이틀 → 플레이 모드 선택
 }
-el("titleStart").onclick = closeTitle;
+el("titleStart").onclick = () => (typeof titleStartGate === "function" ? titleStartGate() : closeTitle());
 // 설정: 기존 사운드 설정(setAudio)을 그대로 사용
 el("titleSettings").onclick = () => {
   const panel = el("titleSettingsPanel");

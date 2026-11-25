@@ -96,6 +96,7 @@
     <section id="lobby" class="screen" aria-label="캐릭터 선택">
       <!-- 공통: 왼쪽 위 뒤로가기(=모드 선택), 오른쪽 위 설정. 모드 화면에서만 보임 -->
       <button id="lobbyBack" class="screen-back" type="button">◀ 모드 선택</button>
+      <button id="lobbyRank" class="screen-gear rank-btn" type="button" aria-label="웨이브 랭킹" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm-1 4v1a2 2 0 0 0 1 1.7V7zm12 0v2.7A2 2 0 0 0 18 8V7z"/></svg></button>
       <button id="lobbySet" class="screen-gear" type="button" aria-label="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
       <div class="panel lobby-card">
         <div class="lobby-left">
@@ -162,6 +163,7 @@
           <label>배경음 <input type="range" id="mVolBgm" min="0" max="100"></label>
           <label>효과음 <input type="range" id="mVolSfx" min="0" max="100"></label>
           <label>음성 <input type="range" id="mVolVoice" min="0" max="100"></label>
+          <div class="nick-row">닉네임 <b id="mNick">-</b><button id="mNickEdit" class="btn btn-ghost" type="button">변경</button></div>
           <label class="qa">QA 전체 해금 (테스트 전용) <input type="checkbox" id="mQa"></label>
           <div class="row"><button id="mMute" class="btn btn-ghost">음소거</button><button id="mClose" class="btn btn-blue">닫기</button></div>
         </div>
@@ -274,6 +276,30 @@
     </section>
 
     <!-- 결과 화면 -->
+    <!-- 닉네임 등록/변경 팝업 (타이틀 GAME START → 미등록이면 표시, 설정에서 변경) -->
+    <section id="nickPopup" class="screen" hidden aria-label="닉네임">
+      <form id="nickForm" class="panel nick-card" autocomplete="off" novalidate>
+        <h3 id="nickTitle">닉네임 등록</h3>
+        <p class="nick-sub" id="nickSub">랭킹에 표시될 이름 (2~12자)</p>
+        <div class="nick-field"><input id="nickInput" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24" placeholder="닉네임 입력"><small id="nickCount">0/12</small></div>
+        <p id="nickErr" class="nick-err" role="alert"></p>
+        <button id="nickOk" class="btn btn-cta nick-ok" type="submit">등록</button>
+        <button id="nickOffline" class="btn btn-blue nick-ok" type="button" hidden>오프라인으로 시작 (나중에 등록)</button>
+        <button id="nickCancel" class="btn btn-ghost nick-cancel" type="button">취소</button>
+      </form>
+    </section>
+    <!-- 웨이브 랭킹 (전체·캐릭터별 TOP 100, 내 순위 아래 고정) -->
+    <section id="rankPanel" class="screen" hidden aria-label="웨이브 랭킹">
+      <div class="panel rank-card">
+        <div class="rank-head"><h3>🏆 웨이브 랭킹</h3><span id="rankMe" class="rank-me"></span><button id="rankClose" class="btn btn-ghost" type="button">닫기</button></div>
+        <div id="rankTabs" class="rank-tabs" role="tablist"></div>
+        <div class="rank-cols"><span>순위</span><span>닉네임</span><span>캐릭터</span><span>웨이브</span><span>생존</span><span>Lv</span><span>처치</span></div>
+        <div id="rankList" class="rank-list"></div>
+        <div id="rankPin" class="rank-row mine pin" hidden></div>
+        <div id="rankMsg" class="rank-msg"></div>
+      </div>
+    </section>
+
     <!-- 일시정지 메뉴 (인게임 메뉴 버튼 / Esc): 계속하기 · 옵션(소리) · 나가기(타이틀). 랭킹 버튼은 넣지 않음 -->
     <section id="pauseMenu" class="screen" hidden aria-label="일시정지">
       <div class="panel pause-card">
@@ -302,6 +328,7 @@
             <div class="stat"><span>생존 시간</span><b id="resTime">0:00</b></div>
           </div>
         </div>
+        <div id="resOnline" class="res-online" hidden><span id="resOnlineText"></span><button id="resResend" class="btn btn-ghost" type="button" hidden>다시 보내기</button><button id="resRankBtn" class="btn btn-gold" type="button" hidden>🏆 랭킹 보기</button></div>
         <div class="res-btns">
           <button id="overBtn" class="btn btn-blue">다시 하기</button>
           <button id="resLobby" class="btn btn-gold">로비로</button>
@@ -331,6 +358,7 @@
   <script src="js/data/endless.js"></script>
   <script src="js/data/wave_maps.js"></script>
   <script src="js/data/vision.js"></script>
+  <script src="js/data/ranking.js"></script>
   <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>
   <script src="js/engine/assets.js"></script>
@@ -359,7 +387,9 @@
   <script src="js/ui/touch.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/cutscene.js"></script>
+  <script src="js/net/ranking.js"></script>
   <script src="js/ui/single.js"></script>
+  <script src="js/ui/ranking.js"></script>
   <script src="js/ui/endless.js"></script>
   <script src="js/game/pokemon.js"></script>
   <script src="js/game/story.js"></script>
