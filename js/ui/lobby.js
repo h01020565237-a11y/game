@@ -388,19 +388,15 @@ el("pMute").onclick = () => {
   setAudio("muted", !audio.settings.muted);
   syncPauseAudio();
 };
-el("pauseExit").onclick = () => { // 나가기: 진행 중인 판을 정리하고 타이틀로 (입력·타이머·소리 남지 않게)
+el("pauseExit").onclick = () => { // 나가기: 진행 중인 판을 정리하고 바로 전 화면으로 (웨이브 → 캐릭터 선택, 싱글 → 그 미션 출전 준비)
   sfx("ui_click");
+  const missionId = singleRun && !singleRun.endless ? singleRun.id : singleRun?.story ? singleRun.id : null;
   document.body.classList.remove("paused");
   el("pauseMenu").hidden = true;
-  openLobby(); // 판 정리 (적·투사체·타이머·BGM 상태)
-  document.body.classList.remove("lobbyOpen", "modeOpen");
-  el("lobby").hidden = true;
-  el("modePanel").hidden = true;
-  el("singlePanel").hidden = true;
-  if (typeof buildTitle === "function") buildTitle(); // 타이틀 다시 표시
-  else {
-    el("title").hidden = false;
-    document.body.classList.add("titleOpen");
+  openLobby(); // 판 정리 (적·투사체·타이머) + lobbyOpen 이라 게임 루프·전투 소리 멈춤
+  if (lobbyMode === "single") {
+    openSinglePanel();
+    if (missionId && typeof openMissionPrep === "function" && SINGLE_MISSIONS.some((m) => m.id === missionId)) openMissionPrep(missionId);
   }
 };
 addEventListener("keydown", (e) => {

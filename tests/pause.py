@@ -64,9 +64,15 @@ with sync_playwright() as pw:
             # 나가기
             (pg.tap if mob else pg.click)('#menuBtn'); pg.wait_for_timeout(100)
             pg.click('#pauseExit'); pg.wait_for_timeout(400)
-            st = pg.evaluate("[!el('title').hidden, !singleRun, mvX, mvY, aiming, document.body.classList.contains('paused'), Object.values(keys).some(Boolean), getComputedStyle(el('menuBtn')).display]")
-            ok(T + '나가기 → 타이틀, 판·입력 정리, 메뉴 버튼 숨김', st[0] and st[1] and st[2] == 0 and st[3] == 0 and not st[4] and not st[5] and not st[6] and st[7] == 'none', st)
-            pg.click('#titleStart'); pg.wait_for_timeout(400)
+            st = pg.evaluate("[!el('lobby').hidden && document.body.classList.contains('lobbyOpen'), !el('missionPrep').hidden, el('title').hidden, !singleRun, mvX, mvY, aiming, document.body.classList.contains('paused'), Object.values(keys).some(Boolean), getComputedStyle(el('menuBtn')).display]")
+            where = st[0] if mode == 'wave' else st[1]
+            ok(T + ('나가기 → 바로 전 화면(캐릭터 선택)' if mode == 'wave' else '나가기 → 바로 전 화면(미션 출전 준비)') + ', 타이틀 아님', where and st[2], st)
+            ok(T + '나가기: 판·입력 정리, 메뉴 버튼 숨김', st[3] and st[4] == 0 and st[5] == 0 and not st[6] and not st[7] and not st[8] and st[9] == 'none', st)
+            pg.evaluate("window.__snd = 0; const o = window.sfx; window.sfx = (...a) => { window.__snd++; return o(...a); }; window.__e = elapsed")
+            pg.wait_for_timeout(1500)
+            snd = pg.evaluate("[window.__snd, elapsed - window.__e]"); pg.evaluate("window.sfx = sfx")
+            ok(T + '나가기 후 전투 소리·게임 진행 멈춤', snd[0] == 0 and snd[1] == 0, snd)
+            pg.evaluate("el('missionPrep').hidden = true; el('singlePanel').hidden = true; openModePanel()"); pg.wait_for_timeout(200)
         ok(f'[{name}] 에러 없음', not errs, errs[:3])
         ctx.close()
     b.close()
