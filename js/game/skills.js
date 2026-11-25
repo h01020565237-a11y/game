@@ -516,10 +516,10 @@ function angleDiff(a, b) {
 }
 // 넉백 (벽·물·상자 앞에서 멈춤)
 function knock(b, dx, dy, distPx) {
-  const n = Math.hypot(dx, dy) || 1;
+  const n = Math.hypot(dx, dy) || 1, r = b.r || 16;
   for (let i = 0; i < distPx / 6; i++) {
-    const x = clamp(b.x + dx / n * 6, 18, W - 18), y = clamp(b.y + dy / n * 6, 18, H - 18);
-    if (terrain(x, y) || blocked(x, y) || boxes.some((q) => dist({ x, y }, q) < 30)) break;
+    const x = clamp(b.x + dx / n * 6, r + 2, W - r - 2), y = clamp(b.y + dy / n * 6, r + 2, H - r - 2);
+    if (terrain(x, y, r) || blocked(x, y, r) || nearBox(x, y, r + 14)) break;
     b.x = x;
     b.y = y;
   }

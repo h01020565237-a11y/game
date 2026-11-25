@@ -11,6 +11,7 @@ function reset() {
   flight = null;
   pet = null;
   summonCD = Array(mons.length).fill(0);
+  if (typeof resetNav === "function") resetNav(); // 길찾기 격자: 상자 상태·맵이 바뀌었을 수 있음
   skillCD = 0;
   swapCD = 0;
   selected = 0;

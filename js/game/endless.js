@@ -138,6 +138,11 @@ function makeEnemy(kind, at, opts = {}) {
     specialT: 1 + Math.random() * 2, owner: null, summoner: opts.summoner || null,
   });
   if (kind === "assassin") a.stealth = 99;
+  const sp = freeSpot(a.x, a.y, a.r); // 벽·물·상자 안 스폰 금지 (몸 크기 기준)
+  if (sp) {
+    a.x = sp.x;
+    a.y = sp.y;
+  }
   fx.push({ x: a.x, y: a.y, t: 0.6, ring: a.r + 14 });
   bots.push(a);
   return a;
@@ -417,8 +422,9 @@ function endlessBossAI(a, dt) {
     if (a.hidden <= 0) {
       const ang = Math.atan2(p.y - a.y, p.x - a.x) + Math.PI; // 뒤쪽으로 나타남
       const fxv = facingVec();
-      a.x = clamp(p.x - fxv[0] * 60, 30, W - 30);
-      a.y = clamp(p.y - fxv[1] * 60, 30, H - 30);
+      const sp = freeSpot(clamp(p.x - fxv[0] * 60, 30, W - 30), clamp(p.y - fxv[1] * 60, 30, H - 30), a.r) || a; // 벽 안에 나타나지 않게
+      a.x = sp.x;
+      a.y = sp.y;
       a.stealth = 0;
       a.tele = { P: { k: "slam", dmg: a.ambushDmg, radius: 70 }, t: 0.4, dur: 0.4, x: a.x, y: a.y, ang };
     }
@@ -477,9 +483,10 @@ function fireBossPat(a) {
   a.atkAnim = 0.4;
   switch (P.k) {
     case "slam":
-      if (P.jump) {
-        a.x = T.x;
-        a.y = T.y;
+      if (P.jump) { // 점프는 벽을 넘어갈 수 있지만 착지는 빈 자리에
+        const sp = freeSpot(T.x, T.y, a.r) || a;
+        a.x = sp.x;
+        a.y = sp.y;
       }
       for (const b of [p, ...(pet ? [pet] : []), ...ultPets]) if (dist(a, b) <= P.radius + 10) hit(a, b, P.dmg * m);
       fx.push({ x: a.x, y: a.y, t: 0.45, explosion: true });
@@ -561,12 +568,8 @@ function fireBossPat(a) {
   }
 }
 function bossChargeStep(a, dt) {
-  const c = a.charge, step = c.speed * dt, ox = a.x, oy = a.y;
-  a.x = clamp(a.x + c.vx * step, 30, W - 30);
-  a.y = clamp(a.y + c.vy * step, 30, H - 30);
-  if (terrain(a.x, a.y) || blocked(a.x, a.y, 24)) {
-    a.x = ox;
-    a.y = oy;
+  const c = a.charge, step = c.speed * dt;
+  if (chargeStep(a, c.vx, c.vy, step)) {
     c.left = 0;
     shake(5);
   }

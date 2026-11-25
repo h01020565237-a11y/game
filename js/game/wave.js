@@ -88,8 +88,13 @@ function makeMob(type, at) {
   const T = MOB_TYPES[type], q = at || spawnPoint(singleRun.m.spawnMinDist);
   const a = actor(q.x, q.y);
   const look = CORRUPT_LOOK[type], vis = look.visuals[Math.floor(Math.random() * look.visuals.length)];
-  Object.assign(a, { mob: type, hp: T.hp, max: T.hp, spd: T.spd, atkT: 0.6 + Math.random() * 0.6, spawnT: 0.6, deadT: 0, visual: vis, seed: Math.random() * 100 });
+  Object.assign(a, { mob: type, r: T.r || 16, hp: T.hp, max: T.hp, spd: T.spd, atkT: 0.6 + Math.random() * 0.6, spawnT: 0.6, deadT: 0, visual: vis, seed: Math.random() * 100 });
   if (type === "boss") Object.assign(a, { pat: 0, patT: 2.5, tele: null, summoned: 0 });
+  const sp = freeSpot(a.x, a.y, a.r); // 벽·물·상자 안에 나오지 않게 (몸 크기 기준)
+  if (sp) {
+    a.x = sp.x;
+    a.y = sp.y;
+  }
   fx.push({ x: a.x, y: a.y, t: 0.6, ring: T.r + 14 });
   bots.push(a);
   return a;
@@ -214,8 +219,8 @@ function separate(a) {
     if (b === a || b.hp <= 0) continue;
     const dx = a.x - b.x, dy = a.y - b.y, dd = Math.hypot(dx, dy), min = (a.r || MOB_TYPES[a.mob]?.r || 16) + (b.r || MOB_TYPES[b.mob]?.r || 16);
     if (dd > 0.01 && dd < min) {
-      const k = (min - dd) / dd * 0.25, x = a.x + dx * k, y = a.y + dy * k;
-      if (!terrain(x, y) && !blocked(x, y)) {
+      const k = (min - dd) / dd * 0.25, x = a.x + dx * k, y = a.y + dy * k, r = a.r || 16;
+      if (!terrain(x, y, r) && !blocked(x, y, r) && !nearBox(x, y, r + 14)) { // 밀려도 벽·상자 안으로 안 들어감
         a.x = x;
         a.y = y;
       }
@@ -238,12 +243,7 @@ function bossAI(a, dt) {
   }
   if (a.charge) { // 돌진 중
     const c = a.charge, step = c.speed * dt;
-    const ox = a.x, oy = a.y;
-    a.x = clamp(a.x + c.vx * step, 30, W - 30);
-    a.y = clamp(a.y + c.vy * step, 30, H - 30);
-    if (terrain(a.x, a.y) || blocked(a.x, a.y, 24)) {
-      a.x = ox;
-      a.y = oy;
+    if (chargeStep(a, c.vx, c.vy, step)) { // 벽·물·상자에 부딪히면 그 앞에서 멈춤
       c.left = 0;
       shake(5);
     }

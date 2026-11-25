@@ -67,6 +67,17 @@ function simMovePath(x0, y0, dx, dy, len) {
   }
   return pts;
 }
+// 돌진: 몸 크기만큼 4px 씩 나눠 검사, 막히면 그 앞에서 멈추고 true
+function chargeStep(a, vx, vy, step) {
+  const r = a.r || 16, n = Math.max(1, Math.ceil(step / 4));
+  for (let k = 0; k < n; k++) {
+    const x = clamp(a.x + vx * step / n, r + 2, W - r - 2), y = clamp(a.y + vy * step / n, r + 2, H - r - 2);
+    if (terrain(x, y, r) || blocked(x, y, r) || nearBox(x, y, r + 14)) return true;
+    a.x = x;
+    a.y = y;
+  }
+  return false;
+}
 function move(a, dx, dy, dt) {
   if (a.stun > 0 || a.root > 0 || (a === p && p.jump)) { // 기절·이동불가(촉수 함정)·점프 중
     a.moving = false;
@@ -80,7 +91,12 @@ function move(a, dx, dy, dt) {
   a.dir = (Math.round(Math.atan2(dx, -dy) / (Math.PI / 4)) + 8) % 8;
   a.frame = (a.frame + dt * 12) % 8;
   a._anim = true; // 이번 스텝에 걷기 프레임을 이미 넘김 (update 의 봇 애니메이션 중복 방지)
-  let s = 150 * (a === p && (pet || ultPets.length) ? SKILL_DATA.summoner.passive.speed : 1) * (a === p && p.punchRush ? SKILL_DATA.suit.r.moveMul : 1) * (a === p && a.run > 0 ? character === "runner" ? SKILL_DATA.runner.q.speed : SKILL_DATA.bear.q.speed : 1) * (a === p && a.heal > 0 ? SKILL_DATA.bear.e.moveMul : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * (a.spd || 1) * (a === p && p.stealth > 0 ? p.stealthSpd || 1 : 1) * dt, x = clamp(a.x + dx * s, 18, W - 18), y = clamp(a.y + dy * s, 18, H - 18);
-  if (!terrain(x, a.y) && !blocked(x, a.y) && !nearBox(x, a.y, 30)) a.x = x;
-  if (!terrain(a.x, y) && !blocked(a.x, y) && !nearBox(a.x, y, 30)) a.y = y;
+  let s = 150 * (a === p && (pet || ultPets.length) ? SKILL_DATA.summoner.passive.speed : 1) * (a === p && p.punchRush ? SKILL_DATA.suit.r.moveMul : 1) * (a === p && a.run > 0 ? character === "runner" ? SKILL_DATA.runner.q.speed : SKILL_DATA.bear.q.speed : 1) * (a === p && a.heal > 0 ? SKILL_DATA.bear.e.moveMul : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * (a.spd || 1) * (a === p && p.stealth > 0 ? p.stealthSpd || 1 : 1) * dt;
+  // 몸 크기(a.r, 기본 16)만큼 벽·물·상자 판정. 한 번에 많이 움직여도(빠른 이동·큰 dt) 8px 씩 나눠 검사 → 벽을 건너뛰지 않음
+  const r = a.r || 16, steps = Math.max(1, Math.ceil(s / 8)), st = s / steps;
+  for (let k = 0; k < steps; k++) {
+    const x = clamp(a.x + dx * st, r + 2, W - r - 2), y = clamp(a.y + dy * st, r + 2, H - r - 2);
+    if (!terrain(x, a.y, r) && !blocked(x, a.y, r) && !nearBox(x, a.y, r + 14)) a.x = x;
+    if (!terrain(a.x, y, r) && !blocked(a.x, y, r) && !nearBox(a.x, y, r + 14)) a.y = y;
+  }
 }
