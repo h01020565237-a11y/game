@@ -309,6 +309,15 @@ function fireBossPattern(a) {
 function updateMobShots(dt) {
   for (const s of mobShots) {
     const steps = Math.max(1, Math.ceil(Math.hypot(s.vx, s.vy) * dt / 8));
+    if (s.home && (s.homeT -= dt) > 0 && p.hp > 0) { // 추적탄 (기섭 보스 하트): 초당 home 라디안까지만 꺾임
+      const want = Math.atan2(p.y - 14 - s.y, p.x - s.x), cur = Math.atan2(s.vy, s.vx), sp = Math.hypot(s.vx, s.vy);
+      let dv = want - cur;
+      while (dv > Math.PI) dv -= Math.PI * 2;
+      while (dv < -Math.PI) dv += Math.PI * 2;
+      const v = cur + clamp(dv, -s.home * dt, s.home * dt);
+      s.vx = Math.cos(v) * sp;
+      s.vy = Math.sin(v) * sp;
+    }
     if (s.turn) { // 휘는 탄 (재한 보스 감아차기)
       const v = Math.atan2(s.vy, s.vx) + s.turn * dt, sp = Math.hypot(s.vx, s.vy);
       s.vx = Math.cos(v) * sp;
@@ -324,6 +333,10 @@ function updateMobShots(dt) {
       } else if (p.hp > 0 && Math.hypot(p.x - s.x, p.y - 14 - s.y) < 18 + s.r * 0.5) {
         hit(s.a, p, s.d);
         if (s.slow) p.slow = Math.max(p.slow || 0, s.slow);
+        if (s.push) { // 물대포: 맞은 방향으로 밀림 (벽 통과 없음)
+          const n = Math.hypot(s.vx, s.vy) || 1;
+          for (let k = 0; k < 6; k++) moveRaw(p, s.vx / n, s.vy / n, s.push / 6);
+        }
         if (s.blast) hazards.push({ x: s.x, y: s.y, r: s.blast, t: 0.01, dur: 0.01, dmg: s.d * 0.6, a: s.a, color: "211, 155, 255" });
         s.dead = true;
       } else if (pet && Math.hypot(pet.x - s.x, pet.y - s.y) < 20) {

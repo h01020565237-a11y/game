@@ -439,6 +439,31 @@ function draw() {
       lightning(f);
       continue;
     }
+    if (f.pkball) { // 몬스터볼이 열리며 빛 (보스 포켓몬 소환·소환 등장). col = 포켓몬 색
+      const u = 1 - f.t / 0.6;
+      g.save();
+      g.globalAlpha = f.t / 0.6;
+      g.fillStyle = f.col || "#fff6a0";
+      g.beginPath();
+      g.arc(f.x, f.y, 8 + 34 * u, 0, 7);
+      g.fill();
+      g.globalAlpha = Math.min(1, f.t / 0.3);
+      ball(f.x, f.y + 6 - 14 * u, 8, u * 6);
+      g.restore();
+      continue;
+    }
+    if (f.healRing) { // 광역 회복 범위 (초록 고리가 퍼짐)
+      const u = 1 - f.t / 0.7;
+      g.save();
+      g.globalAlpha = f.t / 0.7;
+      g.strokeStyle = "#7dff9a";
+      g.lineWidth = 4;
+      g.beginPath();
+      g.arc(f.x, f.y, f.healRing * (0.3 + 0.7 * u), 0, 7);
+      g.stroke();
+      g.restore();
+      continue;
+    }
     if (f.burst || f.recall) {
       g.save();
       g.globalAlpha = f.t / 0.55;

@@ -148,7 +148,7 @@ function makeEnemy(kind, at, opts = {}) {
     mob: kind, endless: true, elite, hp, max: hp, spd: base.spd * sc.spd, dmg: base.dmg * sc.atk * (elite ? E.dmgMul : 1),
     r: base.r * (elite ? 1.2 : 1), exp: opts.noExp ? 0 : elite ? E.exp : base.exp, atkT: 0.5 + Math.random(), spawnT: 0.6, deadT: 0,
     visual: base.visual, seed: Math.random() * 100, look: { scale: (base.scale || 1) * (elite ? E.scale : 1), aura: elite ? E.aura : 0.55 },
-    specialT: 1 + Math.random() * 2, owner: null, summoner: opts.summoner || null,
+    specialT: 1 + Math.random() * 2, owner: null, summoner: opts.summoner || null, pk: base.pk,
   });
   if (kind === "assassin") a.stealth = 99;
   const sp = freeSpot(a.x, a.y, a.r); // 벽·물·상자 안 스폰 금지 (몸 크기 기준)
@@ -277,6 +277,16 @@ function enemyAI(a, dt) {
     return see;
   };
   switch (a.mob) {
+    case "pk_pika": case "pk_char": case "pk_squirt": { // 현곤 보스의 포켓몬: 피카츄 번개탄 / 파이리 화염(예고 원) / 꼬부기 물대포(밀침)
+      if (keepAway() && d <= T.range && a.atkT <= 0) {
+        a.atkT = T.cd * (0.85 + Math.random() * 0.3);
+        a.atkAnim = 0.35;
+        if (T.attack === "flame") hazards.push({ x: p.x, y: p.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "255, 110, 40" });
+        else shoot(T.shot, a.dmg, T.attack === "bolt" ? { color: "#ffe14d", bolt: true, r: 8 } : { color: "#5ab4ff", water: true, push: T.push, r: 9 });
+        sfx(T.attack === "bolt" ? "pistol" : "pet_skill", a);
+      }
+      return;
+    }
     case "ranged": {
       if (keepAway() && d <= T.range && a.atkT <= 0) {
         a.atkT = T.cd * (0.85 + Math.random() * 0.3);
@@ -360,7 +370,20 @@ function enemyAI(a, dt) {
 // 예고 범위 공격: 시간이 다 되면 범위 안의 플레이어 편에게 피해 (예고와 판정 위치가 같음)
 function updateHazards(dt) {
   for (const h of hazards) {
-    if (h.tick) { // 지속 영역 (보스 zone)
+    if (h.shock) { // 퍼지는 충격파: 고리 두께 안 + 틈이 아닌 곳에 있으면 한 번 맞음
+      h.r += h.speed * dt;
+      if (h.r > 0 && !h.hitDone && p.hp > 0) {
+        const d = dist(p, h), v = Math.atan2(p.y - h.y, p.x - h.x);
+        if (Math.abs(d - h.r) < h.w / 2 + 12 && !h.gaps.some((g0) => angleDiff(v, g0) < h.gapW)) {
+          h.hitDone = true;
+          hit(h.a, p, h.dmg);
+        }
+      }
+      if (h.r > h.max) h.dead = true;
+      continue;
+    }
+    if (h.tick) { // 지속 영역 (보스 zone, 먹물 웅덩이)
+      if (h.slow && dist(p, h) <= h.r) p.slow = Math.max(p.slow || 0, h.slow);
       h.life -= dt;
       if ((h.tickT -= dt) <= 0) {
         h.tickT += h.tick;
@@ -423,7 +446,7 @@ function endlessBossAI(a, dt) {
   }
   if (a.rushT > 0) { // 추적 연타
     a.rushT -= dt;
-    chase(a, dt * 1.6);
+    chase(a, dt * (a.rushSpd || 1.6));
     if ((a.rushTick -= dt) <= 0 && dist(a, p) < 60) {
       a.rushTick = 0.3;
       hit(a, p, a.rushDmg);
@@ -461,16 +484,45 @@ function endlessBossAI(a, dt) {
   }
   if (a.patT <= 0 && p.hp > 0) {
     const list = ph >= 1 && (a.pat % 3 === 2) ? Bd.ult : Bd.basic; // 궁극기 단계부터 3번에 1번 궁극기 패턴
-    const P = list[a.pat % list.length];
+    const P = bossPattern(a, list[a.pat % list.length]);
     a.pat++;
-    const ult = list === Bd.ult, [t0, t1] = ult ? B.ultTele : B.tele, tele = (t0 + Math.random() * (t1 - t0)) * enr;
-    faceTo(a, p.x, p.y);
-    a.moving = false;
-    const ang = Math.atan2(p.y - a.y, p.x - a.x);
-    const tx = P.jump || P.k === "traps" ? p.x : a.x, ty = P.jump || P.k === "traps" ? p.y : a.y;
-    a.tele = { P, t: tele, dur: tele, ang, x: tx, y: ty, spots: P.k === "traps" ? trapSpots(P) : null };
-    a.patT = tele + (P.rest || B.gap) * enr + 0.8;
+    const ult = list === Bd.ult, T = Bd.tune || {}, [t0, t1] = P.tele || (ult ? T.ultTele || B.ultTele : T.tele || B.tele), tele = (t0 + Math.random() * (t1 - t0)) * enr;
+    startBossTele(a, P, tele, P.times || 1);
+    a.patT = tele + (P.rest || T.gap || B.gap) * enr + 0.8 + (P.times > 1 ? (P.times - 1) * (B.chainTele + 0.6) : 0);
   }
+}
+// 패턴 + 체력 단계 강화값(ph[1] 60% 이하, ph[2] 30% 이하) 합치기
+function bossPattern(a, P0) {
+  const ph = bossPhase(a);
+  if (!P0.ph) return P0;
+  const P = { ...P0 };
+  for (let i = 1; i <= ph; i++) if (P0.ph[i]) Object.assign(P, P0.ph[i]);
+  return P;
+}
+// 예고 시작 (연속 패턴은 left 로 남은 횟수). 예고 위치와 판정 위치가 같도록 여기서 정함
+function startBossTele(a, P, tele, left) {
+  faceTo(a, p.x, p.y);
+  a.moving = false;
+  const ang = Math.atan2(p.y - a.y, p.x - a.x);
+  const tx = P.jump || P.k === "traps" ? p.x : a.x, ty = P.jump || P.k === "traps" ? p.y : a.y;
+  const spots = P.k === "traps" || P.k === "puddle" ? trapSpots(P) : P.k === "blastLine" ? blastSpots(a, P, ang) : null;
+  a.tele = { P, t: tele, dur: tele, ang, x: tx, y: ty, spots, left };
+}
+function blastSpots(a, P, ang) {
+  const out = [], lines = P.lines || 1;
+  for (let l = 0; l < lines; l++) {
+    const v = ang + (l - (lines - 1) / 2) * 0.5;
+    for (let i = 1; i <= P.n; i++) {
+      const x = a.x + Math.cos(v) * P.step * i, y = a.y + Math.sin(v) * P.step * i;
+      if (x < 20 || y < 20 || x > W - 20 || y > H - 20) break;
+      out.push({ x, y, i });
+    }
+  }
+  return out;
+}
+// 연속 패턴: 다음 한 번 (짧은 예고 다시)
+function bossChainNext(a, P, left) {
+  if (left > 1 && p.hp > 0 && a.hp > 0) startBossTele(a, P, BOSS_BASE.chainTele * (bossPhase(a) === 2 ? BOSS_BASE.enrageMul : 1), left - 1);
 }
 function bossHeal(a, amt) {
   const cap = a.max * BOSS_BASE.healCap;
@@ -492,9 +544,11 @@ function trapSpots(P) {
   return out;
 }
 function fireBossPat(a) {
-  const { P, ang } = a.tele, m = a.dmgMul, T = a.tele;
+  const { P, ang } = a.tele, m = a.dmgMul * (ENDLESS_BOSSES[a.bossId]?.tune?.dmg || 1), T = a.tele;
   a.tele = null;
   a.atkAnim = 0.4;
+  if (P.k === "charge") a.chainAfter = { P, left: T.left || 1 }; // 돌진은 끝난 뒤 다음 돌진
+  else bossChainNext(a, P, T.left || 1);
   switch (P.k) {
     case "slam":
       if (P.jump) { // 점프는 벽을 넘어갈 수 있지만 착지는 빈 자리에
@@ -531,7 +585,7 @@ function fireBossPat(a) {
       for (let r = 0; r < rep; r++) setTimeoutGame(() => {
         const a2 = Math.atan2(p.y - a.y, p.x - a.x);
         for (let i = 0; i < P.n; i++) {
-          const v = a2 + (i - (P.n - 1) / 2) * 0.28;
+          const v = a2 + (i - (P.n - 1) / 2) * (P.spread || 0.28);
           mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * 300, vy: Math.sin(v) * 300, left: 560, d: P.dmg * m, a, r: P.big ? 14 : 8, color: "#d39bff", slow: P.slow, blast: P.blast, boss: true });
         }
       }, r * 0.3);
@@ -574,8 +628,68 @@ function fireBossPat(a) {
     case "zone":
       hazards.push({ x: a.x, y: a.y, r: P.radius, tick: 0.5, tickT: 0.5, life: P.dur, dmg: P.dmg * m, a, follow: a, color: "92, 184, 255" });
       break;
+    case "pokemon": { // 현곤 보스: 포켓몬 여러 마리 동시 소환 (몬스터볼 빛)
+      const cap = ENDLESS_BOSSES[a.bossId].pkCap || 5;
+      for (let i = 0; i < P.n; i++) {
+        if (bots.filter((x) => x.hp > 0 && ENEMY_TYPES[x.mob]?.pk !== undefined).length >= cap) break;
+        if (bots.filter((x) => x.hp > 0 && !x.bossId).length >= BOSS_BASE.addsCap + 2) break;
+        const k = P.kinds[(a.pkI = (a.pkI || 0) + 1) % P.kinds.length], v = ang + Math.PI + (i - (P.n - 1) / 2) * 0.9;
+        const q = freeSpot(clamp(a.x + Math.cos(v) * 90, 30, W - 30), clamp(a.y + Math.sin(v) * 90, 30, H - 30), 16);
+        if (!q) continue;
+        const e = makeEnemy(k, q, { noExp: true });
+        e.spawnT = P.together ? 0.45 : 0.6;
+        fx.push({ x: q.x, y: q.y - 10, t: 0.6, pkball: true, col: PET_LOOK[e.pk]?.color || "#fff" });
+      }
+      sfx("pet_summon", a);
+      break;
+    }
+    case "light": { // 은숙 보스: 빛의 탄막 (사방, 물결마다 회전)
+      for (let w = 0; w < (P.waves || 1); w++) setTimeoutGame(() => {
+        for (let i = 0; i < P.n; i++) {
+          const v = ang + i * Math.PI * 2 / P.n + w * (P.spin ? 0.26 : Math.PI / P.n);
+          mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * 200, vy: Math.sin(v) * 200, left: 540, d: P.dmg * m, a, r: 10, color: "#fff3a8", light: true, boss: true });
+        }
+      }, w * 0.4);
+      sfx("skill_support_e", a);
+      break;
+    }
+    case "aoeHeal": { // 은숙 보스: 광역 회복 (보스는 회복 상한 안에서, 주변 적은 최대 HP 비율)
+      bossHeal(a, a.max * P.amount);
+      for (const b of bots) if (b !== a && b.hp > 0 && b.mob && dist(a, b) <= P.radius) b.hp = Math.min(b.max, b.hp + b.max * P.adds);
+      fx.push({ x: a.x, y: a.y, t: 0.7, healRing: P.radius });
+      fx.push({ x: a.x, y: a.y - 70, t: 0.8, text: "광역 회복!", tcol: "#9cff9c" });
+      sfx("heal", a);
+      break;
+    }
+    case "homing": { // 기섭 보스: 추적 하트 (회전 한계가 있어 옆으로 피하면 빗나감)
+      for (let i = 0; i < P.n; i++) {
+        const v = ang + (i - (P.n - 1) / 2) * 0.55;
+        mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * P.speed, vy: Math.sin(v) * P.speed, left: 900, d: P.dmg * m, a, r: 9, color: "#ff5fa2", heart: true, boss: true, home: P.turn, homeT: P.life });
+      }
+      sfx("shotgun", a);
+      break;
+    }
+    case "puddle": // 상훈 보스: 먹물 웅덩이 (안에 있으면 둔화 + 지속 피해)
+      for (const s2 of T.spots) hazards.push({ x: s2.x, y: s2.y, r: P.radius, tick: 0.5, tickT: 0.5, life: P.dur, dmg: P.dmg * m, a, slow: 0.4, ink: true, color: "70, 40, 110" });
+      sfx("skill_octo_q", a);
+      break;
+    case "blastLine": // 재한 보스: 직선 연속 폭발 (앞에서부터 차례로)
+      for (const s2 of T.spots) hazards.push({ x: s2.x, y: s2.y, r: P.radius, t: 0.12 + s2.i * P.gap, dur: 0.12 + s2.i * P.gap, dmg: P.dmg * m, a, color: "255, 150, 60" });
+      sfx("skill_soccer_e", a);
+      break;
+    case "shock": // 정용 보스: 착지 충격 + 퍼지는 대형 충격파 (틈 있음)
+      for (const b of [p, ...(pet ? [pet] : []), ...ultPets]) if (dist(a, b) <= P.radius + 10) hit(a, b, P.dmg * m);
+      fx.push({ x: a.x, y: a.y, t: 0.5, explosion: true });
+      shake(10);
+      sfx("hammer", a);
+      for (let w = 0; w < (P.waves || 1); w++) {
+        const gaps = Array.from({ length: P.gaps || 0 }, (_, j) => ang + Math.PI / 3 + j * Math.PI * 2 / (P.gaps || 1) + w * 0.6);
+        hazards.push({ shock: true, x: a.x, y: a.y, r: P.radius * 0.6 - w * 90, max: P.max, speed: P.speed, w: P.width, gaps, gapW: 0.42, dmg: P.waveDmg * m, a, hitDone: false, color: "255, 220, 120" });
+      }
+      break;
     case "rush":
       a.rushT = P.dur;
+      a.rushSpd = P.speed || 1.6;
       a.rushTick = 0;
       a.rushDmg = P.dmg * m;
       break;
@@ -596,6 +710,11 @@ function bossChargeStep(a, dt) {
   if (c.left <= 0) {
     a.charge = null;
     a.patT = Math.max(a.patT, c.rest || 1); // 돌진 후 빈틈
+    if (a.chainAfter) { // 연속 돌진 (동기·기섭 보스)
+      const C = a.chainAfter;
+      a.chainAfter = null;
+      bossChainNext(a, C.P, C.left);
+    }
   }
 }
 // 게임 시간 기준 지연 실행 (정지 중에는 멈춤)

@@ -32,6 +32,10 @@ const ENEMY_TYPES = {
   summoner: { name: "소환", visual: "summoner", exp: 30, hp: 600, spd: 0.48, dmg: 45, range: 240, cd: 2.4, r: 16, keep: [220, 320], summon: { every: 7, count: 2, cap: 4 } },
   elite: { name: "엘리트", exp: 50, hpMul: 4, dmgMul: 1.6, scale: 1.35, aura: 0.85 }, // 무작위 유형 + 강화 — 능력치 제안
   boss: { name: "보스", exp: 200 }, // 기획서
+  // 현곤 보스가 부르는 포켓몬 (경험치 0). pk = 포켓몬 번호(mons) → 포켓몬 그림으로 그림. attack: bolt 번개탄 / flame 화염(예고 원) / water 물대포(밀침)
+  pk_pika: { name: "피카츄", pk: 0, exp: 0, hp: 380, spd: 0.72, dmg: 60, range: 240, cd: 1.8, r: 14, keep: [150, 220], shot: 330, attack: "bolt" },
+  pk_char: { name: "파이리", pk: 1, exp: 0, hp: 420, spd: 0.62, dmg: 75, range: 170, cd: 2.3, r: 14, keep: [100, 160], attack: "flame", lob: { radius: 55, tele: 0.7 } },
+  pk_squirt: { name: "꼬부기", pk: 2, exp: 0, hp: 460, spd: 0.6, dmg: 55, range: 220, cd: 2.0, r: 14, keep: [140, 200], shot: 280, attack: "water", push: 60 },
   minion: { name: "졸개", visual: "summoner", exp: 0, hp: 90, spd: 0.7, dmg: 30, range: 30, cd: 1.0, r: 12, scale: 0.75 }, // 소환된 적: 경험치 0 (반복 파밍 방지)
 };
 
@@ -67,16 +71,36 @@ const ELITE_SHARE = 0.12;
 //   phase: HP > 60% basic / 30~60% ult (+지원 적) / 30% 이하 enrage (예고·대기 enrageMul 배)
 //   패턴 종류(공통 부품): slam 원 / charge 돌진선 / cone 부채꼴 / ring 사방탄 / barrage 부채탄 / curve 휘는 탄
 //                      traps 여러 곳 원 / summon 적 소환 / heal 회복(맞으면 중단) / stealth 은신 후 뒤로 / clones 분신 / zone 영역 / rush 추적 연타
-const BOSS_BASE = { addsCap: 6, hp: 8000, dmg: 1, healCap: 0.15, tele: [0.6, 1], ultTele: [1, 1.5], enrageMul: 0.7, gap: 1.2, r: 34, scale: 1.6, spd: 0.5 };
+const BOSS_BASE = { chainTele: 0.45, addsCap: 6, hp: 8000, dmg: 1, healCap: 0.15, tele: [0.6, 1], ultTele: [1, 1.5], enrageMul: 0.7, gap: 1.2, r: 34, scale: 1.6, spd: 0.5 };
+// 보스 = 그 캐릭터 고유 스킬의 강화판 (2026-11-25 요청). 캐릭터 스킬 이펙트를 최대한 재활용
+//   보스별 tune: dmg 피해 배율, tele [최소, 최대] 일반 패턴 예고(초), ultTele 궁극기 패턴 예고, gap 패턴 사이 빈틈 (없으면 BOSS_BASE)
+//   패턴별: tele 예고 덮어쓰기, rest 빈틈, times 연속 횟수(chainTele 간격으로 다시 예고), ph: { 1: 체력 60% 이하, 2: 30% 이하(광폭화) 에서 바꿀 값 }
+//   새 패턴: pokemon 포켓몬 소환 / light 빛의 탄막 / aoeHeal 광역 회복 / homing 추적 하트 / puddle 먹물 웅덩이 / blastLine 연속 폭발 / shock 대형 충격파
 const ENDLESS_BOSSES = {
-  suit: { name: "폭주하는 복서", basic: [{ k: "barrage", n: 2, dmg: 70 }, { k: "charge", dmg: 220, dist: 380, rest: 1.6 }, { k: "cone", dmg: 200, radius: 150, arc: 110 }], ult: [{ k: "rush", dmg: 70, dur: 2.5 }], adds: ["melee", "melee"] },
-  summoner: { name: "만취한 소환사", basic: [{ k: "summon", kinds: ["minion"], n: 2 }, { k: "barrage", n: 3, dmg: 60 }], ult: [{ k: "summon", kinds: ["summoner", "minion", "minion"], n: 3 }], adds: ["summoner"], dmgTakenWithAdds: 0.6 },
-  support: { name: "타락한 수호자", basic: [{ k: "barrage", n: 3, dmg: 60, slow: 1.5 }, { k: "heal", amount: 0.06, dur: 2 }], ult: [{ k: "zone", radius: 150, dmg: 45, dur: 5 }], adds: ["support", "melee"], idleHeal: { after: 4, perSec: 0.01 } },
-  runner: { name: "자기애의 화신", basic: [{ k: "charge", dmg: 200, dist: 420, rest: 1.0 }, { k: "charge", dmg: 200, dist: 420, rest: 1.4 }, { k: "traps", n: 4, dmg: 160, radius: 55 }], ult: [{ k: "ring", n: 16, dmg: 60, spin: true, waves: 4 }], adds: ["mobile", "mobile"] },
-  octo: { name: "극도로 삐진 쭈꾸미", basic: [{ k: "traps", n: 3, dmg: 180, radius: 70 }, { k: "ring", n: 10, dmg: 60 }], ult: [{ k: "traps", n: 8, dmg: 220, radius: 80, map: true }], adds: ["thrower", "thrower"] },
-  stripe: { name: "그림자 암살자", basic: [{ k: "stealth", dmg: 260 }, { k: "cone", dmg: 180, radius: 120, arc: 120 }], ult: [{ k: "clones", n: 4 }], adds: ["assassin"] },
-  soccer: { name: "폭주하는 스트라이커", basic: [{ k: "barrage", n: 1, dmg: 90, repeat: 3 }, { k: "curve", dmg: 120 }, { k: "charge", dmg: 180, dist: 300, rest: 1.2 }], ult: [{ k: "barrage", n: 3, dmg: 160, big: true, blast: 90 }], adds: ["ranged", "ranged"] },
-  bear: { name: "분노의 거대 백곰", basic: [{ k: "slam", dmg: 260, radius: 110 }, { k: "charge", dmg: 240, dist: 360, rest: 1.4 }, { k: "heal", amount: 0.08, dur: 2.5 }], ult: [{ k: "slam", dmg: 320, radius: 170, jump: true }], adds: ["tank"] },
+  suit: { name: "폭주하는 복서", tune: { dmg: 1 },
+    basic: [{ k: "charge", dmg: 200, dist: 360, rest: 1.3, times: 2, ph: { 1: { times: 3 }, 2: { times: 4, dist: 420 } } }, { k: "cone", dmg: 200, radius: 150, arc: 110, ph: { 2: { radius: 180 } } }, { k: "barrage", n: 2, dmg: 70 }],
+    ult: [{ k: "rush", dmg: 80, dur: 2.5, speed: 1.6, ph: { 2: { dur: 3.2, speed: 1.9 } } }], adds: ["melee", "melee"] },
+  summoner: { name: "만취한 소환사", tune: { dmg: 1 },
+    basic: [{ k: "pokemon", n: 2, kinds: ["pk_pika", "pk_char", "pk_squirt"], ph: { 2: { n: 3 } } }, { k: "barrage", n: 3, dmg: 60 }],
+    ult: [{ k: "pokemon", n: 3, kinds: ["pk_pika", "pk_char", "pk_squirt"], together: true, ph: { 2: { n: 4 } } }], adds: ["summoner"], dmgTakenWithAdds: 0.6, pkCap: 5 },
+  support: { name: "타락한 수호자", tune: { dmg: 1 },
+    basic: [{ k: "light", n: 12, dmg: 55, waves: 2, ph: { 1: { waves: 3 }, 2: { n: 16 } } }, { k: "aoeHeal", radius: 260, amount: 0.05, adds: 0.3 }, { k: "barrage", n: 3, dmg: 60, slow: 1.5 }],
+    ult: [{ k: "zone", radius: 150, dmg: 45, dur: 5 }, { k: "light", n: 20, dmg: 60, waves: 4, spin: true }], adds: ["support", "melee"], idleHeal: { after: 4, perSec: 0.01 } },
+  runner: { name: "자기애의 화신", tune: { dmg: 1 },
+    basic: [{ k: "charge", dmg: 200, dist: 420, rest: 1.1, times: 2, ph: { 1: { times: 3 }, 2: { times: 3, dist: 480 } } }, { k: "homing", n: 3, dmg: 90, turn: 2.0, life: 2.2, speed: 210, ph: { 1: { n: 4 }, 2: { n: 5, turn: 2.3 } } }, { k: "traps", n: 4, dmg: 160, radius: 55 }],
+    ult: [{ k: "ring", n: 16, dmg: 60, spin: true, waves: 4 }, { k: "homing", n: 6, dmg: 100, turn: 2.2, life: 2.6, speed: 220 }], adds: ["mobile", "mobile"] },
+  octo: { name: "극도로 삐진 쭈꾸미", tune: { dmg: 1 },
+    basic: [{ k: "puddle", n: 2, radius: 90, dmg: 40, dur: 6, ph: { 1: { n: 3 }, 2: { n: 4 } } }, { k: "traps", n: 4, dmg: 180, radius: 70, ph: { 1: { n: 6 }, 2: { n: 8 } } }, { k: "ring", n: 10, dmg: 60 }],
+    ult: [{ k: "traps", n: 10, dmg: 220, radius: 80, map: true }, { k: "puddle", n: 5, radius: 100, dmg: 45, dur: 7, map: true }], adds: ["thrower", "thrower"] },
+  stripe: { name: "그림자 암살자", tune: { dmg: 1 },
+    basic: [{ k: "stealth", dmg: 260 }, { k: "cone", dmg: 180, radius: 120, arc: 120 }, { k: "stealth", dmg: 260, ph: { 2: { dmg: 320 } } }],
+    ult: [{ k: "clones", n: 8 }], adds: ["assassin"] },
+  soccer: { name: "폭주하는 스트라이커", tune: { dmg: 1 },
+    basic: [{ k: "barrage", n: 3, spread: 0.38, dmg: 90, repeat: 2, ph: { 2: { repeat: 3 } } }, { k: "blastLine", n: 5, step: 75, dmg: 140, radius: 60, gap: 0.18, ph: { 1: { n: 6 }, 2: { lines: 2 } } }, { k: "curve", dmg: 120 }],
+    ult: [{ k: "barrage", n: 3, spread: 0.38, dmg: 160, big: true, blast: 90, repeat: 3 }, { k: "blastLine", n: 6, step: 75, dmg: 160, radius: 65, gap: 0.16, lines: 3 }], adds: ["ranged", "ranged"] },
+  bear: { name: "분노의 거대 백곰", tune: { dmg: 1 },
+    basic: [{ k: "slam", dmg: 220, radius: 100, jump: true, times: 2, ph: { 1: { times: 3 }, 2: { times: 4 } } }, { k: "charge", dmg: 240, dist: 360, rest: 1.4 }, { k: "heal", amount: 0.08, dur: 2.5 }],
+    ult: [{ k: "shock", dmg: 260, radius: 150, waveDmg: 160, waves: 2, max: 460, speed: 300, width: 30, gaps: 3, ph: { 2: { waves: 3 } } }], adds: ["tank"] },
 };
 
 // 공전 칼날 — 기획서 (일부 제안)

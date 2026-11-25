@@ -67,6 +67,7 @@ function drawMob(a) {
   const alpha = fade * Math.min(1, appear * 1.5) * (a.stealth > 0 ? 0.18 : 1); // 은신: 흐린 실루엣만
   if (a.atkAnim > 0) a.atkAnim -= 1 / 60;
   drawCorruptAura(a, s, L.aura * (a.mob === "boss" && a.hp <= a.max * MOB_TYPES.boss.enrageAt ? 1.25 : 1), alpha);
+  if (a.pk !== undefined) return drawPkMob(a, alpha, appear);
   const sh = corruptSheet(a.visual);
   if (!sh) return drawMobShape(a);
   const w = 68 * s * (0.7 + 0.3 * appear) * (a.atkAnim > 0 ? 1.08 : 1);
@@ -141,7 +142,7 @@ function drawMobShots() {
       continue;
     }
     g.fillStyle = s.color;
-    g.shadowColor = "#b35cff";
+    g.shadowColor = s.light ? "#fff3a8" : s.bolt ? "#ffe14d" : s.water ? "#5ab4ff" : "#b35cff";
     g.shadowBlur = 8;
     g.beginPath();
     g.arc(s.x, s.y, s.r, 0, 7);
@@ -151,4 +152,33 @@ function drawMobShots() {
     g.lineWidth = 2;
     g.stroke();
   }
+}
+
+// 현곤 보스가 부른 포켓몬: 포켓몬 그림(없으면 아이콘) + 타락 보라빛. 공격 때 살짝 커짐, 걸을 때 통통
+function drawPkMob(a, alpha, appear) {
+  const im = petArt[a.pk], size = 50 * (0.6 + 0.4 * appear) * (a.atkAnim > 0 ? 1.1 : 1), bob = a.moving ? Math.abs(Math.sin((a.frame || 0) * 0.8)) * 3 : 0;
+  g.save();
+  g.globalAlpha = alpha;
+  g.fillStyle = "#0005";
+  g.beginPath();
+  g.ellipse(a.x, a.y + 6, size * 0.38, size * 0.14, 0, 0, 7);
+  g.fill();
+  g.shadowColor = "#b35cff";
+  g.shadowBlur = 10;
+  if (im) {
+    const flip = (a.dir || 0) >= 5 && (a.dir || 0) <= 7 ? -1 : 1; // 왼쪽 보면 좌우 반전
+    g.translate(a.x, a.y - size * 0.45 - bob);
+    g.scale(flip, 1);
+    g.drawImage(im, -size / 2, -size / 2, size, size);
+  } else {
+    g.fillStyle = PET_LOOK[a.pk]?.color || "#888";
+    g.beginPath();
+    g.arc(a.x, a.y - 18 - bob, 16, 0, 7);
+    g.fill();
+    g.font = "18px sans-serif";
+    g.textAlign = "center";
+    g.fillText(mons[a.pk][1], a.x, a.y - 11 - bob);
+  }
+  g.restore();
+  if (a.hp > 0 && appear >= 1) bar(a.x, a.y - size - 4, a.hp, a.max);
 }
