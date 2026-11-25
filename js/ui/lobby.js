@@ -417,6 +417,7 @@ function syncResults() {
     if (singleRun?.m && over === "미션 성공") return showRecruitResult(); // 영입 성공: 다음 스토리 안내 화면 (js/ui/single.js)
     if (singleRun?.m) showSingleResult();
     else restoreResultLabels();
+    if (typeof JuyeopRankingUI !== "undefined") JuyeopRankingUI.syncResult();
     r.hidden = false;
   };
   // 싱글 미션 성공: 영입 저장 → 컷신 → 결과
