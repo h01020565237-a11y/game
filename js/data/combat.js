@@ -41,6 +41,11 @@ const GRENADE = { max: 3, perPickup: 1, gap: 0.6, weaponId: 6, radius: 90, fuse:
 // ===== 체력 회복 아이템 =====
 // amount: 회복량(최대 HP 대비 비율), 획득 즉시 회복. 체력이 가득 차 있으면 줍지 않음
 const HEAL = { ratio: 0.25 };
+// 보물상자·떨어진 아이템 시간 (초)
+// - 상자: 부서지면 아이템 1번 드롭 → breakFx 초 파괴 연출 후 사라짐 (부서진 즉시 충돌·공격 대상 아님)
+//   respawn 초 뒤 같은 자리에 다시 생김. 그 자리에 캐릭터가 있으면(clear 거리 안) 비켜날 때까지 기다림
+// - 떨어진 아이템(무기·수류탄·회복약 등): life 초 동안 안 주우면 사라짐, 마지막 blink 초는 깜빡임
+const CHEST_RULES = { breakFx: 0.5, respawn: 20, clear: 46, lootLife: 10, blink: 3 };
 
 // ===== 공격 모션·타격감 (그림·소리만, 판정·충전·쿨타임과 무관) =====
 // docs/ATTACK_ANIMATION.md (chatgpt-dev) 기준. phases: [준비, 공격, 복귀] 밀리초

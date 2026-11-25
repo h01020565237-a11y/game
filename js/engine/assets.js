@@ -56,7 +56,6 @@ const chestArt = {
   burst1: loadImage("assets/props/chest-burst-1.webp"),
   burst2: loadImage("assets/props/chest-burst-2.webp"),
   debris: loadImage("assets/props/chest-debris.webp"),
-  // 열린 상자 그림 (ChatGPT 제작 예정): 파일이 오면 props 폴더에 chest-open.webp 로 넣고 open: loadImage(...) 한 줄 추가
 };
 // 무기 아이콘 (96×96), weapons 순서와 같음. 0번 맨손은 그림 없음
 const weaponIcons = WEAPON_ART.map((w) => w && loadImage(w.src));

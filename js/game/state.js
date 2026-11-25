@@ -33,6 +33,7 @@ function reset() {
   clones = [];
   bots = MAP_JUNGLE.botSpawns.map((a, i) => Object.assign(actor(...a), { visual: BOT_VISUAL_ORDER.filter((k) => k !== character)[i] }));
   boxes = MAP_JUNGLE.crates.map(([x, y]) => ({ x, y, hp: 1e3 }));
+  boxRespawns = [];
   loot = [];
   shots = [];
   fx = [];

@@ -118,6 +118,7 @@ function update(dt) {
     } else if (mouse.down) attack(p, mouse.x, mouse.y);
   }
   // 자동 획득: 지나가기만 하면 손해 없는 아이템은 바로 먹음 (교체는 버튼/F 키)
+  updateLootAndChests(dt);
   if (p.hp > 0) pickup(p, isFreeLoot);
   if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(SKILL_DATA.runner.passive.max, p.energy + Math.hypot(p.x - ox, p.y - oy) / SKILL_DATA.runner.passive.per);
   if (singleRun?.m) updateWave(dt); // 싱글: 웨이브 적은 전용 AI
@@ -312,4 +313,19 @@ function update(dt) {
     stats.rank = over === "패배" ? bots.filter((a) => a.hp > 0).length + 1 : 1;
     stats.time = elapsed;
   }
+}
+
+// 떨어진 아이템 수명 + 보물상자 다시 생기기 (CHEST_RULES)
+function updateLootAndChests(dt) {
+  if (loot.some((l) => l.life !== undefined && (l.life -= dt) <= 0)) loot = loot.filter((l) => !(l.life <= 0));
+  for (const q of boxRespawns) {
+    if ((q.t -= dt) > 0) continue;
+    const occupied = [p, ...bots, ...(pet ? [pet] : []), ...ultPets, ...clones].some((a) => a && a.hp > 0 && dist(a, q) < CHEST_RULES.clear + (a.r || 16) - 16);
+    if (occupied || boxes.some((b) => b.x === q.x && b.y === q.y)) continue; // 비켜날 때까지 / 이미 있으면 중복 생성 안 함
+    boxes.push({ x: q.x, y: q.y, hp: 1e3, born: elapsed });
+    fx.push({ x: q.x, y: q.y, t: 0.5, ring: 40 });
+    q.done = true;
+    if (typeof resetNav === "function") resetNav();
+  }
+  if (boxRespawns.some((q) => q.done)) boxRespawns = boxRespawns.filter((q) => !q.done);
 }

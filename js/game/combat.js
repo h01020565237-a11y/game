@@ -16,6 +16,7 @@ function rollDrop() {
 
 // 피해 처리 (모든 공격 공통). o: { ult 궁극기 피해(충전 제외), dot 지속 피해 }
 function hit(a, b, d, o = {}) {
+  if (b.broken) return; // 이미 부서진 상자 (같은 프레임 중복 타격 → 드롭 중복 방지)
   if (b === p && god) return;
   if (b.max && isMine(a) && isMine(b)) return; // 같은 편끼리는 피해 없음
   // 먹물(상훈 Q): 공격자에게 MISS 확률 → 피해 0 (회복·버프에는 영향 없음)
@@ -102,13 +103,22 @@ function hit(a, b, d, o = {}) {
   const tcol = isMine(b) ? "#ff5a5a" : isMine(a) ? "#5ee07a" : "#ffffff";
   fx.push({ x: b.x, y: b.y, t: 0.65, text: Math.round(d), tcol, big: crit });
   if (!b.max && b.hp <= 0) {
-    fx.push({ x: b.x, y: b.y, t: 0.45, crateBurst: true });
-    fx.push({ x: b.x, y: b.y, t: 2, debris: true }); // 바닥 잔해 (그림만, 충돌 없음)
-    b.opened = true; // 부서져 사라지지 않고 "열린 상자"로 남음 (위치·크기·충돌 유지, 다시 열 수 없음)
+    // 부서짐: 즉시 충돌·공격 대상에서 빠지고 breakFx 초 파괴 연출 후 사라짐 → respawn 초 뒤 같은 자리에 다시 생김
+    fx.push({ x: b.x, y: b.y, t: CHEST_RULES.breakFx, crateBurst: true });
+    b.broken = true;
+    boxes = boxes.filter((x) => x !== b);
+    if (!boxRespawns.some((q) => q.x === b.x && q.y === b.y)) boxRespawns.push({ x: b.x, y: b.y, t: CHEST_RULES.respawn });
+    if (typeof resetNav === "function") resetNav();
     const e = rollDrop();
-    loot.push({ x: b.x, y: b.y, type: e.type, id: e.type === LOOT.accessory ? Math.floor(Math.random() * gear.length) : e.id || 0 });
+    dropLoot({ x: b.x, y: b.y, type: e.type, id: e.type === LOOT.accessory ? Math.floor(Math.random() * gear.length) : e.id || 0 });
     sfx("crate_break", b);
   }
+}
+// 아이템 떨어뜨리기: 모두 수명(CHEST_RULES.lootLife)을 가짐 → 안 주우면 사라짐
+function dropLoot(l) {
+  l.life = CHEST_RULES.lootLife;
+  loot.push(l);
+  return l;
 }
 // 손해 없이 바로 먹을 수 있는 아이템: 빈손일 때 주무기, 수류탄(3개 미만), 회복(체력이 깎였을 때)
 function isFreeLoot(a, l) {
@@ -136,9 +146,10 @@ function nearLoot(a, pred) {
 // pred 를 주면 그 조건에 맞는 아이템만 줍는다 (기본: 주워서 의미가 있는 것)
 function pickup(a, pred = isUsefulLoot) {
   let l = nearLoot(a, pred);
-  if (!l) return;
+  if (!l || l.taken) return;
+  l.taken = true; // 같은 프레임 중복 획득 방지
   if (l.type === LOOT.weapon) {
-    if (a.w) loot.push({ x: l.x + 20, y: l.y, type: LOOT.weapon, id: a.w });
+    if (a.w) dropLoot({ x: l.x + 20, y: l.y, type: LOOT.weapon, id: a.w });
     a.w = l.id;
   } else if (l.type === LOOT.grenade) {
     a.grenades = Math.min(GRENADE.max, (a.grenades || 0) + GRENADE.perPickup);
@@ -152,7 +163,7 @@ function pickup(a, pred = isUsefulLoot) {
     if (a.gear.includes(l.id)) return;
     if (a.gear.length === 3) {
       let old = a.gear.shift();
-      loot.push({ x: l.x + 20, y: l.y, type: 1, id: old });
+      dropLoot({ x: l.x + 20, y: l.y, type: 1, id: old });
       if (old === 3) {
         a.max = 3e3;
         a.hp = Math.min(a.hp, a.max);

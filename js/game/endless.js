@@ -204,7 +204,7 @@ function onEndlessDeath(a) {
   if (!a.exp) return;
   R.kills++;
   gainExp(a.exp);
-  if (Math.random() < ENDLESS.dropHeal.chance) loot.push({ x: a.x, y: a.y, type: LOOT.heal, id: 0, amount: ENDLESS.dropHeal.amount });
+  if (Math.random() < ENDLESS.dropHeal.chance) dropLoot({ x: a.x, y: a.y, type: LOOT.heal, id: 0, amount: ENDLESS.dropHeal.amount });
 }
 function gainExp(n) {
   const R = singleRun;

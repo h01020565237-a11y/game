@@ -122,12 +122,17 @@ function findPath(ax, ay, bx, by, rad = 16) {
   NAV.g[s] = 0;
   NAV.from[s] = -1;
   heapPush(s, 0);
-  let found = false, guard = 0;
+  let found = false, guard = 0, bestI = s, bestH = Infinity;
   while (navHeap.idx.length && guard++ < 20000) {
     const i = heapPop();
     if (i === t) {
       found = true;
       break;
+    }
+    const hi = Math.hypot(i % cols - tc, ((i / cols) | 0) - tr); // 못 가는 곳이면 가장 가까이 갈 수 있는 칸까지라도
+    if (hi < bestH) {
+      bestH = hi;
+      bestI = i;
     }
     if (NAV.closed[i] === run) continue;
     NAV.closed[i] = run;
@@ -151,11 +156,12 @@ function findPath(ax, ay, bx, by, rad = 16) {
   }
   navStats.paths++;
   navStats.ms += performance.now() - t0;
-  if (!found) return null;
+  const end = found ? t : bestI; // 목표에 못 닿으면(몸이 커서 못 지나가는 틈 등) 가장 가까운 칸으로
+  if (!found && end === s) return null;
   const path = [];
-  for (let i = t; i >= 0; i = NAV.from[i]) path.push([(i % cols + 0.5) * NAV.cell, (((i / cols) | 0) + 0.5) * NAV.cell]);
+  for (let i = end; i >= 0; i = NAV.from[i]) path.push([(i % cols + 0.5) * NAV.cell, (((i / cols) | 0) + 0.5) * NAV.cell]);
   path.reverse();
-  path[path.length - 1] = [bx, by];
+  if (found) path[path.length - 1] = [bx, by];
   return path;
 }
 
