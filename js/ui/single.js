@@ -2,7 +2,8 @@
 
 // 미션 목록: js/data/story_missions.js STORY_ORDER (출전 캐릭터 = 선행 조건)
 const SINGLE_MISSIONS = STORY_ORDER.map((m) => ({ ...m, need: m.players, wave: true }));
-const missionOpen = (ms) => ms.players.some((k) => singleSave.recruited.includes(k));
+// 선행 영입 조건(requires)과 출전 조건(players)은 따로: 미션이 열려도 출전 캐릭터가 영입돼 있어야 시작
+const missionOpen = (ms) => (ms.requires || []).every((k) => singleSave.recruited.includes(k)) && ms.players.some((k) => singleSave.recruited.includes(k));
 
 function openSinglePanel() {
   renderSinglePanel();
@@ -25,7 +26,7 @@ function renderSinglePanel() {
     const who = ms.players.map((k) => DISPLAY_NAMES[k]).join(ms.any ? " 또는 " : " + ");
     const target = S ? S.target : "3~5분";
     info.innerHTML = `<b>${DISPLAY_NAMES[ms.reward]} 영입</b><span>${sub}</span>` +
-      `<small>출전: ${who} · 목표 ${target} · ${got ? "영입 완료" : ok ? (missionOpen(ms) ? "도전 가능" : "QA 해금으로 도전 가능") : "조건: " + who + " 영입"}</small>`;
+      `<small>출전: ${who} · 목표 ${target} · ${got ? "영입 완료" : ok ? (missionOpen(ms) ? "도전 가능" : "QA 해금으로 도전 가능") : "조건: " + (ms.requires || ms.players).map((k) => DISPLAY_NAMES[k]).join("·") + " 영입"}</small>`;
     card.append(im, info);
     if (ok) {
       const btns = document.createElement("div");
@@ -61,7 +62,7 @@ function startMission(id, who) {
   const ms = SINGLE_MISSIONS.find((m) => m.id === id);
   who = who || ms.players[0];
   if (!ms.players.includes(who)) return; // 지정된 캐릭터로만
-  if (!singleSave.recruited.includes(who) && !ROSTER.testMode) return;
+  if (!ROSTER.testMode && (!missionOpen(ms) || !singleSave.recruited.includes(who))) return; // 선행 영입·출전 조건 우회 금지 (QA 전체 해금만 예외)
   el("singlePanel").hidden = true;
   if (STORY_MISSIONS[id]) beginStory(id, who);
   else beginSingle(id);
@@ -158,7 +159,7 @@ function lockReason(k) {
   const ms = SINGLE_MISSIONS.find((m) => m.reward === k);
   if (!ms) return "아직 영입하지 않은 캐릭터예요.";
   const who = ms.players.map((n) => DISPLAY_NAMES[n]).join(ms.any ? " 또는 " : " + ");
-  return `${DISPLAY_NAMES[k]}: 싱글 모드 「${DISPLAY_NAMES[k]} 영입」 미션(출전: ${who})을 깨면 영입돼요.` + (missionOpen(ms) ? "" : ` (먼저 ${who} 영입 필요)`);
+  return `${DISPLAY_NAMES[k]}: 싱글 모드 「${DISPLAY_NAMES[k]} 영입」 미션(출전: ${who})을 깨면 영입돼요.` + (missionOpen(ms) ? "" : ` (먼저 ${(ms.requires || ms.players).map((n) => DISPLAY_NAMES[n]).join("·")} 영입 필요)`);
 }
 
 // ----- 웨이브 HUD (전투 화면 위쪽) -----

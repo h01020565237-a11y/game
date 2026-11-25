@@ -79,7 +79,7 @@ const LOBBY_ART = {
 
 // ===== 캐릭터 선택창 배치·영입 상태 (Portraits V2 README) =====
 // 배치 순서는 영입 여부와 관계없이 고정: 윗줄 동기·현곤·은숙·기섭 / 아랫줄 상훈·경수·재한·정용
-const LOBBY_ORDER = ["suit", "summoner", "support", "runner", "octo", "stripe", "soccer", "bear"];
+const LOBBY_ORDER = ["suit", "summoner", "support", "runner", "octo", "stripe", "bear", "soccer"]; // 영입 순서와 같음 (2026-11-25: 정용·재한 교체)
 // 영입 상태의 기준은 싱글 저장(singleSave.recruited, localStorage "battlelab.single") 하나. 동기만 처음부터 영입
 // QA 전체 해금(testMode)은 일반 저장과 분리된 별도 키 "battlelab.qa" — 저장된 영입 상태는 바꾸지 않고 플레이만 허용
 const ROSTER = {

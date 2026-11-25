@@ -54,12 +54,14 @@ with sync_playwright() as pw:
     print(st)
     ok('새 저장: 동기만 영입, QA 해금 꺼짐', st['rec'] == ['suit'] and not st['qa'])
     locks = {c[0]: c[1] for c in st['cards']}
-    ok('열린 미션: 현곤(동기), 기섭(동기 또는 현곤) / 나머지 잠금', not locks['현곤 영입'] and not locks['기섭 영입'] and all(locks[k] for k in ['은숙 영입', '상훈 영입', '경수 영입', '재한 영입', '정용 영입']), locks)
-    gi = [c for c in st['cards'] if c[0] == '기섭 영입'][0]
-    ok('기섭 미션: 현곤 미영입이면 동기 출전 버튼만', gi[2] == ['동기(으)로 출전'], gi[2])
+    ok('처음엔 현곤 미션만 열림 (순서 건너뛰기 없음)', not locks['현곤 영입'] and all(locks[k] for k in ['은숙 영입', '기섭 영입', '상훈 영입', '경수 영입', '정용 영입', '재한 영입']), locks)
+    ok('미션 목록 순서: 현곤·은숙·기섭·상훈·경수·정용·재한', [c[0] for c in st['cards']] == ['현곤 영입', '은숙 영입', '기섭 영입', '상훈 영입', '경수 영입', '정용 영입', '재한 영입'], [c[0] for c in st['cards']])
+    ok('캐릭터 선택 순서: 동기·현곤·은숙·기섭·상훈·경수·정용·재한', pg.evaluate('LOBBY_ORDER.map((k) => DISPLAY_NAMES[k]).join()') == '동기,현곤,은숙,기섭,상훈,경수,정용,재한')
+    ok('잠긴 미션 우회 시작 불가 (기섭: 동기는 영입돼 있어도 은숙 영입 전엔 잠김)', pg.evaluate('(startMission("giseop", "suit"), !singleRun)'))
+    ok('출전 조건 따로: 정용 미션은 경수 영입이 선행, 출전은 현곤', pg.evaluate('(() => { const m = SINGLE_MISSIONS.find((x) => x.id === "jeongyong"); return m.requires.join() === "stripe" && m.players.join() === "summoner"; })()'))
     ok('지정되지 않은 캐릭터로 시작 불가', pg.evaluate('(startMission("eunsuk", "suit"), !singleRun)'))
     # 성공 경로: 순서대로 (출전 캐릭터 영입되면서 열림)
-    order = [('giseop', 'suit'), ('hyeongon', 'suit'), ('eunsuk', 'summoner'), ('sanghun', 'runner'), ('gyeongsu', 'octo'), ('jaehan', 'stripe'), ('jeongyong', 'soccer')]
+    order = [('hyeongon', 'suit'), ('eunsuk', 'summoner'), ('giseop', 'summoner'), ('sanghun', 'runner'), ('gyeongsu', 'octo'), ('jeongyong', 'summoner'), ('jaehan', 'bear')]
     for mid, who in order:
         if mid == 'hyeongon':  # 기존 웨이브 미션: 빠르게 클리어
             r = pg.evaluate('''(() => { startMission("hyeongon", "suit"); syncResults(); document.body.classList.add("menuOpen"); god = true; const R = singleRun; let g = 0;
