@@ -6,6 +6,8 @@
 - <link rel="stylesheet" href="..."> 는 <style> 로 인라인
 - <script src="..."> 는 <script> 로 인라인 (순서 유지)
 - CSS/JS/HTML 안의 "assets/..." 경로 문자열은 data URI 로 교체
+- 검사(실패 시 빌드 중단): `assets/${...}` 같은 조합 경로, 파일 안에 못 넣고 남은 "assets/..." 경로
+  → 배포본(아티팩트)에는 assets 폴더가 없어서 이런 경로는 이미지·소리가 깨짐
 """
 import base64
 import pathlib
@@ -13,8 +15,10 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-MIME = {'.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
-ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg))(["\')])')
+MIME = {'.m4a': 'audio/mp4', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
+TEMPLATE_RE = re.compile(r'`[^`\n]*assets/[^`\n]*\$\{[^`\n]*`')
+LEFT_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')
+ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')
 
 
 def inline_assets(text):
@@ -41,7 +45,15 @@ def build(out):
 
     html = re.sub(r'<link rel="stylesheet" href="(?!https?:)([^"]+)">', css, html)
     html = re.sub(r'<script src="([^"]+)"></script>', js, html)
+    bad = TEMPLATE_RE.findall(html)
     html = inline_assets(html)
+    left = sorted({m.group(2) for m in LEFT_RE.finditer(html)})
+    if bad or left:
+        for b in bad:
+            print('ERROR 조합 경로(빌드에서 파일을 넣을 수 없음):', b[:120])
+        for l in left:
+            print('ERROR 파일 안에 못 넣은 경로(파일 없음):', l)
+        sys.exit(1)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding='utf-8')
     print(f'{out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}: {out.stat().st_size:,} bytes')

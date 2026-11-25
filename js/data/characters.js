@@ -22,7 +22,7 @@ const CHARACTER_ORDER = ["summoner", "bear", "runner", "suit", "octo", "stripe",
 
 // ===== 공격 모션 스프라이트 (교체 가능, 지금은 비어 있음) =====
 // ChatGPT 가 공격 동작 시트를 주면 여기에 추가. 형식은 이동 시트와 같음 (96px 칸, 8행 = 방향 N NE E SE S SW W NW)
-// 예: suit: { src: "assets/characters/suit-attack.webp", frames: 6, weaponInHand: true }
+// 예: suit: { src: (assets/characters 폴더의 공격 시트 경로 문자열), frames: 6, weaponInHand: true }
 //   frames: 한 방향의 프레임 수, weaponInHand: 시트에 무기가 그려져 있으면 true (그러면 무기 아이콘을 따로 그리지 않음)
 // 시트가 없는 캐릭터는 이동 시트를 공격 방향으로 돌려 보여 주고, 무기 아이콘으로 동작을 표현
 const ATTACK_SPRITES = {};
@@ -52,9 +52,18 @@ for (const [k, v] of Object.entries(DISPLAY_NAMES)) if (CHARACTER_INFO[k]) CHARA
 // ===== 로비 그림 =====
 // face: 캐릭터 선택창·결과 화면 얼굴 아이콘 (ChatGPT Portraits V2, tools/clean_portraits.py 로 바깥 액자만 잘라냄)
 // full: 전신 (캐릭터 상세에서만 사용, tools/make_lobby_art.py)
-const LOBBY_ART = {};
-for (const k of ["summoner", "bear", "runner", "suit", "octo", "stripe", "soccer", "support"])
-  LOBBY_ART[k] = { face: `assets/portraits/${k}.png`, full: `assets/lobby/${k}-full.webp` };
+// 경로는 반드시 따옴표 문자열로 하나씩 적을 것: 한 파일 빌드(tools/build_single.py)는 "assets/..." 문자열만 파일 안에 넣음
+// (변수로 조합한 경로는 배포본에서 이미지가 깨짐 → 빌드가 실패하도록 검사함)
+const LOBBY_ART = {
+  summoner: { face: "assets/portraits/summoner.png", full: "assets/lobby/summoner-full.webp" },
+  bear: { face: "assets/portraits/bear.png", full: "assets/lobby/bear-full.webp" },
+  runner: { face: "assets/portraits/runner.png", full: "assets/lobby/runner-full.webp" },
+  suit: { face: "assets/portraits/suit.png", full: "assets/lobby/suit-full.webp" },
+  octo: { face: "assets/portraits/octo.png", full: "assets/lobby/octo-full.webp" },
+  stripe: { face: "assets/portraits/stripe.png", full: "assets/lobby/stripe-full.webp" },
+  soccer: { face: "assets/portraits/soccer.png", full: "assets/lobby/soccer-full.webp" },
+  support: { face: "assets/portraits/support.png", full: "assets/lobby/support-full.webp" },
+};
 
 // ===== 캐릭터 선택창 배치·영입 상태 (Portraits V2 README) =====
 // 배치 순서는 영입 여부와 관계없이 고정: 윗줄 동기·현곤·은숙·기섭 / 아랫줄 상훈·경수·재한·정용
