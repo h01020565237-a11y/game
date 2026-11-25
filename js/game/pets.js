@@ -53,7 +53,7 @@ function runPet(pt, dt) {
     pt.moving = false;
     pt.dir = (Math.round(Math.atan2(b.x - pt.x, pt.y - b.y) / (Math.PI / 4)) + 8) % 8;
     if (pt.cd <= 0) {
-      pt.cd = 0.8;
+      pt.cd = 0.8 * (pt.ult && singleRun?.endless && singleRun.mods.petHaste || 1); // 무한 생존 카드: 궁극기 포켓몬 공격 속도
       pt.pose = 0.25;
       hit(pt, b, m[2], { ult: !!pt.ult });
       fx.push({ x: b.x, y: b.y, sx: pt.x, sy: pt.y, t: 0.24, bolt: pt.id === 0, ring: 22 });

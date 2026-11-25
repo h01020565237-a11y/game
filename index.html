@@ -62,6 +62,7 @@
     <!-- 싱글 웨이브 HUD -->
     <div id="bossHud" hidden><span id="bossName">정글 거목</span><div class="boss-bar"><i id="bossFill"></i></div></div>
     <div id="waveBanner" hidden></div>
+    <div id="expHud" hidden><b id="expLv">Lv1</b><div class="exp-bar"><i id="expFill"></i></div></div>
     <div id="weaponHud">
       <span id="weaponIcon" aria-hidden="true"></span>
       <span class="wtext"><b id="weaponName">맨손</b><span id="ammoPips">●●●</span></span>
@@ -128,6 +129,8 @@
       <div class="panel single-card">
         <div class="single-head"><h3>싱글 미션</h3><button id="singleClose" class="btn btn-ghost">닫기</button></div>
         <div id="missionList" class="mission-list"></div>
+        <h4>무한 생존 <small>영입한 캐릭터로 최고 웨이브 도전</small></h4>
+        <div id="endlessList" class="endless-list"></div>
         <h4>스토리 극장</h4>
         <div id="theaterList" class="theater-list"></div>
       </div>
@@ -189,6 +192,7 @@
   <script src="js/data/characters.js"></script>
   <script src="js/data/skills.js"></script>
   <script src="js/data/waves.js"></script>
+  <script src="js/data/endless.js"></script>
   <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>
   <script src="js/engine/assets.js"></script>
@@ -200,6 +204,7 @@
   <script src="js/ui/deck.js"></script>
   <script src="js/game/state.js"></script>
   <script src="js/game/wave.js"></script>
+  <script src="js/game/endless.js"></script>
   <script src="js/engine/input.js"></script>
   <script src="js/game/combat.js"></script>
   <script src="js/game/skills.js"></script>
@@ -209,11 +214,13 @@
   <script src="js/render/background.js"></script>
   <script src="js/render/mobs.js"></script>
   <script src="js/render/skillfx.js"></script>
+  <script src="js/render/endlessfx.js"></script>
   <script src="js/render/renderer.js"></script>
   <script src="js/ui/skilltip.js"></script>
   <script src="js/ui/touch.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/single.js"></script>
+  <script src="js/ui/endless.js"></script>
   <script src="js/ui/title.js"></script>
   <script src="js/main.js"></script>
 </body>

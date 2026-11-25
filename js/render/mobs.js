@@ -60,10 +60,10 @@ function drawCorruptAura(a, s, power, fade) {
   g.restore();
 }
 function drawMob(a) {
-  const L = CORRUPT_LOOK[a.mob], s = L.scale;
+  const L = a.look || CORRUPT_LOOK[a.mob], s = L.scale; // 무한 생존 적은 a.look (크기·오라)
   const appear = a.spawnT > 0 ? 1 - a.spawnT / 0.6 : 1;
   const fade = a.hp <= 0 ? Math.max(0, 1 - a.deadT / 0.6) : 1;
-  const alpha = fade * Math.min(1, appear * 1.5);
+  const alpha = fade * Math.min(1, appear * 1.5) * (a.stealth > 0 ? 0.18 : 1); // 은신: 흐린 실루엣만
   if (a.atkAnim > 0) a.atkAnim -= 1 / 60;
   drawCorruptAura(a, s, L.aura * (a.mob === "boss" && a.hp <= a.max * MOB_TYPES.boss.enrageAt ? 1.25 : 1), alpha);
   const sh = corruptSheet(a.visual);
@@ -89,7 +89,7 @@ function drawMob(a) {
 }
 // 시트가 아직 안 불러와졌을 때 대신 그리는 간단한 모양
 function drawMobShape(a) {
-  const r = MOB_TYPES[a.mob].r;
+  const r = a.r || MOB_TYPES[a.mob]?.r || 16;
   g.fillStyle = "#4a2a6e";
   g.beginPath();
   g.arc(a.x, a.y - r, r, 0, 7);
@@ -135,6 +135,10 @@ function drawMobShots() {
     g.beginPath();
     g.ellipse(s.x, s.y + 18, s.r, s.r * 0.4, 0, 0, 7);
     g.fill();
+    if (s.heart) {
+      drawHeart(s.x, s.y, s.r);
+      continue;
+    }
     g.fillStyle = s.color;
     g.shadowColor = "#b35cff";
     g.shadowBlur = 8;

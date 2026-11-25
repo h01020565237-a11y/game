@@ -15,6 +15,7 @@ function openSinglePanel() {
   sfx("ui_click");
 }
 function renderSinglePanel() {
+  renderEndlessList();
   const list = el("missionList");
   list.innerHTML = "";
   for (const ms of SINGLE_MISSIONS) {
@@ -69,6 +70,7 @@ el("singleClose").onclick = () => {
 // ----- 웨이브 HUD (전투 화면 위쪽) -----
 function updateSingleHUD() {
   const R = singleRun;
+  if (R.endless) return updateEndlessHUD(); // 무한 생존 (js/ui/endless.js)
   setText("aliveNum", String(waveRemaining()));
   el("aliveHud").firstChild.textContent = "남은 적 ";
   setText("zoneHud", R.m ? `${R.m.waves[Math.max(0, R.wave)].label} (${Math.max(1, R.wave + 1)}/${R.m.waves.length})` : "");
@@ -91,6 +93,7 @@ function updateSingleHUD() {
   }
 }
 function resetSingleHUD() {
+  el("expHud").hidden = true;
   el("aliveHud").firstChild.textContent = "생존 ";
   el("bossHud").hidden = true;
   el("waveBanner").hidden = true;
@@ -114,6 +117,7 @@ function renderCards() {
 
 // ----- 결과 (lobby.js syncResults 에서 호출) -----
 function showSingleResult() {
+  if (singleRun.endless) return showEndlessResult();
   const R = singleRun, win = over === "미션 성공";
   el("resTitle").textContent = win ? `${DISPLAY_NAMES[R.m.reward]} 영입 성공!` : "미션 실패";
   el("resTitle").classList.toggle("lose", !win);

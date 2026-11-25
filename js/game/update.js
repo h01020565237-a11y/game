@@ -8,7 +8,9 @@ function compact(arr, keep) {
 
 function update(dt) {
   if (over) return;
+  if (singleRun?.endless && endlessPaused(dt)) return; // 무한 생존: 카드·카운트다운·보스 등장 중 정지
   if (singleRun && singleRun.phase === "cards") return; // 강화 카드 고르는 동안 전투 정지
+  if (singleRun?.endless) updateGameTimers(dt);
   elapsed += dt;
   zone = singleRun?.m && !singleRun.m.zone ? 1e9 : Math.max(115, 1450 - Math.max(0, elapsed - 25) * 8);
   for (let a of [p, ...bots]) {

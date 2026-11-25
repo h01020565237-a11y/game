@@ -53,7 +53,7 @@ function ultReady() {
 // 상훈 삐짐: 가득 차 있으면 이번 스킬 피해 배율을 주고 소모
 function sulkMul() {
   if (character !== "octo" || p.sulk < 1) return 1;
-  p.sulk = 0;
+  p.sulk = SKILL_DATA.octo.passive.keep || 0; // 무한 생존 카드: 일부 유지
   fx.push({ x: p.x, y: p.y - 70, t: 0.7, text: "삐짐 폭발!", tcol: "#ff7ab0", big: true });
   return SKILL_DATA.octo.passive.mult;
 }
@@ -136,6 +136,7 @@ const SKILL_IMPL = {
         a.guardMul = 1 - S.guard;
       }
       fx.push({ x: p.x, y: p.y, t: 0.5, ring: S.radius });
+      if (S.waveDmg) for (const b of bots) if (b.hp > 0 && dist(p, b) <= S.radius) hit(p, b, S.waveDmg); // 무한 생존 카드: 회복 충격파
       return true;
     },
     r(S) { // 다들 내 뒤로!: 따라다니는 영역
@@ -215,13 +216,18 @@ const SKILL_IMPL = {
       faceVec(x, y);
       const side = p.curveSide || 1;
       p.curveSide = -side;
-      shots.push(Object.assign(curvePath(p.x, p.y, x, y, S.range, S.bend * side), { a: p, curve: true, u: 0, speed: S.speed, d: S.dmg, hitSet: new Set(), soccer: true }));
+      for (const sd of S.both ? [side, -side] : [side]) // 무한 생존 카드: 양발(좌우 동시)
+        shots.push(Object.assign(curvePath(p.x, p.y, x, y, S.range, S.bend * sd), { a: p, curve: true, u: 0, speed: S.speed, d: S.dmg, hitSet: new Set(), soccer: true }));
       return true;
     },
     r(S, t) { // 내가 마무리할게: 직선 관통 + 최대 거리 폭발
       const [x, y] = unitTo(t);
       faceVec(x, y);
-      shots.push({ a: p, x: p.x, y: p.y, vx: x * S.speed, vy: y * S.speed, left: S.range, d: S.dmg, pierce: true, hitSet: new Set(), push: S.push, blast: S, soccer: true, big: true, ult: true });
+      const base = Math.atan2(y, x);
+      for (const off of S.multi === 3 ? [-0.26, 0, 0.26] : [0]) { // 무한 생존 카드: 3방향
+        const v = base + off;
+        shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, pierce: true, hitSet: new Set(), push: S.push, blast: S, soccer: true, big: true, ult: true });
+      }
       return true;
     },
   },
@@ -278,6 +284,9 @@ function healActor(a, amount, quiet) {
   const before = a.hp;
   a.hp = Math.min(a.max, a.hp + amount);
   const got = a.hp - before;
+  // 은숙 카드 "넘치는 챙김": 넘친 회복을 보호막으로 (최대 HP 비율 상한)
+  const cap = singleRun?.endless && singleRun.mods.shieldCap;
+  if (cap && a === p && amount > got) p.shield = Math.min(p.max * cap, (p.shield || 0) + (amount - got));
   if (got <= 0) return 0;
   if (a === p || a.owner === p || a === pet) {
     a.healAcc = (a.healAcc || 0) + got;
@@ -295,7 +304,7 @@ function chargeUlt(amount) {
   if (p.ultT > 0 && !ULT_RULES.chargeDuringUlt) return;
   const base = (singleRun ? ULT_RULES.pve : ULT_RULES.pvp).base, mul = ULT_RULES.mult[character] || 1;
   const was = p.ult;
-  p.ult = Math.min(1, p.ult + amount * mul / base);
+  p.ult = Math.min(1, p.ult + amount * mul * (p.ultMul || 1) / base); // ultMul: 무한 생존 카드
   if (was < 1 && p.ult >= 1) {
     fx.push({ x: p.x, y: p.y - 80, t: 1, text: "궁극기 준비!", tcol: "#ffd23f", big: true });
     sfx("reload", p);
@@ -317,6 +326,7 @@ function updateSkills(dt) {
   if (character === "bear") {
     if (p.run > 0) for (const b of bots) if (b.hp > 0 && !p.runHits?.has(b) && dist(p, b) < 34) {
       p.runHits?.add(b);
+      if (SKILL_DATA.bear.q.dmg) hit(p, b, SKILL_DATA.bear.q.dmg); // 무한 생존 카드: 몸통 박치기
       knock(b, b.x - p.x, b.y - p.y, SKILL_DATA.bear.q.push);
       fx.push({ x: b.x, y: b.y, t: 0.3, ring: 30 });
     }
@@ -327,6 +337,11 @@ function updateSkills(dt) {
     }
   }
   if (character === "runner" || character === "bear") p.run = Math.max(0, p.run - dt);
+  // 기섭 카드 "잔상": 질주 중 지나간 자리 근처 적에게 피해
+  if (character === "runner" && p.run > 0 && singleRun?.endless && singleRun.mods.trail && (p.trailT = (p.trailT || 0) - dt) <= 0) {
+    p.trailT = 0.4;
+    for (const b of bots) if (b.hp > 0 && dist(p, b) < 40) hit(p, b, singleRun.mods.trail);
+  }
   // 동기: 돌진·옆걸음·펀치 러시
   if (p.rush) {
     const R = p.rush, step = Math.min(R.left, 900 * dt), ox = p.x, oy = p.y;
@@ -387,7 +402,7 @@ function updateSkills(dt) {
         H.spin += 0.35;
         for (let i = 0; i < S.hearts; i++) {
           const v = H.spin + i / S.hearts * Math.PI * 2;
-          shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, slow: S.slow, heart: true, ult: true });
+          shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, slow: S.slow, heart: true, ult: true, pierce: !!S.pierce, hitSet: S.pierce ? new Set() : null });
         }
       }
       if (H.t <= 0) p.heartUlt = null;

@@ -37,6 +37,9 @@ function reset() {
   fx = [];
   over = "";
   notice = "";
-  if (singleRun) setupWaveRun(); // 싱글 웨이브 미션: 봇 대신 웨이브 적
+  if (!singleRun?.endless) restoreEndlessSkills(); // 무한 생존 밖에서는 항상 원래 스킬 수치
+  hazards = [];
+  gameTimers = [];
+  if (singleRun) setupWaveRun(); // 싱글 웨이브 미션·무한 생존: 봇 대신 웨이브 적
   else mobShots = [];
 }

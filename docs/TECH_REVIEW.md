@@ -624,3 +624,11 @@ export default {
 - 구분: `CORRUPT_LOOK` (js/data/waves.js) — 일반 크기 1·오라 0.6, 보스 크기 1.6·오라 1. 근접 = 정용·기섭·경수·재한, 원거리 = 상훈·은숙, 보스 = 현곤 (데이터로 변경 가능, 플레이어 동기는 제외).
 - 보스 체력 막대 이름 "타락한 ○○" 로 표시. 미션 클리어·영입 조건·적 능력치는 변경 없음.
 - 캐릭터 선택창 현곤 포켓몬 칸에도 같은 공통 설명창 연결 (길게 누르기 / PC 마우스 올리기). 설명만 본 경우 선택이 바뀌지 않음. 스크롤 영역 안 버튼도 위치가 맞도록 설명창 위치 계산에 스크롤 반영.
+
+## 무한 생존 모드 V1 (ENDLESS_SURVIVAL_V1)
+- 데이터: `js/data/endless.js` (ENDLESS 설정, ENEMY_TYPES, ENDLESS_WAVES 1~20, BOSS_BASE, ENDLESS_BOSSES 8종, BLADES, ENDLESS_CARDS, RARITY_LOOK). 밸런스 수치 전부 여기서 조정.
+- 로직: `js/game/endless.js` — 웨이브 흐름(카운트다운→60초 생존/보스→카드→다음), 경험치·레벨업 카드, 적 8유형 AI, 보스 패턴(기본/궁극 + 페이즈 + 소환 상한 BOSS_BASE.addsCap), 칼날, 기록(localStorage `battlelab.endless`).
+- 스토리/배틀로얄 격리: `singleRun.endless` 일 때만 분기. 카드가 바꾼 SKILL_DATA 는 모드 종료/리셋 시 스냅샷으로 복원.
+- 렌더/UI: `js/render/endlessfx.js`(예고 범위, 장판, 칼날), `js/ui/endless.js`(목록, HUD, 카드, 결과). 보스전에는 경험치 바를 보스 바 아래로 이동.
+- 회귀: rules / skilltip / dist_check ALL PASS, sim errors=0, 스토리 웨이브 미션 수치 변화 없음.
+- 미구현/보류: 보스 BGM(에셋 없음), 무기 보상, 배틀로얄 봇의 V2 스킬·궁극기.

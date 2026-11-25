@@ -228,8 +228,9 @@ function draw() {
   }
   // 쓰러진 캐릭터: 사라지기 전 잠깐 바래는 효과
   for (const a of [p, ...bots]) if (a.hp <= 0 && !a.mob) drawDeath(a, a === p ? character : a.visual);
+  if (singleRun?.endless) drawHazards();
   if (singleRun) for (const a of bots) {
-    if (a.mob === "boss") drawBossTele(a);
+    if (a.mob === "boss") a.bossId ? drawEndlessTele(a) : drawBossTele(a);
     if (a.mob && a.hp <= 0) drawMob(a); // 쓰러지는 중
   }
   for (let a of [p, ...bots].filter((a2) => a2.hp > 0 && (a2 === p || a2.mob || visible(p, a2))).sort((a2, b) => a2.y - b.y)) {
@@ -263,6 +264,7 @@ function draw() {
     g.fillText(DISPLAY_NAMES[a === p ? character : a.visual] + " · " + weapons[a.w][0], a.x, a.y + 28);
   }
   for (const pt of [...(pet ? [pet] : []), ...ultPets]) drawPetActor(pt);
+  drawBlades();
   for (const c of clones) drawClone(c);
   setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
   if (singleRun) drawMobShots();

@@ -66,6 +66,14 @@ function hit(a, b, d, o = {}) {
     if (character === "summoner" && (pet || ultPets.length)) d *= SKILL_DATA.summoner.passive.take;
   }
   if (b.guardT > 0) d *= b.guardMul ?? 1; // 은숙 E
+  // 무한 생존 보스: 현곤 보스는 소환한 적이 살아 있는 동안 받는 피해 감소
+  if (b.bossId && ENDLESS_BOSSES[b.bossId].dmgTakenWithAdds && bots.some((x) => x !== b && x.hp > 0 && !x.bossId)) d *= ENDLESS_BOSSES[b.bossId].dmgTakenWithAdds;
+  // 은숙 카드: 보호막이 먼저 막음
+  if (b === p && p.shield > 0) {
+    const s = Math.min(p.shield, d);
+    p.shield -= s;
+    d -= s;
+  }
   if (b.max) b.lastHurt = elapsed; // 은숙 패시브: 맞으면 회복 중단
   if (b === p && character === "octo" && b.max) p.sulk = Math.min(1, (p.sulk || 0) + d / SKILL_DATA.octo.passive.perDmg);
   const real = b.max ? Math.min(d, Math.max(0, b.hp)) : d; // 과잉 피해 제외한 실제 피해
@@ -74,7 +82,14 @@ function hit(a, b, d, o = {}) {
     stats.damage += real;
     if (b.hp - d <= 0) stats.kills++;
     if (!o.ult) chargeUlt(ULT_RULES.overkill ? d : real); // 궁극기 충전 (상자·궁극기 피해 제외)
+    if (p.steal && real > 0) healActor(p, real * p.steal, true); // 무한 생존 흡혈 카드
+    if (singleRun?.endless) {
+      const M = singleRun.mods;
+      if (M.petWeak && (a === pet || a.ult)) b.weak = Math.max(b.weak || 0, M.petWeak);
+      if (b.hp - d <= 0) endlessOnKill(a, b);
+    }
   }
+  if (b === p && d > 0 && singleRun?.endless) endlessOnHurt(d);
   b.hp -= d;
   if (!b.max) b.flash = elapsed + 0.12;
   // 타격감: 피격 깜빡임·밀림 흔들림, 타격 이펙트, 효과음, 내가 맞으면 화면 흔들림
@@ -128,9 +143,9 @@ function pickup(a, pred = isUsefulLoot) {
   } else if (l.type === LOOT.grenade) {
     a.grenades = Math.min(GRENADE.max, (a.grenades || 0) + GRENADE.perPickup);
   } else if (l.type === LOOT.heal) {
-    const before = a.hp;
-    a.hp = Math.min(a.max, a.hp + a.max * HEAL.ratio);
-    fx.push({ x: a.x, y: a.y - 20, t: 0.8, text: "+" + Math.round(a.hp - before), heal: true });
+    const amt = a.max * (l.amount ?? HEAL.ratio); // 무한 생존 처치 드롭은 10% (l.amount)
+    if (a === p) healActor(a, amt);
+    else a.hp = Math.min(a.max, a.hp + amt);
     fx.push({ x: a.x, y: a.y, t: 0.5, healRing: true });
   } else {
     if (!FEATURES.accessories) return;

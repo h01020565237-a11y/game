@@ -59,7 +59,7 @@ function move(a, dx, dy, dt) {
   a.dir = (Math.round(Math.atan2(dx, -dy) / (Math.PI / 4)) + 8) % 8;
   a.frame = (a.frame + dt * 12) % 8;
   a._anim = true; // 이번 스텝에 걷기 프레임을 이미 넘김 (update 의 봇 애니메이션 중복 방지)
-  let s = 150 * (a === p && (pet || ultPets.length) ? SKILL_DATA.summoner.passive.speed : 1) * (a === p && p.punchRush ? SKILL_DATA.suit.r.moveMul : 1) * (a === p && a.run > 0 ? character === "runner" ? SKILL_DATA.runner.q.speed : SKILL_DATA.bear.q.speed : 1) * (a === p && a.heal > 0 ? SKILL_DATA.bear.e.moveMul : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * (a.spd || 1) * dt, x = clamp(a.x + dx * s, 18, W - 18), y = clamp(a.y + dy * s, 18, H - 18);
+  let s = 150 * (a === p && (pet || ultPets.length) ? SKILL_DATA.summoner.passive.speed : 1) * (a === p && p.punchRush ? SKILL_DATA.suit.r.moveMul : 1) * (a === p && a.run > 0 ? character === "runner" ? SKILL_DATA.runner.q.speed : SKILL_DATA.bear.q.speed : 1) * (a === p && a.heal > 0 ? SKILL_DATA.bear.e.moveMul : 1) * (a.slow > 0 ? 0.65 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * (a.spd || 1) * (a === p && p.stealth > 0 ? p.stealthSpd || 1 : 1) * dt, x = clamp(a.x + dx * s, 18, W - 18), y = clamp(a.y + dy * s, 18, H - 18);
   if (!terrain(x, a.y) && !blocked(x, a.y) && !nearBox(x, a.y, 30)) a.x = x;
   if (!terrain(a.x, y) && !blocked(a.x, y) && !nearBox(a.x, y, 30)) a.y = y;
 }

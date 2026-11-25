@@ -43,8 +43,10 @@ function beginSingle(missionId) {
 function endSingle() {
   singleRun = null;
   mobShots = [];
+  restoreEndlessSkills(); // 무한 생존 카드로 바뀐 스킬 수치를 원래대로
 }
 function setupWaveRun() {
+  if (singleRun.endless) return setupEndless(); // 무한 생존 (js/game/endless.js)
   const m = WAVE_MISSIONS[singleRun.id];
   Object.assign(singleRun, {
     m, wave: -1, phase: "intro", t: m.startDelay, queue: [], spawnT: 0, cards: [], picked: [], kills: 0, bannerT: 0, banner: "",
@@ -95,6 +97,7 @@ function makeMob(type, at) {
 
 // ----- 매 프레임 (update 에서 호출) -----
 function updateWave(dt) {
+  if (singleRun.endless) return updateEndless(dt);
   const R = singleRun;
   if (R.bannerT > 0) R.bannerT -= dt;
   if (R.phase === "intro") {
@@ -197,7 +200,7 @@ function chase(a, dt) {
       a._nav = null;
       c.bad = 0;
       a.spawnT = 0.6;
-      fx.push({ x: a.x, y: a.y, t: 0.6, ring: MOB_TYPES[a.mob].r + 14 });
+      fx.push({ x: a.x, y: a.y, t: 0.6, ring: (a.r || MOB_TYPES[a.mob]?.r || 16) + 14 });
     }
   }
 }
@@ -208,7 +211,7 @@ function p_r() {
 function separate(a) {
   for (const b of bots) {
     if (b === a || b.hp <= 0) continue;
-    const dx = a.x - b.x, dy = a.y - b.y, dd = Math.hypot(dx, dy), min = MOB_TYPES[a.mob].r + MOB_TYPES[b.mob].r;
+    const dx = a.x - b.x, dy = a.y - b.y, dd = Math.hypot(dx, dy), min = (a.r || MOB_TYPES[a.mob]?.r || 16) + (b.r || MOB_TYPES[b.mob]?.r || 16);
     if (dd > 0.01 && dd < min) {
       const k = (min - dd) / dd * 0.25, x = a.x + dx * k, y = a.y + dy * k;
       if (!terrain(x, y) && !blocked(x, y)) {
@@ -304,13 +307,22 @@ function fireBossPattern(a) {
 function updateMobShots(dt) {
   for (const s of mobShots) {
     const steps = Math.max(1, Math.ceil(Math.hypot(s.vx, s.vy) * dt / 8));
+    if (s.turn) { // 휘는 탄 (재한 보스 감아차기)
+      const v = Math.atan2(s.vy, s.vx) + s.turn * dt, sp = Math.hypot(s.vx, s.vy);
+      s.vx = Math.cos(v) * sp;
+      s.vy = Math.sin(v) * sp;
+    }
     for (let i = 0; i < steps && !s.dead; i++) {
       s.x += s.vx * dt / steps;
       s.y += s.vy * dt / steps;
       s.left -= Math.hypot(s.vx, s.vy) * dt / steps;
-      if (s.left < 0 || blocked(s.x, s.y, 2) || s.x < 0 || s.y < 0 || s.x > W || s.y > H) s.dead = true;
-      else if (p.hp > 0 && Math.hypot(p.x - s.x, p.y - 14 - s.y) < 18 + s.r * 0.5) {
+      if (s.left < 0 || blocked(s.x, s.y, 2) || s.x < 0 || s.y < 0 || s.x > W || s.y > H) {
+        s.dead = true;
+        if (s.blast) hazards.push({ x: s.x, y: s.y, r: s.blast, t: 0.01, dur: 0.01, dmg: s.d * 0.6, a: s.a, color: "211, 155, 255" });
+      } else if (p.hp > 0 && Math.hypot(p.x - s.x, p.y - 14 - s.y) < 18 + s.r * 0.5) {
         hit(s.a, p, s.d);
+        if (s.slow) p.slow = Math.max(p.slow || 0, s.slow);
+        if (s.blast) hazards.push({ x: s.x, y: s.y, r: s.blast, t: 0.01, dur: 0.01, dmg: s.d * 0.6, a: s.a, color: "211, 155, 255" });
         s.dead = true;
       } else if (pet && Math.hypot(pet.x - s.x, pet.y - s.y) < 20) {
         hit(s.a, pet, s.d);
