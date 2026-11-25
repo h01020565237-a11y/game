@@ -429,6 +429,11 @@ html, body { touch-action: manipulation; overscroll-behavior: none; -webkit-text
 #touch .petBtn .pet-art { flex: 0 1 auto; min-height: 0; display: block; max-width: 75%; max-height: 75%; width: auto; height: auto; object-fit: contain; margin: auto; pointer-events: none; }
 .pk-slot .pet-art, .pk-mon .pet-art { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
 .card-art { width: 64px; height: 64px; object-fit: contain; pointer-events: none; }
+/* 플로팅 조이스틱 (2026-11-25): 왼쪽 아래 넓은 영역이 이동 판정, 조이스틱은 누른 자리로 이동 */
+#mvZone { position: absolute; left: 0; bottom: 0; width: 46%; height: 76%; pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body.mobile #touch .stick#mv { z-index: 1; opacity: .55; transition: opacity .12s; }
+body.mobile #touch .stick#mv.on { opacity: 1; }
+#touch button { z-index: 2; }
 </style>
   <style>
 /* Battle Lab UI — ChatGPT 인계 시안 방향 (남색 패널, 하늘색 테두리, 노란 주 버튼, 둥근 글꼴)
@@ -551,7 +556,7 @@ html, body { touch-action: manipulation; overscroll-behavior: none; -webkit-text
 #ammoPips { color: var(--bl-gold); letter-spacing: 2px; font-size: 13px; }
 #grenHud { font-size: 13px; color: #cfe1ff; padding-left: 8px; border-left: 1px solid #7fb3ff66; }
 body.lobbyOpen #topHud, body.lobbyOpen #weaponHud, body.lobbyOpen #touch { visibility: hidden; }
-body.mobile #topHud { left: 70px; }          /* 왼쪽 위 메뉴 버튼 자리 */
+#topHud, body.mobile #topHud { left: 78px; }   /* 왼쪽 위 메뉴 버튼 자리 (PC·모바일 공통) */
 body.mobile #weaponHud { bottom: 6px; transform: translateX(-50%) scale(.9); transform-origin: bottom center; }
 
 /* ---------- 화면(로비·결과) 공통 ---------- */
@@ -1161,6 +1166,149 @@ body.mobile .prep-pick span { font-size: clamp(11px, 3cqh, 13px); }
 /* 미션 안내·웨이브 배너: 글자보다 배경이 작아 보이던 문제 → 줄 높이·여백을 글자 크기에 맞추고, 길면 두 줄로 (2026-11-25) */
 #waveBanner { line-height: 1.35; padding: .45em 1.2em; box-sizing: border-box; width: max-content; max-width: 88%; white-space: normal; text-align: center; border-radius: 18px; font-size: clamp(15px, 1.6vw + 8px, 26px); box-shadow: 0 4px 14px #0008; }
 body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
+
+/* ===== 인게임 메뉴 버튼 + 일시정지 메뉴 (2026-11-25) ===== */
+#menuBtn, body.mobile #menuBtn {
+  display: block; position: absolute; left: 10px; top: 8px; z-index: 6; bottom: auto;
+  width: auto; min-width: 52px; height: clamp(30px, 6.4%, 42px); padding: 0 12px; box-sizing: border-box;
+  font-family: var(--bl-font); font-size: clamp(12px, 2.4vmin, 16px); color: #fff; cursor: pointer;
+  background: linear-gradient(180deg, var(--bl-navy-2), var(--bl-navy)); border: 2px solid var(--bl-edge); border-radius: 10px;
+  box-shadow: 0 3px 0 var(--bl-deep); pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+#menuBtn::after { content: ""; position: absolute; inset: -8px; } /* 터치 판정 넓게 */
+#menuBtn:active { transform: translateY(2px); }
+body.lobbyOpen #menuBtn, body.titleOpen #menuBtn, body.modeOpen #menuBtn, body.csOpen #menuBtn { display: none; }
+#pauseMenu { z-index: 14; background: #070d22b8; backdrop-filter: blur(3px); }
+/* 시안: 다크 네이비 + 파란 입체 테두리, 금색 제목, 가운데 다이아 구분선, 세 버튼 동일 규격 */
+.pause-card { --pb-h: clamp(40px, 12.5cqh, 58px); --pb-r: clamp(14px, 4cqh, 22px); --pb-gap: clamp(7px, 2.4cqh, 13px); --pb-font: clamp(16px, 5cqh, 24px);
+  display: flex; flex-direction: column; align-items: stretch; gap: var(--pb-gap); width: min(78cqw, 400px); box-sizing: border-box; max-height: 94cqh; overflow-y: auto;
+  padding: clamp(10px, 3cqh, 20px) clamp(16px, 4cqw, 30px) clamp(14px, 4cqh, 24px);
+  background: linear-gradient(180deg, #1a2d78 0%, #0f1c52 55%, #0b153f 100%); border: 3px solid #4f8dff; border-radius: clamp(18px, 5cqh, 28px);
+  box-shadow: 0 0 0 2px #1b3a9a, 0 7px 0 #0a1d5c, 0 12px 26px #0009, inset 0 2px 0 #ffffff33, inset 0 0 0 2px #2a56c8; animation: bl-pop .2s ease-out; }
+.pause-head { display: flex; align-items: center; justify-content: center; gap: .4em; margin: 0; font-weight: normal; font-size: clamp(22px, 7cqh, 34px); color: #ffd23f; text-shadow: 0 2px 0 #7a4a00, 0 3px 0 #1a1033; letter-spacing: 1px; }
+.pause-coin { display: grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; background: radial-gradient(circle at 45% 35%, #ffe680, #f5b400 60%, #b97800); color: #5a3300; box-shadow: 0 2px 0 #6b3d00, inset 0 0 0 2px #fff3b077; }
+.pause-coin svg { width: 70%; height: 70%; }
+.pause-rule { position: relative; height: 10px; margin: -2px 6% 0; }
+.pause-rule::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; transform: translateY(-50%); background: linear-gradient(90deg, transparent, #3c7bff 20%, #3c7bff 42%, transparent 46%, transparent 54%, #3c7bff 58%, #3c7bff 80%, transparent); }
+.pause-rule i { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; transform: translate(-50%, -50%) rotate(45deg); background: linear-gradient(135deg, #bfe0ff, #3c8bff); box-shadow: 0 0 8px #5aa2ff; }
+.pause-view { display: flex; flex-direction: column; gap: var(--pb-gap); }
+.pause-view[hidden] { display: none; }
+/* 세 버튼: 가로·세로·곡률·글자 크기·간격·아이콘 크기/위치 동일 */
+#pauseMenu .pbtn, body.mobile #pauseMenu .pbtn { font-size: var(--pb-font); font-weight: 800; min-height: 0; min-width: 0; }
+#pauseMenu .pbtn.small, body.mobile #pauseMenu .pbtn.small { font-size: calc(var(--pb-font) * .86); }
+.pbtn { position: relative; display: grid; grid-template-columns: 30% 2px 1fr; align-items: center; width: 100%; height: var(--pb-h); padding: 0; border: 3px solid; border-radius: var(--pb-r);
+  font: inherit; font-size: var(--pb-font); letter-spacing: 1px; cursor: pointer; transition: transform .07s, box-shadow .07s, filter .07s; -webkit-tap-highlight-color: transparent; }
+.pbtn::after { content: ""; position: absolute; left: 6%; right: 6%; top: 7%; height: 32%; border-radius: var(--pb-r) var(--pb-r) 40% 40%; background: linear-gradient(180deg, #ffffff66, #ffffff00); pointer-events: none; }
+.pbtn .pico { display: grid; place-items: center; height: 100%; }
+.pbtn .pico svg { width: calc(var(--pb-h) * .62); height: calc(var(--pb-h) * .62); filter: drop-shadow(0 2px 0 #0005); }
+.pbtn::before { content: ""; grid-column: 2; grid-row: 1; width: 2px; height: 46%; border-radius: 1px; background: currentColor; opacity: .55; }
+.pbtn .pico { grid-column: 1; grid-row: 1; }
+.pbtn > span { grid-column: 3; grid-row: 1; text-align: center; padding-right: 8%; white-space: nowrap; }
+.pbtn.gold { color: #fff6d0; background: linear-gradient(180deg, #ffd84a 0%, #ffb800 55%, #f29a00 100%); border-color: #ffe78a; box-shadow: 0 5px 0 #b36a00, 0 7px 10px #0007; text-shadow: 0 2px 0 #6b3500, -1px -1px 0 #6b3500, 1px -1px 0 #6b3500; }
+.pbtn.gold .pico { color: #ffe9a0; }
+.pbtn.blue { color: #f0f6ff; background: linear-gradient(180deg, #5aa2ff 0%, #2f77f0 55%, #1d5fd6 100%); border-color: #9cc6ff; box-shadow: 0 5px 0 #123e9a, 0 7px 10px #0007; text-shadow: 0 2px 0 #0d2a6b, -1px -1px 0 #0d2a6b, 1px -1px 0 #0d2a6b; }
+.pbtn.blue .pico { color: #fffaf0; }
+.pbtn.red { color: #fff0ee; background: linear-gradient(180deg, #ff7a70 0%, #e8453d 55%, #c9302b 100%); border-color: #ffaaa3; box-shadow: 0 5px 0 #861a17, 0 7px 10px #0007; text-shadow: 0 2px 0 #5a0d0d, -1px -1px 0 #5a0d0d, 1px -1px 0 #5a0d0d; }
+.pbtn.red .pico { color: #fff6ee; }
+.pbtn:active, .pbtn.down { transform: translateY(4px) scale(.985); filter: brightness(.95); }
+.pbtn.gold:active, .pbtn.gold.down { box-shadow: 0 1px 0 #b36a00, 0 2px 4px #0007; }
+.pbtn.blue:active, .pbtn.blue.down { box-shadow: 0 1px 0 #123e9a, 0 2px 4px #0007; }
+.pbtn.red:active, .pbtn.red.down { box-shadow: 0 1px 0 #861a17, 0 2px 4px #0007; }
+.pbtn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+/* 옵션·확인창 아래쪽 두 버튼 (서로 같은 크기) */
+.pause-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--pb-gap); }
+.pbtn.small { grid-template-columns: 1fr; }
+.pbtn.small::before { display: none; }
+.pbtn.small > span { grid-column: 1; padding: 0; }
+.pbtn.small { height: calc(var(--pb-h) * .86); }
+.pause-opt { background: #0a1438aa; border: 2px solid #2a56c8; border-radius: var(--pb-r); padding: clamp(8px, 2.6cqh, 14px) clamp(10px, 3cqw, 16px); }
+.pause-opt label { display: grid; grid-template-columns: 5.6em 1fr 2.4em; align-items: center; gap: 10px; color: #dbe9ff; font-size: clamp(13px, 3.8cqh, 16px); }
+.pause-opt label b { font-weight: normal; color: #ffd23f; text-align: right; }
+.pause-opt input { width: 100%; accent-color: #ffd23f; }
+.pause-ask { margin: 2px 0 4px; text-align: center; color: #fff; font-size: clamp(17px, 5.4cqh, 24px); line-height: 1.4; }
+.pause-ask small { display: block; color: #a9c4ff; font-size: .62em; }
+
+/* ===== 인게임 조작 UI (2026-11-25 통합 요청 5장) ===== */
+/* 오른쪽 아래: [공격(큰 버튼, 장착 무기 아이콘)] 왼쪽으로 [대시][무기 교체] 같은 작은 크기 나란히, 그 옆 [수류탄] */
+body.mobile #touch #atk { right: 3%; bottom: 7%; width: clamp(72px, 12vw, 108px); padding: 0; display: grid; place-items: center; white-space: normal; }
+#touch #atk .w-ico { width: 54%; aspect-ratio: 1; background: var(--wicon) center / contain no-repeat; filter: drop-shadow(0 2px 0 #6d0f0a); pointer-events: none; }
+#touch #atk.fist .w-ico { background: none; }
+#touch #atk.fist .w-ico::before { content: "✊"; display: block; font-size: clamp(26px, 5vw, 42px); line-height: 1; text-align: center; }
+#touch #atk .ammo { position: absolute; bottom: 9%; left: 0; right: 0; text-align: center; font-size: clamp(9px, 1.6vw, 13px); letter-spacing: 1px; color: #ffe07a; pointer-events: none; }
+body.mobile #touch #dashBtn, body.mobile #touch #pickBtn, body.mobile #touch #grenBtn { width: clamp(42px, 6.8vw, 58px); bottom: 6%; padding: 0; }
+body.mobile #touch #dashBtn { right: 17%; }
+body.mobile #touch #pickBtn { right: 24.6%; left: auto; }
+body.mobile #touch #grenBtn { right: 32.2%; }
+/* 무기 교체: 교체할 무기가 있을 때만 금빛 팝, 없으면 페이드 (자리 고정) */
+#touch #pickBtn { visibility: visible; opacity: 0; transform: scale(.6); pointer-events: none; transition: opacity .18s, transform .18s; display: grid; place-items: center; overflow: visible; white-space: normal; }
+#touch #pickBtn.show { opacity: 1; transform: scale(1); pointer-events: auto; animation: swap-pop .35s ease-out, swap-glow 1.2s ease-in-out .35s infinite; }
+#touch #pickBtn .w-ico { width: 62%; aspect-ratio: 1; background: var(--wicon) center / contain no-repeat; pointer-events: none; }
+#touch #pickBtn .swap-arrow { position: absolute; right: -4px; top: -6px; font-size: 14px; color: #fff; background: #b37f00; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; text-align: center; pointer-events: none; }
+#touch #pickBtn .nm { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px; font-size: 10px; color: #ffe07a; white-space: nowrap; text-shadow: 0 1px 0 #000; pointer-events: none; }
+@keyframes swap-pop { 0% { transform: scale(.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@keyframes swap-glow { 50% { box-shadow: 0 0 0 3px #ffe36b99, 0 0 16px #ffd23f; } }
+#touch #grenBtn { display: grid; place-items: center; white-space: normal; }
+#touch #grenBtn .w-ico { width: 60%; aspect-ratio: 1; background: var(--gicon) center / contain no-repeat; pointer-events: none; }
+#touch #grenBtn .cnt { position: absolute; right: -3px; bottom: -3px; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; background: #0b1436; color: #fff; font-size: 11px; text-align: center; pointer-events: none; }
+#touch #grenBtn.empty { opacity: .4; filter: grayscale(.8); }
+/* 현곤 포켓몬 버튼: 공격 버튼 둘레 부채꼴 (위 → 왼쪽 위 → 왼쪽) */
+body.mobile.summoner #touch .petBtn[data-i="0"] { right: 5%; bottom: 46%; }
+body.mobile.summoner #touch .petBtn[data-i="1"] { right: 14.2%; bottom: 39.7%; }
+body.mobile.summoner #touch .petBtn[data-i="2"] { right: 20%; bottom: 23.2%; }
+/* 모바일: 무기 정보는 공격·수류탄 버튼에 있으니 아래 가운데 무기 칸 대신 미니맵 */
+body.mobile #weaponHud { display: none; }
+body:not(.mobile) #weaponHud { left: 12px; transform: none; }
+#minimap { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); width: 17%; height: auto; opacity: .82; border-radius: 8px; border: 2px solid #7fb3ffaa; background: #0b143699; pointer-events: none; z-index: 4; }
+body.lobbyOpen #minimap, body.titleOpen #minimap, body.modeOpen #minimap { visibility: hidden; }
+
+/* ===== 닉네임 팝업 · 랭킹 (다크 네이비 + 골드) ===== */
+#nickPopup { z-index: 40; background: #0d1636cc; }
+body.mobile #nickPopup.kb { justify-content: flex-start; padding-top: 3cqh; } /* 키보드가 아래에서 올라오면 팝업을 위로 */
+body.mobile.rot #nickPopup.kb { align-items: flex-start; justify-content: center; padding: 0 0 0 4cqw; } /* 세로 폰(90° 회전 화면): 화면 오른쪽=실제 아래(키보드) → 왼쪽으로 */
+.nick-card { display: flex; flex-direction: column; align-items: center; gap: clamp(5px, 1.6cqh, 10px); width: auto; padding: clamp(10px, 3cqh, 20px) clamp(16px, 3cqw, 26px); }
+.nick-card h3 { margin: 0; font-weight: normal; color: #ffe07a; font-size: clamp(18px, 5.6cqh, 26px); text-shadow: 0 3px 0 #6b3d00; }
+.nick-sub { margin: 0; color: #cfe1ff; font-size: clamp(11px, 3.2cqh, 14px); }
+.nick-field { position: relative; width: clamp(200px, 30cqw, 240px); }
+#nickInput { width: 100%; box-sizing: border-box; height: 44px; font-size: 16px; /* 16px 미만이면 iOS 가 확대함 */ text-align: center; font-family: inherit; color: #fff; background: #0b1436; border: 2px solid var(--bl-edge); border-radius: 12px; outline: none; padding: 0 40px; }
+#nickInput::placeholder { color: #8fa6d8; text-align: center; }
+#nickInput:focus { border-color: var(--bl-gold); box-shadow: 0 0 0 3px #ffd23f44; }
+#nickCount { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #8fa6d8; font-size: 12px; pointer-events: none; }
+#nickCount.over { color: #ff8a80; }
+.nick-err { margin: 0; min-height: 1.2em; color: #ffb0a8; font-size: 13px; text-align: center; max-width: clamp(200px, 30cqw, 240px); }
+.nick-ok, body.mobile .nick-ok { width: clamp(200px, 30cqw, 240px); min-width: 0; height: 44px; font-size: 18px; }
+#nickOffline { font-size: 14px; }
+.nick-cancel, body.mobile .nick-cancel { width: clamp(200px, 30cqw, 240px); font-size: 14px; min-height: 36px; }
+.nick-row { display: flex; align-items: center; gap: 8px; color: #cfe1ff; }
+.nick-row b { color: #ffe07a; font-weight: normal; flex: 1; }
+.rank-btn { right: calc(clamp(8px, 2cqw, 20px) + clamp(34px, 9.5cqh, 48px) + 8px); color: #ffd23f; }
+.rank-btn[hidden] { display: none; }
+#rankPanel { z-index: 35; background: #070d24cc; }
+.rank-card { display: flex; flex-direction: column; width: min(96cqw, 880px); height: min(94cqh, 640px); padding: clamp(8px, 2cqh, 14px); box-sizing: border-box; gap: 6px; background: linear-gradient(180deg, #16224f, #0b1334); border-color: #d9a520; }
+.rank-head { display: flex; align-items: center; gap: 10px; }
+.rank-head h3 { margin: 0; font-weight: normal; color: #ffd23f; font-size: clamp(17px, 5cqh, 24px); }
+.rank-me { flex: 1; color: #cfe1ff; font-size: clamp(11px, 3.2cqh, 14px); }
+.rank-tabs { display: flex; gap: 4px; overflow-x: auto; flex: none; }
+.rank-tab { flex: none; font-family: inherit; font-size: clamp(11px, 3.2cqh, 14px); color: #cfe1ff; background: #0b1436; border: 1px solid #3b4f8a; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.rank-tab.on { color: #3b2700; background: linear-gradient(180deg, #fff2a8, #ffc93a); border-color: #ffd23f; }
+.rank-cols, .rank-row { display: grid; grid-template-columns: 3em minmax(0, 2.2fr) minmax(0, 1fr) 4em 4em 3em 4em; gap: 4px; align-items: center; padding: 0 8px; font-size: clamp(11px, 3.3cqh, 14px); }
+.rank-cols { color: #8fa6d8; font-size: clamp(10px, 2.8cqh, 12px); flex: none; }
+.rank-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.rank-row { min-height: clamp(24px, 7.4cqh, 34px); color: #fff; background: #0f1a44; border-radius: 8px; position: relative; }
+.rank-row .rk { text-align: center; color: #cfe1ff; }
+.rank-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-row.top1 { background: linear-gradient(90deg, #5c4400, #1b2350); } .rank-row.top2 { background: linear-gradient(90deg, #4a4f5c, #1b2350); } .rank-row.top3 { background: linear-gradient(90deg, #5a3315, #1b2350); }
+.rank-row .rk:not(:empty) { font-size: 1.05em; }
+.rank-row.mine { outline: 2px solid #ffd23f; background: #2b2a12; }
+.rank-row.gold { animation: rank-gold 1.6s ease-out; }
+@keyframes rank-gold { 0% { box-shadow: 0 0 0 0 #ffd23f; } 30% { box-shadow: 0 0 22px 6px #ffd23fcc; } 100% { box-shadow: 0 0 0 0 #ffd23f00; } }
+.rank-row.pin { flex: none; }
+.rank-row.pin.dim { visibility: hidden; height: 0; min-height: 0; padding: 0; outline: 0; }
+.rank-msg { flex: none; text-align: center; color: #cfe1ff; font-size: 13px; }
+.res-online { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; color: #ffe07a; font-size: clamp(12px, 3.4cqh, 15px); }
+.res-online[hidden] { display: none; }
+.res-online .btn { font-size: 13px; padding: 4px 12px; }
+.gold-burst { animation: rank-gold-text 1.6s ease-out 2; color: #ffd23f !important; }
+@keyframes rank-gold-text { 0%, 100% { text-shadow: 0 3px 0 #6b3d00; transform: scale(1); } 30% { text-shadow: 0 0 18px #ffd23f, 0 0 36px #ffb000, 0 3px 0 #6b3d00; transform: scale(1.08); } }
 </style>
 </head>
 <body class="lobbyOpen">
@@ -1189,16 +1337,19 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
   <div id="hud"></div>
   <div id="arena">
     <canvas id="c" width="1000" height="650"></canvas>
+    <!-- 메뉴(일시정지) 버튼: PC·모바일 공통, 조작 버튼 묶음(#touch) 밖에 둠 -->
+    <button id="menuBtn" type="button" aria-label="메뉴 (일시정지)">메뉴</button>
     <div id="touch">
+      <!-- 플로팅 조이스틱: 왼쪽 영역 어디든 누른 자리에 조이스틱이 생김 (버튼 위에서 시작한 터치는 제외) -->
+      <div id="mvZone" aria-hidden="true"></div>
       <div class="stick" id="mv"><i></i><span>이동</span></div>
-      <button id="atk">공격</button>
+      <button id="atk" aria-label="공격"><i class="w-ico" aria-hidden="true"></i><span id="atkAmmo" class="ammo"></span></button>
       <button id="dashBtn">대시</button>
       <button id="summonBtn">소환</button>
       <button id="bearHeal" style="display:none;right:20%;bottom:36%">회복</button>
       <button id="ultBtn" aria-label="궁극기"><span id="ultLabel">0%</span></button>
-      <button id="pickBtn">교체</button>
-      <button id="grenBtn">수류탄</button>
-      <button id="menuBtn" aria-label="메뉴">메뉴</button>
+      <button id="pickBtn" aria-label="무기 교체" aria-hidden="true"><i class="w-ico" aria-hidden="true"></i><b class="swap-arrow" aria-hidden="true">⇄</b><span id="pickName" class="nm"></span></button>
+      <button id="grenBtn" aria-label="수류탄"><i class="w-ico" aria-hidden="true"></i><span id="grenCount" class="cnt">0</span></button>
       <button class="petBtn" data-i="0" aria-label="포켓몬 1"></button>
       <button class="petBtn" data-i="1" aria-label="포켓몬 2"></button>
       <button class="petBtn" data-i="2" aria-label="포켓몬 3"></button>
@@ -1218,6 +1369,8 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
     <div id="waveBanner" hidden></div>
     <button id="pkDeckBtn" class="btn btn-gold" hidden>포켓몬 편성</button>
     <div id="expHud" hidden><b id="expLv">Lv1</b><div class="exp-bar"><i id="expFill"></i></div></div>
+    <!-- 미니맵: 중앙 하단, 화면 너비 약 17%, 반투명 (플레이어 파란 화살표·적 빨강·상자 노랑·소환수 초록·은숙 분홍) -->
+    <canvas id="minimap" aria-label="미니맵"></canvas>
     <div id="weaponHud">
       <span id="weaponIcon" aria-hidden="true"></span>
       <span class="wtext"><b id="weaponName">맨손</b><span id="ammoPips">●●●</span></span>
@@ -1245,6 +1398,7 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
     <section id="lobby" class="screen" aria-label="캐릭터 선택">
       <!-- 공통: 왼쪽 위 뒤로가기(=모드 선택), 오른쪽 위 설정. 모드 화면에서만 보임 -->
       <button id="lobbyBack" class="screen-back" type="button">◀ 모드 선택</button>
+      <button id="lobbyRank" class="screen-gear rank-btn" type="button" aria-label="웨이브 랭킹" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm-1 4v1a2 2 0 0 0 1 1.7V7zm12 0v2.7A2 2 0 0 0 18 8V7z"/></svg></button>
       <button id="lobbySet" class="screen-gear" type="button" aria-label="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
       <div class="panel lobby-card">
         <div class="lobby-left">
@@ -1311,6 +1465,7 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
           <label>배경음 <input type="range" id="mVolBgm" min="0" max="100"></label>
           <label>효과음 <input type="range" id="mVolSfx" min="0" max="100"></label>
           <label>음성 <input type="range" id="mVolVoice" min="0" max="100"></label>
+          <div class="nick-row">닉네임 <b id="mNick">-</b><button id="mNickEdit" class="btn btn-ghost" type="button">변경</button></div>
           <label class="qa">QA 전체 해금 (테스트 전용) <input type="checkbox" id="mQa"></label>
           <div class="row"><button id="mMute" class="btn btn-ghost">음소거</button><button id="mClose" class="btn btn-blue">닫기</button></div>
         </div>
@@ -1423,6 +1578,62 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
     </section>
 
     <!-- 결과 화면 -->
+    <!-- 닉네임 등록/변경 팝업 (타이틀 GAME START → 미등록이면 표시, 설정에서 변경) -->
+    <section id="nickPopup" class="screen" hidden aria-label="닉네임">
+      <form id="nickForm" class="panel nick-card" autocomplete="off" novalidate>
+        <h3 id="nickTitle">닉네임 등록</h3>
+        <p class="nick-sub" id="nickSub">랭킹에 표시될 이름 (2~12자)</p>
+        <div class="nick-field"><input id="nickInput" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24" placeholder="닉네임 입력"><small id="nickCount">0/12</small></div>
+        <p id="nickErr" class="nick-err" role="alert"></p>
+        <button id="nickOk" class="btn btn-cta nick-ok" type="submit">등록</button>
+        <button id="nickOffline" class="btn btn-blue nick-ok" type="button" hidden>오프라인으로 시작 (나중에 등록)</button>
+        <button id="nickCancel" class="btn btn-ghost nick-cancel" type="button">취소</button>
+      </form>
+    </section>
+    <!-- 웨이브 랭킹 (전체·캐릭터별 TOP 100, 내 순위 아래 고정) -->
+    <section id="rankPanel" class="screen" hidden aria-label="웨이브 랭킹">
+      <div class="panel rank-card">
+        <div class="rank-head"><h3>🏆 웨이브 랭킹</h3><span id="rankMe" class="rank-me"></span><button id="rankClose" class="btn btn-ghost" type="button">닫기</button></div>
+        <div id="rankTabs" class="rank-tabs" role="tablist"></div>
+        <div class="rank-cols"><span>순위</span><span>닉네임</span><span>캐릭터</span><span>웨이브</span><span>생존</span><span>Lv</span><span>처치</span></div>
+        <div id="rankList" class="rank-list"></div>
+        <div id="rankPin" class="rank-row mine pin" hidden></div>
+        <div id="rankMsg" class="rank-msg"></div>
+      </div>
+    </section>
+
+    <!-- 일시정지 메뉴 (인게임 메뉴 버튼 / Esc): 계속하기 · 옵션(소리) · 나가기(타이틀). 랭킹 버튼은 넣지 않음 -->
+    <section id="pauseMenu" class="screen" hidden aria-label="일시정지">
+      <div class="panel pause-card">
+        <h3 class="pause-head"><i class="pause-coin" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7.5" y="6" width="3.2" height="12" rx="1.2" fill="currentColor"/><rect x="13.3" y="6" width="3.2" height="12" rx="1.2" fill="currentColor"/></svg></i><span id="pauseTitle">일시정지</span></h3>
+        <div class="pause-rule" aria-hidden="true"><i></i></div>
+        <!-- 기본: 계속하기 / 옵션 / 나가기 (세 버튼 크기·곡률·글자·간격 동일) -->
+        <div id="pauseMain" class="pause-view">
+          <button id="pauseResume" class="pbtn gold" type="button"><i class="pico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.6v14.8L19.2 12z" fill="currentColor" stroke="#4a2600" stroke-width="1.6" stroke-linejoin="round"/></svg></i><span>계속하기</span></button>
+          <button id="pauseOptBtn" class="pbtn blue" type="button"><i class="pico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" stroke="#0d2a6b" stroke-width="1.2" d="M10.3 2.5h3.4l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6-2.6-.5v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7z"/><circle cx="12" cy="12" r="3.2" fill="#1d5fd6"/></svg></i><span>옵션 (사운드)</span></button>
+          <button id="pauseExit" class="pbtn red" type="button"><i class="pico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 3.5h8.5v17H3.5z" fill="currentColor" stroke="#5a0d0d" stroke-width="1.4" stroke-linejoin="round"/><circle cx="9.3" cy="12" r="1" fill="#5a0d0d"/><path d="M13.5 12h6.2M17 8.6l3.4 3.4-3.4 3.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i><span>나가기</span></button>
+        </div>
+        <!-- 옵션: 배경음·효과음·캐릭터 음성 (저장됨). 일시정지 유지 -->
+        <div id="pauseOpt" class="pause-view pause-opt" hidden>
+          <label>배경음악 <input type="range" id="pVolBgm" min="0" max="100"><b id="pVolBgmN"></b></label>
+          <label>효과음 <input type="range" id="pVolSfx" min="0" max="100"><b id="pVolSfxN"></b></label>
+          <label>캐릭터 음성 <input type="range" id="pVolVoice" min="0" max="100"><b id="pVolVoiceN"></b></label>
+          <div class="pause-row">
+            <button id="pMute" class="pbtn blue small" type="button">음소거</button>
+            <button id="pOptBack" class="pbtn gold small" type="button">확인</button>
+          </div>
+        </div>
+        <!-- 나가기 확인. 일시정지 유지 -->
+        <div id="pauseConfirm" class="pause-view" hidden>
+          <p class="pause-ask">정말 나갈까요?<small>진행 중인 판은 저장되지 않아요</small></p>
+          <div class="pause-row">
+            <button id="pauseExitNo" class="pbtn blue small" type="button">취소</button>
+            <button id="pauseExitYes" class="pbtn red small" type="button">나가기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="results" class="screen" hidden aria-label="게임 결과">
       <div class="panel res-card">
         <div class="res-title" id="resTitle">승리!</div>
@@ -1435,6 +1646,7 @@ body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }
             <div class="stat"><span>생존 시간</span><b id="resTime">0:00</b></div>
           </div>
         </div>
+        <div id="resOnline" class="res-online" hidden><span id="resOnlineText"></span><button id="resResend" class="btn btn-ghost" type="button" hidden>다시 보내기</button><button id="resRankBtn" class="btn btn-gold" type="button" hidden>🏆 랭킹 보기</button></div>
         <div class="res-btns">
           <button id="overBtn" class="btn btn-blue">다시 하기</button>
           <button id="resLobby" class="btn btn-gold">로비로</button>
@@ -1476,7 +1688,10 @@ const MAP_JUNGLE = {
 // 무기: [이름, 데미지, 쿨타임(초), 사거리], angles: 근접/표시용 부채꼴 각도(도)
 // 장비 id: 0 운동화, 1 방탄조끼, 2 장갑, 3 목걸이, 4 손목시계, 5 흡혈 반지
 
-const weapons = [["맨손", 100, 0.5, 80], ["검", 250, 0.6, 120], ["망치", 600, 1.5, 100], ["권총", 250, 0.6, 240], ["샷건", 140, 1.4, 160], ["저격총", 800, 2, 380], ["수류탄", 500, 2, 260]];
+const weapons = [["맨손", 100, 0.5, 80], ["검", 250, 0.8, 120], ["망치", 700, 2.0, 100], ["권총", 450, 1.2, 240], ["샷건", 140, 1.4, 160], ["저격총", 800, 2, 380], ["수류탄", 500, 2, 260]];
+// 무기 밸런스 확정 (2026-11-25 통합 요청서): 검 250·0.8초·2명 / 망치 700·2.0초·2명(공격각 160도 유지) / 권총 450·1.2초·1명
+// gap: 공격과 공격 사이 최소 간격(초, 탄창 연사 간격보다 우선), maxTargets: 한 번에 맞는 최대 대상(가까운 순). 나머지 무기는 기존 설정
+const WEAPON_RULES = { 1: { gap: 0.8, maxTargets: 2 }, 2: { gap: 2.0, maxTargets: 2 }, 3: { gap: 1.2, maxTargets: 1 } };
 const angles = [90, 120, 160, 30, 75, 12, 60];
 const gear = ["운동화", "방탄조끼", "장갑", "목걸이", "손목시계", "흡혈 반지"];
 
@@ -2109,7 +2324,7 @@ const WAVE_MISSIONS = {
 const STORY_MISSIONS = {
   eunsuk: {
     reward: "support", players: ["summoner"], title: "새벽별교회를 지켜라", sub: "보호 방어전 + 보스", target: "4~6분", scaleW: 3,
-    ward: { name: "은숙", look: "support", hp: 4200, hunters: 0.4 }, // hunters: 근접·기동 적 중 은숙을 노리는 비율. 2026-11-25 요청: 적 수 1단계 24→36, 2단계 30→44
+    ward: { name: "은숙", look: "support", hp: 4200, hunters: 1 }, // hunters: 일반 적 중 은숙을 우선 노리는 비율 (2026-11-25: 0.4 근접·기동만 → 1 전 유형, 원거리는 사거리에서 쏨). 2026-11-25 요청: 적 수 1단계 24→36, 2단계 30→44
     stages: [
       { label: "1단계", time: 70, count: 36, kinds: ["melee", "mobile"], tips: [[0.5, "은숙을 지켜라! 은숙 체력이 0이 되면 실패"], [5, "포켓몬 버튼을 눌러 던지기 → 10초간 함께 싸움"], [16, "E 교체: 소환 중인 포켓몬을 다른 포켓몬으로"]] },
       { label: "2단계", time: 80, count: 44, kinds: ["melee", "mobile", "ranged", "thrower"], tips: [[0.5, "원거리·투척 적 등장 — 붉은 예고 범위를 피하세요"], [10, "R 궁극기 「한잔했어!」: 게이지 100%면 포켓몬 3마리 동시 소환"]] },
@@ -2186,7 +2401,8 @@ const ENDLESS = {
   heal: { clear: 0.2, boss: 0.5 },        // 웨이브 클리어 회복 (최대 HP 비율) — 기획서
   dropHeal: { chance: 0.03, amount: 0.1 }, // 적 처치 시 회복 아이템 — 기획서
   rarity: { common: 65, rare: 25, legend: 10 }, // 카드 등장 확률(%) — 기획서
-  countdown: 3,              // 웨이브 시작 전 카운트다운(초) — 기획서 제안
+  contact: { interval: 0.8, mul: 0.5 }, // 몸 접촉 피해: 적 공격력 × mul, 플레이어는 interval 초에 한 번만 (여러 적이 붙어도) — 제안값(미확정)
+  countdown: 1.5,            // 웨이브 시작 안내(초) — 2026-11-25: 3 → 1.5, 안내 중에도 이동 가능
   resetSkillCD: true,        // 웨이브 전환 시 일반 스킬 쿨타임 초기화 — 기획서 제안
   exp: { base: 50, per: 15 },// 다음 레벨 요구 = base + per × (현재 레벨 - 1) — 기획서
   scale: { hp: 1.1, atk: 1.07, spdPer: 0.015, spdMax: 1.5 }, // 웨이브 W 배율: hp^(W-1), atk^(W-1), min(spdMax, 1+spdPer×(W-1)) — 기획서
@@ -2383,6 +2599,20 @@ const PET_AI = {
   personal: 44,           // 현곤에게 이보다 가까우면 비켜 섬 (이동 방해 금지)
   sep: 36,                // 포켓몬끼리 이보다 가까우면 서로 밀어냄
   spread: 0.9,            // 대기 자리 각도 간격 (라디안, 현곤 뒤쪽 부채꼴)
+};
+</script>
+  <script>/* js/data/ranking.js */
+// ===== 닉네임·웨이브 랭킹 (Google Apps Script 서버, 2026-11-25 요청서) =====
+// 서버 규격: GET ?action=health | ?action=ranking&character=all|suit…
+//            POST(본문 JSON, Content-Type text/plain;charset=UTF-8) action=register|rename|submit
+// 정렬(화면): 도달 웨이브 → 처치 수 → 생존 시간 (최신 통합 요청서 6장. 이전 요청서는 웨이브 → 생존 시간 → 처치 수 — 충돌, 최신 기준)
+const RANKING = {
+  url: "https://script.google.com/macros/s/AKfycbwNbdh8exke0WeZPmRokyOWLeZhg9jBtISFDJ9gDVbwHnHMTUvP9KuZmVOeT8tkPwluOA/exec",
+  timeout: 9000,        // 요청 제한 시간(ms). 실패해도 게임은 계속
+  top: 100,             // 최대 표시 순위
+  nick: { min: 2, max: 12, pattern: /^[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ_\-. ]+$/ }, // 한글·영문·숫자 (+ 공백·_-.)
+  cacheSec: 20,         // 같은 탭을 다시 열 때 이 시간 안이면 다시 안 불러옴
+  characters: ["all", "suit", "summoner", "support", "runner", "octo", "stripe", "bear", "soccer"],
 };
 </script>
   <script>/* js/data/title.js */
@@ -3344,7 +3574,10 @@ function petSlot(pt) {
 }
 function petTarget(pt) {
   const L = PET_AI.leash;
-  return minBy(bots.filter((b2) => b2.hp > 0 && dist(p, b2) <= L && visible(pt, b2)), (b2) => dist(pt, b2));
+  const foe = minBy(bots.filter((b2) => b2.hp > 0 && dist(p, b2) <= L && visible(pt, b2)), (b2) => dist(pt, b2));
+  if (foe) return foe;
+  // 적이 없으면 보물상자도 부숨 (2026-11-25 버그: 포켓몬이 상자를 안 때림). 반경·시야 규칙 같음
+  return minBy(boxes.filter((x) => !x.broken && x.hp > 0 && dist(p, x) <= L && (!visionOn() || inPlayerVision(x))), (x) => dist(pt, x));
 }
 function runPet(pt, dt) {
   pt.life -= dt;
@@ -3678,6 +3911,7 @@ function updateWave(dt) {
   if (singleRun.endless) return updateEndless(dt);
   const R = singleRun;
   if (R.bannerT > 0) R.bannerT -= dt;
+  if (R.phase === "fight" || R.phase === "boss") contactDamage(dt); // 몸 접촉 피해 (현곤 영입 미션)
   if (R.phase === "intro") {
     if ((R.t -= dt) <= 0) R.phase = "fight";
     return;
@@ -3916,6 +4150,9 @@ function updateMobShots(dt) {
       } else if (pet && Math.hypot(pet.x - s.x, pet.y - s.y) < 20) {
         hit(s.a, pet, s.d);
         s.dead = true;
+      } else if (singleRun?.ward && singleRun.ward.hp > 0 && Math.hypot(singleRun.ward.x - s.x, singleRun.ward.y - 14 - s.y) < 18 + s.r * 0.5) { // 보호 대상(은숙)도 맞음
+        hit(s.a, singleRun.ward, s.d);
+        s.dead = true;
       }
     }
   }
@@ -4061,7 +4298,7 @@ function endlessPaused(dt) {
   if (R.phase === "count") {
     if (updateMapSwap(dt)) return true; // 맵 교체 암전 중: 카운트다운 정지
     if ((R.t -= dt) <= 0) startEndlessFight();
-    return true;
+    return false; // 웨이브 시작 안내 중에도 캐릭터는 움직임 (2026-11-25 버그: 안내 동안 강제 정지). 적 등장은 fight 부터
   }
   if (R.phase === "intro") {
     if ((R.t -= dt) <= 0) R.phase = "boss";
@@ -4101,13 +4338,28 @@ function makeEnemy(kind, at, opts = {}) {
   }
   fx.push({ x: a.x, y: a.y, t: 0.6, ring: a.r + 14 });
   bots.push(a);
+  if (R.story) storyMarkHunter(a, kind); // 은숙이를 지켜라: 은숙 우선
   return a;
 }
 
 // ----- 매 프레임 -----
+// 몸 접촉 피해 (2026-11-25 버그: 적과 붙어 있어도 피해가 없던 문제). 연속 프레임 피해 방지: 플레이어 기준 간격
+function contactDamage(dt) {
+  const C = ENDLESS.contact;
+  p.contactT = Math.max(0, (p.contactT || 0) - dt);
+  if (p.contactT > 0 || p.hp <= 0 || p.jump) return;
+  for (const a of bots) {
+    if (a.hp <= 0 || !a.mob || a.spawnT > 0 || a.stun > 0 || a.stealth > 0) continue;
+    if (dist(a, p) > (a.r || 16) + (p.r || 16) + 3) continue;
+    p.contactT = C.interval;
+    hit(a, p, (a.dmg || 20) * C.mul, { contact: true });
+    return;
+  }
+}
 function updateEndless(dt) {
   const R = singleRun;
   if (R.story) updateStory(dt);
+  if (R.phase === "fight" || R.phase === "boss") contactDamage(dt);
   // 플레이어 강화: 자연 회복, 상태이상 저항(상훈 카드)
   if (p.regen) healActor(p, p.max * p.regen * dt, true);
   if (R.mods.resist) for (const k of ["stun", "slow", "root"]) if (p[k] > 0) p[k] = Math.max(0, p[k] - dt * R.mods.resist / (1 - R.mods.resist));
@@ -4121,7 +4373,6 @@ function updateEndless(dt) {
       let k = kinds[Math.floor(Math.random() * kinds.length)];
       if (k === "elite" && Math.random() > ELITE_SHARE * kinds.length) k = kinds.find((x) => x !== "elite") || "melee";
       const e = makeEnemy(k);
-      if (R.story && e) storyMarkHunter(e, e.mob);
       R.spawned++;
       R.spawnT = ((R.stageTime || ENDLESS.normalTime) * 0.92) / R.plan;
     }
@@ -4626,7 +4877,7 @@ function fireBossPat(a) {
       break;
     case "shock": // 정용 보스: 착지 충격 + 퍼지는 대형 충격파 (틈 있음)
       for (const b of [p, ...(pet ? [pet] : []), ...ultPets]) if (dist(a, b) <= P.radius + 10) hit(a, b, P.dmg * m);
-      fx.push({ x: a.x, y: a.y, t: 0.5, explosion: true });
+      fx.push({ x: a.x, y: a.y, t: 0.45, explosion: true });
       shake(10);
       sfx("hammer", a);
       for (let w = 0; w < (P.waves || 1); w++) {
@@ -4856,6 +5107,8 @@ function endlessRecord() {
 // 키보드·마우스 입력
 
 onkeydown = (e) => {
+  if (document.body.classList.contains("paused")) return; // 일시정지 중엔 게임 입력 무시 (Esc 는 lobby.js)
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return; // 글자 입력 중 (닉네임 등)
   if (["SELECT", "BUTTON"].includes(document.activeElement?.tagName)) document.activeElement.blur();
   keys[e.code] = true;
   if (e.code === "Space") {
@@ -4870,7 +5123,7 @@ onkeydown = (e) => {
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
   if (e.code === "KeyG" && !over && !e.repeat) throwGrenade(p, mouse.x, mouse.y);
-  if (e.code === "Escape") openLobby();
+  if (e.code === "Escape") return; // Esc = 일시정지 메뉴 (js/ui/lobby.js)
   if (e.code === "KeyR") reset();
   if (e.code === "KeyF" && !over) pickup(p, isSwapLoot);
   if (e.code.startsWith("Arrow")) e.preventDefault();
@@ -5223,7 +5476,7 @@ function attack(a, x, y) {
   if (a === p && WEAPON_FEEL[a.w].kick) shake(WEAPON_FEEL[a.w].kick);
   // 탄창 1발 소모, 다음 발까지 짧은 간격만 둠 (충전은 reloadTime 마다 1발)
   a.ammo -= 1;
-  a.cd = AMMO.fireGap;
+  a.cd = Math.max(AMMO.fireGap, WEAPON_RULES[a.w]?.gap || 0); // 확정 무기는 공격 간격 고정
   d *= hasGear(a, 2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;
@@ -5240,12 +5493,15 @@ function attack(a, x, y) {
   }
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
-    for (let b of hitTargets(a)) { // 휘두른 범위 안이면 은신해도 맞음
+    let inArc = hitTargets(a).filter((b) => { // 휘두른 범위 안이면 은신해도 맞음
       let delta = Math.atan2(Math.sin(Math.atan2(b.y - a.y, b.x - a.x) - ang), Math.cos(Math.atan2(b.y - a.y, b.x - a.x) - ang));
-      if (dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b)) {
-        hit(a, b, d, { basic: true });
-        if (a === p && character === "suit" && p.comboStep === 2 && a.w === 0) knock(b, b.x - a.x, b.y - a.y, SKILL_DATA.suit.combo.hookPush);
-      }
+      return dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b);
+    });
+    const cap = WEAPON_RULES[a.w]?.maxTargets; // 검·망치: 가까운 대상 최대 2명
+    if (cap) inArc = inArc.sort((u, v) => dist(a, u) - dist(a, v)).slice(0, cap);
+    for (const b of inArc) {
+      hit(a, b, d, { basic: true });
+      if (a === p && character === "suit" && p.comboStep === 2 && a.w === 0) knock(b, b.x - a.x, b.y - a.y, SKILL_DATA.suit.combo.hookPush);
     }
 
     fx.push({ x: a.x + Math.cos(ang) * r * 0.6, y: a.y + Math.sin(ang) * r * 0.6, t: 0.18, ring: r * 0.55 });
@@ -6192,8 +6448,9 @@ function update(dt) {
     p.dash = Math.max(0, p.dash - step);
   } else {
     let [ix, iy] = p.moveLock ? [p.moveLock.x, p.moveLock.y] : tackleInput(); // 이동형 스킬 중엔 발동 방향 고정
-    if (Math.hypot(ix, iy) > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
-    move(p, ix, iy, dt);
+    const mag = Math.hypot(ix, iy);
+    if (mag > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
+    move(p, ix, iy, dt * (mag < 1 && !p.moveLock ? clamp(mag * 1.25, 0.4, 1) : 1)); // 조이스틱 세기 반영 (살짝 밀면 천천히)
     if (aiming) {
       autoAttack();
     } else if (mouse.down) attack(p, mouse.x, mouse.y);
@@ -7422,7 +7679,7 @@ function draw() {
     if (f.cone) coneDraw(f.x, f.y, f.ang, f.r, f.half, f.t);
     if (f.explosion) {
       g.save();
-      let u = 1 - f.t / 0.45;
+      let u = Math.max(0, Math.min(1, 1 - f.t / 0.45)); // 수명이 0.45초보다 길게 들어와도 반지름이 음수가 되지 않게
       g.fillStyle = `rgba(255,160,40,${1 - u})`;
       g.beginPath();
       g.arc(f.x, f.y, 90 * Math.min(1, u * 4), 0, 7);
@@ -7542,7 +7799,7 @@ function draw() {
     g.fillStyle = "white";
     g.font = "12px sans-serif";
     g.textAlign = "center";
-    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual] + " · " + weapons[a.w][0], a.x, a.y + 28);
+    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual], a.x, a.y + 28); // 이름만 (장착 무기 이름은 2026-11-25 요청으로 제거, 무기는 공격 버튼·HUD 아이콘)
   }
   for (const pt of [...(pet ? [pet] : []), ...ultPets]) drawPetActor(pt);
   drawBlades();
@@ -7906,6 +8163,77 @@ function mobShown(a) {
   if (!visionOn()) return true;
   if (!inPlayerVision(a)) return false;
   return [p, pet, ...ultPets].some((o) => o && o.hp > 0 && !concealed(o, a));
+}
+</script>
+  <script>/* js/render/minimap.js */
+// ===== 미니맵 (2026-11-25 통합 요청 5장) =====
+// 중앙 하단, 화면 너비 약 17%, 반투명. 실제 위치와 연동:
+//   플레이어 파란 화살표 · 적 빨강 · 상자 노랑 · 소환수(포켓몬·분신) 초록 · 은숙(보호 대상) 분홍 · 지금 화면 범위 흰 테두리
+// 시야(싱글·웨이브)가 켜져 있으면 시야에 보이는 적만 표시 (미니맵으로 시야를 우회하지 않게)
+// 성능: 벽은 맵·크기가 바뀔 때만 따로 그려 두고(캐시), 점들은 2프레임에 한 번
+const MINIMAP = { every: 2, dot: 2.2 };
+let mmFrame = 0, mmCache = null;
+function drawMinimap() {
+  const cv = document.getElementById("minimap");
+  if (!cv || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("titleOpen")) return;
+  if (++mmFrame % MINIMAP.every) return;
+  const cw = Math.max(60, Math.round(cv.clientWidth * (window.devicePixelRatio || 1)));
+  const ch = Math.round(cw * H / W);
+  if (cv.width !== cw || cv.height !== ch) {
+    cv.width = cw;
+    cv.height = ch;
+  }
+  const k = cw / W, m = cv.getContext("2d");
+  const key = (activeMap?.id || "jungle") + ":" + cw;
+  if (!mmCache || mmCache.key !== key) { // 벽 (맵 바뀔 때만)
+    const c2 = document.createElement("canvas");
+    c2.width = cw;
+    c2.height = ch;
+    const g2 = c2.getContext("2d");
+    g2.fillStyle = "rgba(160, 180, 220, 0.55)";
+    for (const [x, y, w, h] of walls) g2.fillRect(x * k, y * k, Math.max(1, w * k), Math.max(1, h * k));
+    g2.fillStyle = "rgba(70, 160, 90, 0.35)";
+    for (const [x, y, w, h] of bushes) g2.fillRect(x * k, y * k, w * k, h * k);
+    mmCache = { key, c: c2 };
+  }
+  m.clearRect(0, 0, cw, ch);
+  m.drawImage(mmCache.c, 0, 0);
+  const R = MINIMAP.dot * (cw / 160);
+  const dot = (x, y, col, r = R) => {
+    m.fillStyle = col;
+    m.beginPath();
+    m.arc(x * k, y * k, r, 0, 7);
+    m.fill();
+  };
+  for (const b of boxes) if (!b.broken) dot(b.x, b.y, "#ffd23f", R * 0.9);
+  for (const a of bots) {
+    if (a.hp <= 0) continue;
+    if (singleRun ? !mobShown(a) : !visible(p, a)) continue;
+    dot(a.x, a.y, a.bossId || a.mob === "boss" ? "#ff2a2a" : "#ff5a5a", a.bossId || a.mob === "boss" ? R * 1.8 : R);
+  }
+  for (const a of [pet, ...ultPets, ...clones]) if (a && a.hp > 0) dot(a.x, a.y, "#5cff7a");
+  if (singleRun?.ward && singleRun.ward.hp > 0) dot(singleRun.ward.x, singleRun.ward.y, "#ff8fd0", R * 1.4);
+  // 화면 범위
+  m.strokeStyle = "rgba(255,255,255,0.6)";
+  m.lineWidth = Math.max(1, cw / 160);
+  m.strokeRect(camX * k, camY * k, VW * k, VH * k);
+  // 플레이어: 바라보는 방향 화살표
+  const v = ((p.lastMoveDir ?? p.dir ?? 4) * Math.PI) / 4, s = R * 2.6, px = p.x * k, py = p.y * k;
+  m.save();
+  m.translate(px, py);
+  m.rotate(v);
+  m.fillStyle = "#3aa0ff";
+  m.strokeStyle = "#ffffff";
+  m.lineWidth = Math.max(1, cw / 200);
+  m.beginPath();
+  m.moveTo(0, -s);
+  m.lineTo(s * 0.7, s * 0.7);
+  m.lineTo(0, s * 0.3);
+  m.lineTo(-s * 0.7, s * 0.7);
+  m.closePath();
+  m.fill();
+  m.stroke();
+  m.restore();
 }
 </script>
   <script>/* js/ui/skilltip.js */
@@ -8357,7 +8685,89 @@ function releaseSticks() {
 }
 document.addEventListener("visibilitychange", () => document.hidden && releaseSticks());
 addEventListener("pagehide", releaseSticks);
-stick("mv", (x, y) => {
+// ----- 이동: 플로팅 조이스틱 (2026-11-25) -----
+// 왼쪽 이동 영역(#mvZone) 어디서든 누르면 그 자리가 조이스틱 중심. 360도, 끈 방향·거리(세기) 반영
+// 손가락이 영역 밖으로 나가도 그 손가락(pointerId) 계속 추적. 떼거나 취소되면 정지·원래 자리로
+// 멀티터치: 손가락마다 따로. 다른 손가락(공격·대시 등)을 떼도 이동 손가락은 유지 (touch identifier 로 확인)
+const MV_STICK = { dead: 0.12, radius: 0.5 }; // dead: 이 안쪽은 정지, radius: 최대 세기가 되는 거리(조이스틱 지름 비율)
+function floatStick(zone, st, fn) {
+  const knob = st.querySelector("i"), arena = document.getElementById("arena");
+  let pid = null, tid = null, cx = 0, cy = 0;
+  const rot = () => document.body.classList.contains("rot");
+  function local(clx, cly) { // 화면 좌표 → #touch 안 좌표 (세로 폰 회전 포함)
+    const r = arena.getBoundingClientRect(), s = (rot() ? r.height : r.width) / (arena.offsetWidth || 1) || 1;
+    return rot() ? [(cly - r.top) / s, (r.right - clx) / s] : [(clx - r.left) / s, (cly - r.top) / s];
+  }
+  function place(lx, ly) {
+    st.style.left = `${lx - st.offsetWidth / 2}px`;
+    st.style.top = `${ly - st.offsetHeight / 2}px`;
+    st.style.bottom = "auto";
+    st.classList.add("on");
+  }
+  function home() {
+    st.style.left = st.style.top = st.style.bottom = "";
+    st.classList.remove("on");
+    knob.style.transform = "";
+  }
+  function set(e) {
+    const size = (rot() ? st.getBoundingClientRect().height : st.getBoundingClientRect().width) || 80;
+    let [dx, dy] = toLocal(e.clientX - cx, e.clientY - cy);
+    let x = dx / (size * MV_STICK.radius), y = dy / (size * MV_STICK.radius);
+    const n = Math.hypot(x, y);
+    if (n > 1) {
+      x /= n;
+      y /= n;
+    }
+    knob.style.transform = `translate(${x * st.offsetWidth * 0.3}px,${y * st.offsetHeight * 0.3}px)`;
+    if (n < MV_STICK.dead) fn(0, 0, true);
+    else fn(x, y, true);
+  }
+  function release() {
+    if (pid !== null) {
+      try {
+        zone.releasePointerCapture(pid);
+      } catch (err) {}
+    }
+    pid = tid = null;
+    home();
+    fn(0, 0, false);
+  }
+  function down(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    if (pid !== null && pid !== e.pointerId) release(); // 남아 있던 손가락 상태는 버리고 새 손가락으로
+    pid = e.pointerId;
+    cx = e.clientX;
+    cy = e.clientY;
+    const [lx, ly] = local(cx, cy);
+    place(lx, ly);
+    try {
+      zone.setPointerCapture(pid);
+    } catch (err) {}
+    fn(0, 0, true);
+  }
+  zone.addEventListener("pointerdown", down);
+  st.addEventListener("pointerdown", down);
+  const mv = (e) => e.pointerId === pid && set(e);
+  zone.addEventListener("pointermove", mv);
+  st.addEventListener("pointermove", mv);
+  const end = (e) => e.pointerId === pid && release();
+  for (const t of [zone, st]) for (const ev of ["pointerup", "pointercancel"]) t.addEventListener(ev, end);
+  document.addEventListener("pointerup", end, true);
+  document.addEventListener("pointercancel", end, true);
+  const tstart = (e) => (tid = e.changedTouches[0]?.identifier ?? tid);
+  zone.addEventListener("touchstart", tstart, { passive: true });
+  st.addEventListener("touchstart", tstart, { passive: true });
+  const tcheck = (e) => { // 이동 손가락(identifier)이 더 이상 화면에 없으면 놓음 (다른 손가락을 뗀 건 상관없음)
+    if (pid === null || tid === null) return;
+    for (const t of e.touches) if (t.identifier === tid) return;
+    release();
+  };
+  document.addEventListener("touchend", tcheck, true);
+  document.addEventListener("touchcancel", tcheck, true);
+  sticks.push({ el: st, release, held: () => pid !== null });
+}
+floatStick(document.getElementById("mvZone"), document.getElementById("mv"), (x, y) => {
   mvX = x;
   mvY = y;
 });
@@ -8429,14 +8839,7 @@ document.querySelector("#mobileToggle").onclick = () => {
   aiming = false;
   fitCanvas();
 };
-// 모바일 메뉴 (캐릭터·덱 선택). 열려 있는 동안 게임은 멈춤
-document.querySelector("#menuBtn").onpointerdown = (e) => {
-  e.preventDefault();
-  document.body.classList.toggle("menuOpen");
-  releaseSticks();
-  aiming = false;
-  closeSwipe();
-};
+// 메뉴 버튼(일시정지)은 js/ui/lobby.js 한 곳에서만 처리 (예전엔 여기와 lobby.js 가 서로 덮어씀)
 window.addEventListener("blur", () => {
   releaseSticks();
   releaseAttack(false);
@@ -8447,8 +8850,17 @@ const ammoText = (a) => "●".repeat(a.ammo) + "○".repeat(Math.max(0, AMMO.max
 function touchHUD() {
   checkHoldAttack();
   tickSkillAim();
-  setText("atk", "공격\n" + ammoText(p));
-  setText("grenBtn", "수류탄\n" + (p.grenades || 0) + "/" + GRENADE.max);
+  // 공격 버튼: 장착 무기 아이콘(없으면 주먹) + 탄창. 무기가 바뀌면 바로 갱신
+  const wKey = p.w + "|" + (basicOf(p)?.name || "");
+  if (atkBtn._w !== wKey) {
+    atkBtn._w = wKey;
+    const art = WEAPON_ART[p.w];
+    atkBtn.style.setProperty("--wicon", art ? `url("${weaponIcons[p.w].src}")` : "none");
+    atkBtn.classList.toggle("fist", !art);
+    atkBtn.dataset.w = basicOf(p)?.name || weapons[p.w][0];
+  }
+  setText("atkAmmo", ammoText(p));
+  setText("grenCount", String(p.grenades || 0));
   const gOn = (p.grenades || 0) > 0;
   if (grenBtn._on !== gOn) {
     grenBtn._on = gOn;
@@ -8486,13 +8898,18 @@ function touchHUD() {
     ub._ready = ready;
     ub.classList.toggle("ready", ready);
   }
-  // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
+  // 무기 교체 버튼: 바꿀 수 있는 무기 위에 있을 때만 (금빛 팝 등장 / 페이드 사라짐). 자리는 고정이라 다른 버튼이 안 흔들림
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
-  let label = swapL ? "교체\n" + lootName(swapL) : "";
-  setText("pickBtn", label);
-  if (pick._show !== !!swapL) {
-    pick._show = !!swapL;
-    pick.style.visibility = swapL ? "visible" : "hidden";
+  const sKey = swapL ? swapL.type + ":" + swapL.id : "";
+  if (pick._k !== sKey) {
+    pick._k = sKey;
+    if (swapL) {
+      const ic = swapL.type === LOOT.weapon ? weaponIcons[swapL.id] : null;
+      pick.style.setProperty("--wicon", ic ? `url("${ic.src}")` : "none");
+      setText("pickName", lootName(swapL));
+    }
+    pick.classList.toggle("show", !!swapL);
+    pick.setAttribute("aria-hidden", String(!swapL));
   }
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
@@ -8536,6 +8953,7 @@ for (const ev of ["touchstart", "touchmove"]) {
 // - 탭: 가장 가까운 적에게 자동 조준 투척 (적이 없으면 바라보는 방향 최대 거리)
 // - 끌기: 방향과 거리를 직접 조준 (화면에 낙하 지점과 폭발 범위 표시), 손을 떼면 투척, 가운데로 되돌리면 취소
 const grenBtn = document.querySelector("#grenBtn");
+grenBtn.style.setProperty("--gicon", weaponIcons[GRENADE.weaponId] ? `url("${weaponIcons[GRENADE.weaponId].src}")` : "none"); // 수류탄 아이콘 (사용해도 장착 무기는 그대로)
 let grenPress = null, grenAim = null;
 grenBtn.onpointerdown = (e) => {
   e.preventDefault();
@@ -8901,10 +9319,101 @@ el("overBtn").onclick = () => {
   sfx("ui_click");
   reset();
 };
-document.querySelector("#menuBtn").onpointerdown = (e) => {
+// ===== 인게임 일시정지 메뉴 (2026-11-25 버그: 메뉴 버튼이 안 눌리던 문제) =====
+// 원인: touch.js·lobby.js 두 곳에서 같은 버튼 onpointerdown 을 덮어써서 '메뉴'가 로비로 바로 나가 버렸고, PC 에선 버튼이 숨겨져 있었음
+// 이제: 메뉴 버튼(PC·모바일 공통, Esc) → 일시정지(시뮬레이션 전체 정지: main.js 루프가 paused 면 update 안 함) → 계속하기 / 옵션 / 나가기
+function isPaused() {
+  return document.body.classList.contains("paused");
+}
+function canPause() {
+  return !isLobbyOpen() && el("title").hidden && el("modePanel").hidden && !over && el("cutscene").hidden && !document.body.classList.contains("csOpen") && el("results").hidden && el("recruitResult").hidden;
+}
+function openPause() {
+  if (isPaused() || !canPause()) return;
+  if (singleRun?.phase === "cards") return; // 카드 고르는 중은 이미 멈춰 있음
+  document.body.classList.add("paused");
+  el("pauseMenu").hidden = false;
+  pauseView("main");
+  if (typeof releaseSticks === "function") releaseSticks();
+  if (typeof releaseAttack === "function") releaseAttack(false);
+  aiming = false;
+  for (const k in keys) keys[k] = false; // 눌린 키가 남지 않게
+  syncPauseAudio();
+  sfx("ui_click");
+  setTimeout(() => el("pauseResume").focus?.({ preventScroll: true }), 0);
+}
+function closePause() {
+  if (!isPaused()) return;
+  document.body.classList.remove("paused");
+  el("pauseMenu").hidden = true;
+  if (typeof releaseSticks === "function") releaseSticks();
+  for (const k in keys) keys[k] = false;
+  last = performance.now(); // 멈춘 시간만큼 한꺼번에 흐르지 않게 (js/main.js)
+  acc = 0;
+}
+function syncPauseAudio() {
+  el("pVolBgm").value = Math.round(audio.settings.bgm * 100);
+  el("pVolSfx").value = Math.round(audio.settings.sfx * 100);
+  el("pVolVoice").value = Math.round((audio.settings.voice ?? 0.9) * 100);
+  for (const id of ["pVolBgm", "pVolSfx", "pVolVoice"]) el(id + "N").textContent = el(id).value;
+  el("pMute").textContent = audio.settings.muted ? "소리 켜기" : "음소거";
+}
+// 일시정지 창 화면 전환: main(세 버튼) / opt(사운드) / confirm(나가기 확인). 어느 화면이든 게임은 계속 멈춤
+function pauseView(v) {
+  el("pauseMain").hidden = v !== "main";
+  el("pauseOpt").hidden = v !== "opt";
+  el("pauseConfirm").hidden = v !== "confirm";
+  el("pauseTitle").textContent = v === "opt" ? "옵션 (사운드)" : v === "confirm" ? "나가기" : "일시정지";
+  if (v === "opt") syncPauseAudio();
+  const f = { main: "pauseResume", opt: "pOptBack", confirm: "pauseExitNo" }[v];
+  setTimeout(() => el(f)?.focus?.({ preventScroll: true }), 0);
+}
+// 버튼 누르는 순간 눌림 효과음 (눌림 모양은 CSS :active / .down)
+for (const b of document.querySelectorAll("#pauseMenu .pbtn")) {
+  b.addEventListener("pointerdown", () => {
+    b.classList.add("down");
+    sfx("ui_click");
+  });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, () => b.classList.remove("down"));
+}
+el("menuBtn").onpointerdown = (e) => {
   e.preventDefault();
-  openLobby();
+  e.stopPropagation();
+  isPaused() ? closePause() : openPause();
 };
+el("menuBtn").onclick = (e) => e.preventDefault(); // 키보드(Enter/Space) 접근은 아래 keydown 으로
+el("pauseResume").onclick = () => closePause();
+el("pauseOptBtn").onclick = () => pauseView("opt");
+el("pOptBack").onclick = () => pauseView("main");
+el("pVolBgm").oninput = (e) => (setAudio("bgm", e.target.value / 100), syncPauseAudio());
+el("pVolSfx").oninput = (e) => (setAudio("sfx", e.target.value / 100), syncPauseAudio());
+el("pVolVoice").oninput = (e) => (setAudio("voice", e.target.value / 100), syncPauseAudio());
+el("pMute").onclick = () => {
+  setAudio("muted", !audio.settings.muted);
+  syncPauseAudio();
+};
+el("pauseExit").onclick = () => pauseView("confirm"); // 먼저 확인창
+el("pauseExitNo").onclick = () => pauseView("main");
+el("pauseExitYes").onclick = () => { // 나가기: 진행 중인 판을 정리하고 바로 전 화면으로 (웨이브 → 캐릭터 선택, 싱글 → 그 미션 출전 준비)
+  const missionId = singleRun && !singleRun.endless ? singleRun.id : singleRun?.story ? singleRun.id : null;
+  document.body.classList.remove("paused");
+  el("pauseMenu").hidden = true;
+  openLobby(); // 판 정리 (적·투사체·타이머) + lobbyOpen 이라 게임 루프·전투 소리 멈춤
+  if (lobbyMode === "single") {
+    openSinglePanel();
+    if (missionId && typeof openMissionPrep === "function" && SINGLE_MISSIONS.some((m) => m.id === missionId)) openMissionPrep(missionId);
+  }
+};
+addEventListener("keydown", (e) => {
+  if (e.code !== "Escape" || e.repeat) return;
+  if (isPaused() && el("pauseMain").hidden) pauseView("main"); // 옵션·확인창에서 Esc → 메뉴로
+  else if (isPaused()) closePause();
+  else openPause();
+});
+// 앱 전환·창 이탈 시 자동 일시정지 (전투 중일 때만)
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && canPause() && singleRun?.phase !== "cards") openPause();
+});
 
 // 사운드 설정 (로비 안)
 function bindAudioUI() {
@@ -9294,6 +9803,170 @@ addEventListener("resize", () => {
   const sc = cs.story.scenes[cs.idx];
   csFit([el("csFrameA"), el("csFrameB")][cs.front], sc.size);
 });
+</script>
+  <script>/* js/net/ranking.js */
+// ===== 닉네임·랭킹 통신 (js/data/ranking.js) =====
+// - 프로필(localStorage battlelab.profile): { playerId(UUID 1개), token(UUID 2개 연결), nickname, registered }
+// - 서버 연결 실패해도 게임은 그대로: 닉네임은 기기에 저장(registered:false)해 두고 나중에 등록 재시도
+// - 기록 등록 실패 → battlelab.rankQueue 에 보관, 다음 기회(랭킹 열기·결과 화면·게임 시작)에 재전송
+// - QA 테스트(전체 해금) 판과 싱글 미션 기록은 온라인 등록 안 함
+const PROFILE_KEY = "battlelab.profile", RANK_QUEUE_KEY = "battlelab.rankQueue";
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 15) | 64;
+  b[8] = (b[8] & 63) | 128;
+  const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+let profile = (() => {
+  try {
+    const s = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if (s && s.playerId && s.token) return s;
+  } catch (e) {}
+  return null;
+})();
+function saveProfile() {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch (e) {}
+}
+function ensureIds() {
+  if (!profile) profile = { playerId: uuid(), token: uuid() + uuid(), nickname: "", registered: false };
+  return profile;
+}
+// 닉네임 검사 (화면 검사; 중복은 서버가 판단)
+function nickError(n) {
+  const N = RANKING.nick, len = [...n].length;
+  if (len < N.min || len > N.max) return `${N.min}~${N.max}자로 입력해 주세요`;
+  if (!N.pattern.test(n)) return "한글·영문·숫자만 쓸 수 있어요";
+  return "";
+}
+// ----- 서버 요청 -----
+// GAS 웹 앱은 script.google.com → 302 → script.googleusercontent.com 으로 넘김. fetch 가 따라가며, 응답은 CORS 허용
+// POST 는 '단순 요청'(text/plain)이라 사전 요청(preflight) 없이 감
+async function rankFetch(opts, query = "") {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), RANKING.timeout);
+  try {
+    const res = await fetch(RANKING.url + query, { ...opts, redirect: "follow", signal: ctl.signal, cache: "no-store" });
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error("서버 응답을 읽을 수 없어요");
+    }
+    if (!res.ok || data.ok === false || data.success === false || data.error) throw new Error(rankErrorText(data.error || data.message || data.code || `HTTP ${res.status}`));
+    return data;
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("서버 응답이 늦어요");
+    if (e instanceof TypeError) throw new Error("서버에 연결할 수 없어요");
+    throw e;
+  } finally {
+    clearTimeout(t);
+  }
+}
+function rankErrorText(e) {
+  const s = String(e);
+  if (/dup|taken|exist|중복|사용 ?중/i.test(s)) return "이미 사용 중인 닉네임이에요";
+  if (/auth|token|unauth|권한|인증/i.test(s)) return "인증 정보가 맞지 않아요";
+  if (/invalid|length|형식|글자/i.test(s)) return "닉네임 형식을 확인해 주세요";
+  return s;
+}
+const rankPost = (body) => rankFetch({ method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(body) });
+const rankGet = (q) => rankFetch({ method: "GET" }, "?" + new URLSearchParams(q).toString());
+async function rankHealth() {
+  return rankGet({ action: "health" });
+}
+async function registerNickname(nickname) {
+  const P = ensureIds();
+  await rankPost({ action: "register", playerId: P.playerId, token: P.token, nickname });
+  P.nickname = nickname;
+  P.registered = true;
+  saveProfile();
+}
+async function renameNickname(nickname) {
+  const P = ensureIds();
+  if (!P.registered) return registerNickname(nickname); // 아직 서버에 없으면 등록으로
+  await rankPost({ action: "rename", playerId: P.playerId, token: P.token, nickname });
+  P.nickname = nickname; // 기록은 playerId 기준이라 그대로 유지
+  saveProfile();
+}
+// 서버 연결 실패 시: 닉네임만 기기에 두고 게임 진행 (나중에 등록)
+function keepNicknameOffline(nickname) {
+  const P = ensureIds();
+  P.nickname = nickname;
+  P.registered = false;
+  saveProfile();
+}
+// ----- 랭킹 목록 -----
+// 서버 응답 모양이 조금 달라도 읽을 수 있게 (ranking|rows|data|list|배열), 필드 이름도 몇 가지 허용
+function normRow(r) {
+  const n = (v) => +v || 0;
+  return {
+    playerId: r.playerId || r.player_id || r.id || "",
+    nickname: String(r.nickname ?? r.nick ?? r.name ?? "?"),
+    character: r.character || r.char || "",
+    wave: n(r.wave), time: n(r.time ?? r.survival ?? r.seconds), level: n(r.level ?? r.lv), kills: n(r.kills ?? r.kill),
+  };
+}
+const rankSort = (a, b) => b.wave - a.wave || b.kills - a.kills || b.time - a.time;
+const rankCache = {};
+async function fetchRanking(ch, force) {
+  const C = rankCache[ch];
+  if (!force && C && performance.now() - C.at < RANKING.cacheSec * 1000) return C.rows;
+  const data = await rankGet({ action: "ranking", character: ch });
+  const list = Array.isArray(data) ? data : data.ranking || data.rows || data.data || data.list || data.items || [];
+  // 같은 사람 중복 방지(최고 기록 1개만) + 정렬 + 최대 100위
+  const best = new Map();
+  for (const raw of list) {
+    const r = normRow(raw), key = r.playerId || r.nickname;
+    const o = best.get(key);
+    if (!o || rankSort(r, o) < 0) best.set(key, r);
+  }
+  const rows = [...best.values()].sort(rankSort).slice(0, RANKING.top);
+  rankCache[ch] = { at: performance.now(), rows };
+  return rows;
+}
+// ----- 기록 등록 (실패 시 대기열) -----
+function rankQueue() {
+  try {
+    return JSON.parse(localStorage.getItem(RANK_QUEUE_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+function setRankQueue(q) {
+  try {
+    localStorage.setItem(RANK_QUEUE_KEY, JSON.stringify(q.slice(-20)));
+  } catch (e) {}
+}
+// 웨이브 판 종료 시 (QA·싱글 제외). 같은 캐릭터는 더 좋은 기록만 남김
+function queueWaveRecord(rec) {
+  const q = rankQueue().filter((x) => !(x.character === rec.character && rankSort(x, rec) <= 0));
+  if (!q.some((x) => x.character === rec.character)) q.push(rec);
+  setRankQueue(q);
+}
+let rankSending = false;
+async function flushRankQueue() {
+  if (rankSending || !profile?.nickname) return { sent: 0, left: rankQueue().length };
+  rankSending = true;
+  let sent = 0, err = "";
+  try {
+    if (!profile.registered) await registerNickname(profile.nickname); // 오프라인으로 시작했던 닉네임 등록
+    for (const rec of rankQueue()) {
+      await rankPost({ action: "submit", playerId: profile.playerId, token: profile.token, character: rec.character, wave: rec.wave, time: rec.time, level: rec.level, kills: rec.kills });
+      setRankQueue(rankQueue().filter((x) => x !== rec && !(x.character === rec.character && x.wave === rec.wave && x.kills === rec.kills && x.time === rec.time)));
+      sent++;
+      for (const k of ["all", rec.character]) delete rankCache[k];
+    }
+  } catch (e) {
+    err = e.message;
+  } finally {
+    rankSending = false;
+  }
+  return { sent, left: rankQueue().length, err };
+}
 </script>
   <script>/* js/ui/single.js */
 // ===== 싱글모드 화면: 미션 선택, 웨이브 HUD, 강화 카드, 결과, 영입 컷신, 스토리 극장 =====
@@ -9768,6 +10441,331 @@ el("prepBack").onclick = () => {
   openSinglePanel();
 };
 </script>
+  <script>/* js/ui/ranking.js */
+// ===== 닉네임 팝업 · 웨이브 랭킹 화면 (js/net/ranking.js) =====
+// 진입: 타이틀 GAME START → 닉네임 있으면 바로 모드 선택, 없으면 닉네임 팝업(취소 = 타이틀)
+// 랭킹: 웨이브 모드 캐릭터 선택 화면 오른쪽 위 🏆 (인게임 메뉴에는 없음)
+// 판 종료(웨이브 모드, QA·싱글 제외): 기록 자동 등록 → 결과 화면에 상태 + 실패 시 다시 보내기 + 랭킹 보기(내 순위 이동 애니메이션)
+
+// ----- 닉네임 팝업 -----
+let nickMode = "register", nickBusy = false, nickDone = null;
+function openNick(mode, done) {
+  nickMode = mode;
+  nickDone = done || null;
+  el("nickTitle").textContent = mode === "rename" ? "닉네임 변경" : "닉네임 등록";
+  el("nickSub").textContent = mode === "rename" ? "바꿔도 랭킹 기록은 그대로예요" : "랭킹에 표시될 이름 (2~12자)";
+  el("nickOk").textContent = mode === "rename" ? "변경" : "등록";
+  el("nickInput").value = mode === "rename" ? profile?.nickname || "" : "";
+  el("nickErr").textContent = "";
+  el("nickOffline").hidden = true;
+  nickCount();
+  el("nickPopup").hidden = false;
+  document.body.classList.add("nickOpen");
+  setTimeout(() => el("nickInput").focus({ preventScroll: true }), 50);
+}
+function closeNick() {
+  el("nickInput").blur(); // 키보드 닫기
+  el("nickPopup").hidden = true;
+  el("nickPopup").classList.remove("kb");
+  document.body.classList.remove("nickOpen");
+}
+function nickCount() {
+  const n = [...el("nickInput").value.trim()].length;
+  el("nickCount").textContent = `${n}/${RANKING.nick.max}`;
+  el("nickCount").classList.toggle("over", n > RANKING.nick.max);
+}
+el("nickInput").addEventListener("input", nickCount); // 한글 조합 중에도 표시만 갱신 (막지 않음)
+el("nickInput").addEventListener("compositionend", nickCount);
+el("nickInput").addEventListener("keydown", (e) => {
+  e.stopPropagation(); // 게임 키(WASD·Esc…) 로 안 넘어가게
+  if (e.key === "Escape") {
+    e.preventDefault();
+    el("nickCancel").click();
+  }
+});
+el("nickInput").addEventListener("keyup", (e) => e.stopPropagation());
+// 모바일 키보드: 입력창·버튼이 가리지 않게 팝업을 키보드 반대쪽으로 (세로 폰 회전 화면 포함)
+el("nickInput").addEventListener("focus", () => el("nickPopup").classList.add("kb"));
+el("nickInput").addEventListener("blur", () => setTimeout(() => document.activeElement !== el("nickInput") && el("nickPopup").classList.remove("kb"), 120));
+window.visualViewport?.addEventListener("resize", () => {
+  const vv = window.visualViewport, open = vv.height < window.innerHeight * 0.8;
+  el("nickPopup").style.setProperty("--kbh", open ? `${Math.round(window.innerHeight - vv.height)}px` : "0px");
+});
+el("nickForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (nickBusy) return; // 요청 중 중복 누름 방지
+  const name = el("nickInput").value.trim(), bad = nickError(name);
+  if (bad) {
+    el("nickErr").textContent = bad;
+    return;
+  }
+  if (nickMode === "rename" && name === profile?.nickname) return closeNick();
+  nickBusy = true;
+  el("nickOk").disabled = true;
+  el("nickOk").textContent = nickMode === "rename" ? "변경 중…" : "등록 중…";
+  el("nickErr").textContent = "";
+  try {
+    if (nickMode === "rename") await renameNickname(name);
+    else await registerNickname(name);
+    closeNick();
+    syncNickUI();
+    nickDone?.();
+  } catch (err) {
+    el("nickErr").textContent = err.message;
+    // 서버에 닿지 않으면 게임은 막지 않음: 기기에만 저장하고 시작 (나중에 등록)
+    const offline = /연결|늦어요|읽을 수/.test(err.message);
+    el("nickOffline").hidden = !offline;
+  } finally {
+    nickBusy = false;
+    el("nickOk").disabled = false;
+    el("nickOk").textContent = nickMode === "rename" ? "변경" : "등록";
+  }
+});
+el("nickOffline").onclick = () => {
+  const name = el("nickInput").value.trim();
+  if (nickError(name)) return;
+  if (nickMode === "rename") {
+    profile.nickname = name;
+    profile.renamePending = true;
+    saveProfile();
+  } else keepNicknameOffline(name);
+  closeNick();
+  syncNickUI();
+  nickDone?.();
+};
+el("nickCancel").onclick = () => {
+  sfx("ui_click");
+  closeNick(); // 타이틀(또는 설정)로 그대로
+};
+// 타이틀 GAME START: 닉네임 확인
+function titleStartGate() {
+  if (profile?.nickname) return closeTitle();
+  sfx("ui_click");
+  openNick("register", () => closeTitle());
+}
+// 설정(모드 선택 화면 톱니): 닉네임 표시·변경
+function syncNickUI() {
+  const n = profile?.nickname || "-";
+  if (el("mNick")) el("mNick").textContent = n + (profile && !profile.registered ? " (미등록)" : "");
+  el("rankMe").textContent = profile?.nickname ? `내 닉네임: ${profile.nickname}` : "닉네임 없음";
+}
+el("mNickEdit").onclick = () => {
+  sfx("ui_click");
+  openNick(profile?.nickname ? "rename" : "register");
+};
+syncNickUI();
+
+// ----- 랭킹 화면 -----
+const RANK_TAB_NAMES = { all: "전체" };
+let rankTab = "all", rankAnim = null;
+function buildRankTabs() {
+  const box = el("rankTabs");
+  box.innerHTML = "";
+  for (const ch of RANKING.characters) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "rank-tab" + (ch === rankTab ? " on" : "");
+    b.textContent = RANK_TAB_NAMES[ch] || DISPLAY_NAMES[ch];
+    b.setAttribute("role", "tab");
+    b.onclick = () => {
+      sfx("ui_click");
+      rankTab = ch;
+      buildRankTabs();
+      loadRanking(false);
+    };
+    box.append(b);
+  }
+}
+function fmtRankTime(s) {
+  s = Math.round(s || 0);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function rankRowHTML(r, i) {
+  const medal = ["🥇", "🥈", "🥉"][i] || "";
+  return `<span class="rk">${medal || i + 1}</span><span class="nm"></span><span>${DISPLAY_NAMES[r.character] || r.character || "-"}</span><span>W${r.wave}</span><span>${fmtRankTime(r.time)}</span><span>${r.level || "-"}</span><span>${r.kills}</span>`;
+}
+const isMyRow = (r) => profile && (r.playerId ? r.playerId === profile.playerId : r.nickname === profile.nickname);
+function renderRanking(rows) {
+  const list = el("rankList");
+  list.innerHTML = "";
+  let myIdx = -1;
+  rows.forEach((r, i) => {
+    const d = document.createElement("div");
+    d.className = "rank-row" + (i < 3 ? " top" + (i + 1) : "") + (isMyRow(r) ? " mine" : "");
+    d.innerHTML = rankRowHTML(r, i);
+    d.querySelector(".nm").textContent = r.nickname; // 닉네임은 글자로만 (HTML 주입 방지)
+    d.dataset.id = r.playerId || r.nickname;
+    if (isMyRow(r)) myIdx = i;
+    list.append(d);
+  });
+  // 내 순위 아래 고정 (목록에서 보이는 동안은 숨겨 중복 표시 방지)
+  const pin = el("rankPin");
+  if (myIdx >= 0) {
+    pin.innerHTML = rankRowHTML(rows[myIdx], myIdx);
+    pin.querySelector(".nm").textContent = rows[myIdx].nickname;
+  } else if (profile?.nickname) {
+    const loc = endlessBestFor(rankTab);
+    pin.innerHTML = `<span class="rk">-</span><span class="nm"></span><span>${loc ? DISPLAY_NAMES[loc.character] : "-"}</span><span>${loc ? "W" + loc.wave : "-"}</span><span>${loc ? fmtRankTime(loc.time) : "-"}</span><span>${loc?.level || "-"}</span><span>${loc ? loc.kills : "-"}</span>`;
+    pin.querySelector(".nm").textContent = profile.nickname + " (순위 밖)";
+  }
+  pin.hidden = !profile?.nickname;
+  pin.dataset.idx = myIdx;
+  updatePinVisibility();
+  el("rankMsg").textContent = rows.length ? "" : "아직 등록된 기록이 없어요";
+  return myIdx;
+}
+function updatePinVisibility() {
+  const pin = el("rankPin"), list = el("rankList"), mine = list.querySelector(".mine");
+  if (!mine || !profile?.nickname) return pin.classList.remove("dim");
+  const a = mine.getBoundingClientRect(), b = list.getBoundingClientRect();
+  pin.classList.toggle("dim", a.top >= b.top - 2 && a.bottom <= b.bottom + 2); // 목록에서 보이면 고정 줄은 감춤
+}
+el("rankList").addEventListener("scroll", updatePinVisibility, { passive: true });
+function endlessBestFor(tab) { // 기기에 저장된 내 최고 기록 (순위 밖일 때 표시용)
+  const list = Object.entries(endlessSave.best).map(([character, b]) => ({ character, ...b }));
+  const pick = tab === "all" ? list.sort(rankSort)[0] : list.find((x) => x.character === tab);
+  return pick || null;
+}
+async function loadRanking(force) {
+  el("rankMsg").textContent = "불러오는 중…";
+  try {
+    if (rankQueue().length) await flushRankQueue(); // 못 보낸 기록 먼저
+    const rows = await fetchRanking(rankTab, force);
+    return { rows, idx: renderRanking(rows) };
+  } catch (e) {
+    el("rankList").innerHTML = "";
+    el("rankMsg").innerHTML = "";
+    el("rankMsg").append(`랭킹을 불러오지 못했어요 (${e.message}) `);
+    const b = document.createElement("button");
+    b.className = "btn btn-ghost";
+    b.textContent = "다시 시도";
+    b.onclick = () => loadRanking(true);
+    el("rankMsg").append(b);
+    return null;
+  }
+}
+let rankPausedGame = false;
+function openRanking(tab) {
+  rankTab = tab || rankTab;
+  buildRankTabs();
+  syncNickUI();
+  el("rankPanel").hidden = false;
+  // 팝업 동안만 일시정지 (전투 중에 열렸다면). 닫으면 재개
+  rankPausedGame = !isLobbyOpen() && !over && !document.body.classList.contains("paused");
+  if (rankPausedGame) document.body.classList.add("paused");
+  return loadRanking(false);
+}
+function closeRanking() {
+  el("rankPanel").hidden = true;
+  if (rankPausedGame) {
+    document.body.classList.remove("paused");
+    last = performance.now();
+    acc = 0;
+  }
+  rankPausedGame = false;
+}
+el("rankClose").onclick = () => {
+  sfx("ui_click");
+  closeRanking();
+};
+el("lobbyRank").onclick = () => {
+  sfx("ui_click");
+  openRanking("all");
+};
+// 웨이브 모드 캐릭터 선택에서만 🏆 표시
+const _renderLobbyInfo = renderLobbyInfo;
+renderLobbyInfo = function () {
+  _renderLobbyInfo();
+  el("lobbyRank").hidden = lobbyMode !== "wave";
+};
+
+// ----- 판 종료: 기록 등록 + 결과 화면 표시 -----
+let lastRunRank = null; // { before: [...], rec }
+function onWaveRunEnd(r) {
+  const R = singleRun, box = el("resOnline");
+  box.hidden = true;
+  el("resResend").hidden = el("resRankBtn").hidden = true;
+  if (!R?.endless || R.story) return; // 싱글 미션 기록은 웨이브 랭킹 제외
+  box.hidden = false;
+  if (ROSTER.testMode) { // QA 테스트 판은 온라인 등록 제외
+    el("resOnlineText").textContent = "QA 전체 해금 판 — 온라인 랭킹에는 등록되지 않아요";
+    return;
+  }
+  if (!profile?.nickname) {
+    el("resOnlineText").textContent = "닉네임이 없어 온라인 랭킹에 등록되지 않았어요";
+    return;
+  }
+  if (r.newBest) { // 개인 최고 기록 갱신: 금빛 효과음
+    sfx("pickup");
+    el("resTitle").classList.add("gold-burst");
+  }
+  const rec = { character, wave: r.wave, time: Math.round(r.time), level: r.level, kills: r.kills };
+  const prevAll = rankCache.all?.rows || null;
+  lastRunRank = { before: prevAll, rec, newBest: r.newBest };
+  if (!r.newBest && endlessSave.best[character]) { // 이 캐릭터 최고 기록보다 낮으면 보내지 않음 (덮어쓰기 방지)
+    el("resOnlineText").textContent = "개인 최고 기록이 아니라 랭킹은 그대로예요";
+    el("resRankBtn").hidden = false;
+    return;
+  }
+  queueWaveRecord(rec);
+  sendRunRecord();
+}
+async function sendRunRecord() {
+  el("resOnlineText").textContent = "랭킹에 기록 등록 중…";
+  el("resResend").hidden = true;
+  const before = lastRunRank?.before || (await fetchRanking("all").catch(() => null));
+  if (lastRunRank) lastRunRank.before = before;
+  const res = await flushRankQueue();
+  if (res.left === 0 && !res.err) {
+    el("resOnlineText").textContent = lastRunRank?.newBest ? "🏆 개인 최고 기록 갱신! 랭킹에 등록했어요" : "랭킹에 등록했어요";
+    el("resRankBtn").hidden = false;
+  } else {
+    el("resOnlineText").textContent = `기록 등록 실패 (${res.err || "대기 중"}) — 기기에 보관했어요`;
+    el("resResend").hidden = false;
+  }
+}
+el("resResend").onclick = () => {
+  sfx("ui_click");
+  sendRunRecord();
+};
+// 랭킹 보기: 이전 순위 자리에서 새 자리로 내 줄이 이동, 다른 줄은 밀려남 (FLIP 애니메이션)
+el("resRankBtn").onclick = async () => {
+  sfx("ui_click");
+  const before = lastRunRank?.before;
+  const oldIdx = before ? before.findIndex(isMyRow) : -1;
+  const out = await openRanking("all");
+  if (!out || out.idx < 0) return;
+  const list = el("rankList"), rows = [...list.children], mine = rows[out.idx];
+  const rowH = mine.getBoundingClientRect().height;
+  const from = oldIdx >= 0 ? oldIdx : Math.min(rows.length, RANKING.top); // 처음 들어온 기록은 맨 아래에서
+  if (from === out.idx) {
+    mine.classList.add("gold");
+    return;
+  }
+  // 첫 상태: 내 줄은 예전 자리, 그 사이 줄들은 한 칸씩 원래 자리
+  mine.style.transform = `translateY(${(from - out.idx) * rowH}px)`;
+  const lo = Math.min(from, out.idx), hi = Math.max(from, out.idx), dir = from > out.idx ? -1 : 1;
+  for (let i = lo; i <= hi; i++) if (rows[i] && rows[i] !== mine) rows[i].style.transform = `translateY(${dir * rowH}px)`;
+  mine.scrollIntoView({ block: "center" });
+  void list.offsetHeight;
+  requestAnimationFrame(() => {
+    for (const d of rows) {
+      d.style.transition = "transform .9s cubic-bezier(.2,.8,.2,1)";
+      d.style.transform = "";
+    }
+    mine.classList.add("gold");
+    if (lastRunRank?.newBest) sfx("pickup");
+    setTimeout(() => {
+      for (const d of rows) d.style.transition = "";
+      updatePinVisibility();
+    }, 950);
+  });
+};
+// 시작할 때 못 보낸 기록이 있으면 조용히 재전송
+setTimeout(() => {
+  if (profile?.nickname && rankQueue().length) flushRankQueue();
+}, 4000);
+</script>
   <script>/* js/ui/endless.js */
 // ===== 무한 생존 화면: 시작 목록·기록, HUD(웨이브·타이머·레벨), 카드, 결과 =====
 
@@ -9848,7 +10846,9 @@ function showEndlessResult() {
   el("resTitle").classList.toggle("lose", !r.newBest);
   el("resRank").previousElementSibling.textContent = "웨이브 · 레벨";
   el("resRank").textContent = `W${r.wave} · Lv${r.level}`;
+  el("resKills").textContent = String(r.kills); // 랭킹에 올라가는 처치 수와 같게
   el("overBtn").textContent = "다시 도전";
+  if (typeof onWaveRunEnd === "function") onWaveRunEnd(r); // 온라인 랭킹 등록 (js/ui/ranking.js)
 }
 </script>
   <script>/* js/game/pokemon.js */
@@ -10120,22 +11120,42 @@ function updateStory(dt) {
     if (R.limitT <= 0) storyFail("시간 초과! 보스를 제한시간 안에 쓰러뜨리지 못했어요");
   }
   const w = R.ward;
+  // 은숙 떨림 버그: 맞을 때 흔들림(hitT)이 은숙만 줄어들지 않아 한 번 맞으면 계속 떨렸음 → 여기서 줄임
+  if (w) {
+    w.hitT = Math.max(0, (w.hitT || 0) - dt);
+    w.reveal = Math.max(0, (w.reveal || 0) - dt);
+  }
   if (w && w.hp <= 0 && !w.down) {
     w.down = true;
     storyFail(`${w.name}이(가) 쓰러졌어요`);
   }
 }
 // 적 일부는 보호 대상을 노림 (근접·기동형)
+// '은숙이를 지켜라': 적이 플레이어보다 은숙을 우선 노림 (2026-11-25 버그 수정: 예전엔 근접·기동형 40%만)
+// hunters = 은숙을 노리는 적 비율(데이터), 보스·졸개 제외. 원거리형은 사거리에서 은숙에게 쏨 (탄은 플레이어가 막을 수 있음)
 function storyMarkHunter(a, kind) {
   const R = singleRun, S = R?.story;
-  if (S?.ward && R.ward && (kind === "melee" || kind === "mobile") && Math.random() < S.ward.hunters) a.hunt = true;
+  if (!S?.ward || !R.ward || a.bossId || kind === "minion") return;
+  if (Math.random() < (S.ward.hunters ?? 1)) a.hunt = true;
 }
 function wardAI(a, dt) {
   const w = singleRun.ward, T = ENEMY_TYPES[a.mob] || ENEMY_TYPES.melee, d = dist(a, w);
-  if (d > (T.range || 34) + 14) steer(a, w.x, w.y, dt);
+  const ranged = !!(T.shot || T.lob), reach = ranged ? (T.keep ? T.keep[1] : T.range || 200) : (T.range || 34) + 14;
+  if (d > reach) steer(a, w.x, w.y, dt);
+  else if (ranged && T.keep && d < T.keep[0]) move(a, a.x - w.x, a.y - w.y, dt);
   else a.moving = false;
+  a.dir = (Math.round(Math.atan2(w.x - a.x, a.y - w.y) / (Math.PI / 4)) + 8) % 8;
   a.atkT = (a.atkT || 0) - dt;
-  if (d <= (T.range || 34) + 18 && a.atkT <= 0) {
+  if (a.atkT > 0) return;
+  if (ranged && d <= (T.range || 200) + 20 && clearLine(a, w)) {
+    a.atkT = T.cd || 1.6;
+    a.atkAnim = 0.3;
+    if (T.lob) hazards.push({ x: w.x, y: w.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "211, 155, 255" });
+    else {
+      const ang = Math.atan2(w.y - a.y, w.x - a.x), spd = T.shot || 300;
+      mobShots.push({ x: a.x, y: a.y - 14, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, left: (T.range || 200) + 80, d: a.dmg, a, r: 7, color: "#c77dff" });
+    }
+  } else if (!ranged && d <= (T.range || 34) + 18) {
     a.atkT = T.cd || 1.2;
     a.atkAnim = 0.3;
     hit(a, w, a.dmg || T.dmg);
@@ -10427,7 +11447,7 @@ function closeTitle() {
   sfx("ui_click");
   if (typeof openModePanel === "function") openModePanel(); // 타이틀 → 플레이 모드 선택
 }
-el("titleStart").onclick = closeTitle;
+el("titleStart").onclick = () => (typeof titleStartGate === "function" ? titleStartGate() : closeTitle());
 // 설정: 기존 사운드 설정(setAudio)을 그대로 사용
 el("titleSettings").onclick = () => {
   const panel = el("titleSettingsPanel");
@@ -10465,6 +11485,46 @@ buildTitle();
 // 이제는 프레임이 떨어져도 게임 속도는 실제 시간과 같고, 그리기만 덜 한다.
 
 const STEP = 1 / 60;
+// ----- 그리기 보간 (2026-11-25 이동 버벅임 수정) -----
+// 원인: 게임 계산은 1/60초 고정인데 그림은 화면 주사율마다 그려서, 120Hz 폰에선 두 번에 한 번 같은 자리가 그려지고
+//       60Hz 에서도 프레임 간격이 흔들리면 한 프레임에 0번·2번 계산돼 끊겨 보였음
+// 해결: 스텝 직전 위치를 기억해 두고, 그릴 때만 '직전 위치 → 현재 위치' 사이를 남은 시간 비율로 이어 그림 (계산·판정은 그대로)
+const INTERP_JUMP = 90; // 한 스텝에 이보다 많이 움직이면(순간이동·리스폰) 보간 안 함
+function interpActors() {
+  const out = [p];
+  for (const a of bots) out.push(a);
+  if (pet) out.push(pet);
+  for (const a of ultPets) out.push(a);
+  for (const a of clones) out.push(a);
+  for (const s of shots) out.push(s);
+  if (singleRun) for (const s of mobShots) out.push(s);
+  return out;
+}
+function snapPrev() {
+  for (const a of interpActors()) {
+    a._px = a.x;
+    a._py = a.y;
+  }
+}
+function applyInterp(alpha) {
+  const saved = [];
+  if (alpha >= 1) return saved;
+  for (const a of interpActors()) {
+    if (a._px === undefined) continue;
+    const dx = a.x - a._px, dy = a.y - a._py;
+    if (Math.abs(dx) + Math.abs(dy) > INTERP_JUMP || (dx === 0 && dy === 0)) continue;
+    saved.push(a, a.x, a.y);
+    a.x = a._px + dx * alpha;
+    a.y = a._py + dy * alpha;
+  }
+  return saved;
+}
+function restoreInterp(saved) {
+  for (let i = 0; i < saved.length; i += 3) {
+    saved[i].x = saved[i + 1];
+    saved[i].y = saved[i + 2];
+  }
+}
 const MAX_STEPS = 8; // 한 프레임에 따라잡을 최대 스텝 수 (약 0.13초)
 let acc = 0;
 
@@ -10483,6 +11543,10 @@ function drawLoading() {
 
 fitCanvas();
 reset();
+let frameErrs = 0;
+function frameError(e) { // 같은 에러가 매 프레임 쌓이지 않게 몇 번만 기록
+  if (frameErrs++ < 5) console.error("[frame]", e);
+}
 function loop(t) {
   trackFrame(t);
   beginFrame();
@@ -10497,8 +11561,10 @@ function loop(t) {
   let n = 0;
   // 모바일 메뉴가 열려 있으면 게임 일시정지
   // 로비·메뉴가 열려 있으면 게임 일시정지
-  if (document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("csOpen")) acc = 0;
+  // 일시정지 메뉴(paused)·로비·컷신·(테스트용 menuOpen) 동안 시뮬레이션 전체 정지: 적 AI·이동·공격·웨이브 타이머·스킬 시간
+  if (document.body.classList.contains("paused") || document.body.classList.contains("menuOpen") || document.body.classList.contains("lobbyOpen") || document.body.classList.contains("csOpen")) acc = 0;
   while (acc >= STEP - 1e-9 && n < MAX_STEPS) {
+    snapPrev(); // 그리기 보간용: 이번 스텝 전 위치
     updateMouseWorld();
     update(STEP);
     tickSummonAim(STEP);
@@ -10506,9 +11572,23 @@ function loop(t) {
     n++;
   }
   if (n === MAX_STEPS) acc = 0;
-  draw();
-  touchHUD();
-  uiFrame();
+  const lerped = applyInterp(Math.min(1, acc / STEP)); // 계산은 1/60초 고정, 그림은 그 사이를 이어서 (120Hz·프레임 흔들림에서 끊김 방지)
+  // 그리기·HUD 에서 에러가 나도 다음 프레임은 계속 (예전: 에러 한 번에 루프가 끊겨 캐릭터 없는 화면으로 멈춤)
+  try {
+    draw();
+    drawMinimap(); // 보간된 위치로 같이
+  } catch (e) {
+    frameError(e);
+    for (let i = 0; i < 40; i++) g.restore(); // 중간에 끊긴 save() 정리 (빈 스택에서 restore 는 아무 일 없음)
+    g.globalAlpha = 1;
+  }
+  restoreInterp(lerped);
+  try {
+    touchHUD();
+    uiFrame();
+  } catch (e) {
+    frameError(e);
+  }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
