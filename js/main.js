@@ -28,7 +28,7 @@ function installBattlePauseMenu() {
   const arena = el("arena"), body = document.body;
   const style = document.createElement("style");
   style.textContent = `
-    #battlePause[hidden] { display:none !important; }
+    #battlePause[hidden], #battlePause [hidden] { display:none !important; }
     #battlePause { position:absolute; inset:0; z-index:60; display:grid; place-items:center; background:#070d20b8; touch-action:auto; }
     #battlePause .pause-card { width:min(78%,340px); max-height:94%; box-sizing:border-box; padding:clamp(10px,3vh,20px); overflow:auto; display:flex; flex-direction:column; gap:clamp(6px,1.6vh,12px); text-align:center; }
     #battlePause h3 { margin:0; color:#ffe17b; font-size:clamp(17px,4vh,25px); }
