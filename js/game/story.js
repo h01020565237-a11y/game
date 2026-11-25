@@ -86,22 +86,42 @@ function updateStory(dt) {
     if (R.limitT <= 0) storyFail("시간 초과! 보스를 제한시간 안에 쓰러뜨리지 못했어요");
   }
   const w = R.ward;
+  // 은숙 떨림 버그: 맞을 때 흔들림(hitT)이 은숙만 줄어들지 않아 한 번 맞으면 계속 떨렸음 → 여기서 줄임
+  if (w) {
+    w.hitT = Math.max(0, (w.hitT || 0) - dt);
+    w.reveal = Math.max(0, (w.reveal || 0) - dt);
+  }
   if (w && w.hp <= 0 && !w.down) {
     w.down = true;
     storyFail(`${w.name}이(가) 쓰러졌어요`);
   }
 }
 // 적 일부는 보호 대상을 노림 (근접·기동형)
+// '은숙이를 지켜라': 적이 플레이어보다 은숙을 우선 노림 (2026-11-25 버그 수정: 예전엔 근접·기동형 40%만)
+// hunters = 은숙을 노리는 적 비율(데이터), 보스·졸개 제외. 원거리형은 사거리에서 은숙에게 쏨 (탄은 플레이어가 막을 수 있음)
 function storyMarkHunter(a, kind) {
   const R = singleRun, S = R?.story;
-  if (S?.ward && R.ward && (kind === "melee" || kind === "mobile") && Math.random() < S.ward.hunters) a.hunt = true;
+  if (!S?.ward || !R.ward || a.bossId || kind === "minion") return;
+  if (Math.random() < (S.ward.hunters ?? 1)) a.hunt = true;
 }
 function wardAI(a, dt) {
   const w = singleRun.ward, T = ENEMY_TYPES[a.mob] || ENEMY_TYPES.melee, d = dist(a, w);
-  if (d > (T.range || 34) + 14) steer(a, w.x, w.y, dt);
+  const ranged = !!(T.shot || T.lob), reach = ranged ? (T.keep ? T.keep[1] : T.range || 200) : (T.range || 34) + 14;
+  if (d > reach) steer(a, w.x, w.y, dt);
+  else if (ranged && T.keep && d < T.keep[0]) move(a, a.x - w.x, a.y - w.y, dt);
   else a.moving = false;
+  a.dir = (Math.round(Math.atan2(w.x - a.x, a.y - w.y) / (Math.PI / 4)) + 8) % 8;
   a.atkT = (a.atkT || 0) - dt;
-  if (d <= (T.range || 34) + 18 && a.atkT <= 0) {
+  if (a.atkT > 0) return;
+  if (ranged && d <= (T.range || 200) + 20 && clearLine(a, w)) {
+    a.atkT = T.cd || 1.6;
+    a.atkAnim = 0.3;
+    if (T.lob) hazards.push({ x: w.x, y: w.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "211, 155, 255" });
+    else {
+      const ang = Math.atan2(w.y - a.y, w.x - a.x), spd = T.shot || 300;
+      mobShots.push({ x: a.x, y: a.y - 14, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, left: (T.range || 200) + 80, d: a.dmg, a, r: 7, color: "#c77dff" });
+    }
+  } else if (!ranged && d <= (T.range || 34) + 18) {
     a.atkT = T.cd || 1.2;
     a.atkAnim = 0.3;
     hit(a, w, a.dmg || T.dmg);

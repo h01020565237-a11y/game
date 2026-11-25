@@ -55,7 +55,10 @@ function petSlot(pt) {
 }
 function petTarget(pt) {
   const L = PET_AI.leash;
-  return minBy(bots.filter((b2) => b2.hp > 0 && dist(p, b2) <= L && visible(pt, b2)), (b2) => dist(pt, b2));
+  const foe = minBy(bots.filter((b2) => b2.hp > 0 && dist(p, b2) <= L && visible(pt, b2)), (b2) => dist(pt, b2));
+  if (foe) return foe;
+  // 적이 없으면 보물상자도 부숨 (2026-11-25 버그: 포켓몬이 상자를 안 때림). 반경·시야 규칙 같음
+  return minBy(boxes.filter((x) => !x.broken && x.hp > 0 && dist(p, x) <= L && (!visionOn() || inPlayerVision(x))), (x) => dist(pt, x));
 }
 function runPet(pt, dt) {
   pt.life -= dt;

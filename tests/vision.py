@@ -94,7 +94,7 @@ with sync_playwright() as pw:
     # 포켓몬 AI: 활동 반경·복귀·대기 거리·겹침
     pg.evaluate('V.story()')
     r = pg.evaluate('''(() => { p.ult = 1; castSkill("r", { x: p.x + 50, y: p.y }); const out = { n: ultPets.length };
-      for (const pt of ultPets) { pt.life = 99; pt.skillCD = 99; }
+      for (const pt of ultPets) { pt.life = 99; pt.skillCD = 99; } boxes = []; /* 상자가 있으면 포켓몬이 상자를 때리러 감 (정상) */
       V.step(240); // 적 없음 → 대기 자리
       out.dist = ultPets.map((pt) => Math.round(dist(pt, p)));
       let mn = 1e9; for (let i = 0; i < ultPets.length; i++) for (let j = i + 1; j < ultPets.length; j++) mn = Math.min(mn, dist(ultPets[i], ultPets[j]));

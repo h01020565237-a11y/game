@@ -106,6 +106,7 @@ function updateWave(dt) {
   if (singleRun.endless) return updateEndless(dt);
   const R = singleRun;
   if (R.bannerT > 0) R.bannerT -= dt;
+  if (R.phase === "fight" || R.phase === "boss") contactDamage(dt); // 몸 접촉 피해 (현곤 영입 미션)
   if (R.phase === "intro") {
     if ((R.t -= dt) <= 0) R.phase = "fight";
     return;
@@ -343,6 +344,9 @@ function updateMobShots(dt) {
         s.dead = true;
       } else if (pet && Math.hypot(pet.x - s.x, pet.y - s.y) < 20) {
         hit(s.a, pet, s.d);
+        s.dead = true;
+      } else if (singleRun?.ward && singleRun.ward.hp > 0 && Math.hypot(singleRun.ward.x - s.x, singleRun.ward.y - 14 - s.y) < 18 + s.r * 0.5) { // 보호 대상(은숙)도 맞음
+        hit(s.a, singleRun.ward, s.d);
         s.dead = true;
       }
     }

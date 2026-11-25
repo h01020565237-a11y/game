@@ -8,7 +8,8 @@ const ENDLESS = {
   heal: { clear: 0.2, boss: 0.5 },        // 웨이브 클리어 회복 (최대 HP 비율) — 기획서
   dropHeal: { chance: 0.03, amount: 0.1 }, // 적 처치 시 회복 아이템 — 기획서
   rarity: { common: 65, rare: 25, legend: 10 }, // 카드 등장 확률(%) — 기획서
-  countdown: 3,              // 웨이브 시작 전 카운트다운(초) — 기획서 제안
+  contact: { interval: 0.8, mul: 0.5 }, // 몸 접촉 피해: 적 공격력 × mul, 플레이어는 interval 초에 한 번만 (여러 적이 붙어도) — 제안값(미확정)
+  countdown: 1.5,            // 웨이브 시작 안내(초) — 2026-11-25: 3 → 1.5, 안내 중에도 이동 가능
   resetSkillCD: true,        // 웨이브 전환 시 일반 스킬 쿨타임 초기화 — 기획서 제안
   exp: { base: 50, per: 15 },// 다음 레벨 요구 = base + per × (현재 레벨 - 1) — 기획서
   scale: { hp: 1.1, atk: 1.07, spdPer: 0.015, spdMax: 1.5 }, // 웨이브 W 배율: hp^(W-1), atk^(W-1), min(spdMax, 1+spdPer×(W-1)) — 기획서

@@ -118,7 +118,7 @@ function endlessPaused(dt) {
   if (R.phase === "count") {
     if (updateMapSwap(dt)) return true; // 맵 교체 암전 중: 카운트다운 정지
     if ((R.t -= dt) <= 0) startEndlessFight();
-    return true;
+    return false; // 웨이브 시작 안내 중에도 캐릭터는 움직임 (2026-11-25 버그: 안내 동안 강제 정지). 적 등장은 fight 부터
   }
   if (R.phase === "intro") {
     if ((R.t -= dt) <= 0) R.phase = "boss";
@@ -158,13 +158,28 @@ function makeEnemy(kind, at, opts = {}) {
   }
   fx.push({ x: a.x, y: a.y, t: 0.6, ring: a.r + 14 });
   bots.push(a);
+  if (R.story) storyMarkHunter(a, kind); // 은숙이를 지켜라: 은숙 우선
   return a;
 }
 
 // ----- 매 프레임 -----
+// 몸 접촉 피해 (2026-11-25 버그: 적과 붙어 있어도 피해가 없던 문제). 연속 프레임 피해 방지: 플레이어 기준 간격
+function contactDamage(dt) {
+  const C = ENDLESS.contact;
+  p.contactT = Math.max(0, (p.contactT || 0) - dt);
+  if (p.contactT > 0 || p.hp <= 0 || p.jump) return;
+  for (const a of bots) {
+    if (a.hp <= 0 || !a.mob || a.spawnT > 0 || a.stun > 0 || a.stealth > 0) continue;
+    if (dist(a, p) > (a.r || 16) + (p.r || 16) + 3) continue;
+    p.contactT = C.interval;
+    hit(a, p, (a.dmg || 20) * C.mul, { contact: true });
+    return;
+  }
+}
 function updateEndless(dt) {
   const R = singleRun;
   if (R.story) updateStory(dt);
+  if (R.phase === "fight" || R.phase === "boss") contactDamage(dt);
   // 플레이어 강화: 자연 회복, 상태이상 저항(상훈 카드)
   if (p.regen) healActor(p, p.max * p.regen * dt, true);
   if (R.mods.resist) for (const k of ["stun", "slow", "root"]) if (p[k] > 0) p[k] = Math.max(0, p[k] - dt * R.mods.resist / (1 - R.mods.resist));
@@ -178,7 +193,6 @@ function updateEndless(dt) {
       let k = kinds[Math.floor(Math.random() * kinds.length)];
       if (k === "elite" && Math.random() > ELITE_SHARE * kinds.length) k = kinds.find((x) => x !== "elite") || "melee";
       const e = makeEnemy(k);
-      if (R.story && e) storyMarkHunter(e, e.mob);
       R.spawned++;
       R.spawnT = ((R.stageTime || ENDLESS.normalTime) * 0.92) / R.plan;
     }
