@@ -541,3 +541,14 @@ body.lobbyOpen #lobby { display: flex; }
 .lobby-record { margin: 2px 0; color: #ffd27a; font-size: clamp(11px, 2.8cqh, 14px); }
 #lobbyPlay.off { filter: grayscale(.8) brightness(.8); }
 body.modeOpen #lobby { visibility: hidden; }
+
+/* 영입 미션 목록 · 영입 완료 화면 */
+.mission-btns { display: flex; flex-direction: column; gap: 4px; }
+.mission-btns .btn { white-space: nowrap; font-size: clamp(11px, 2.8cqh, 14px); }
+#recruitSplash { z-index: 40; background: radial-gradient(ellipse at 50% 45%, #fff3b0cc, #1b2a5ef2 60%); }
+#recruitSplash[hidden] { display: none; }
+.rs-card { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #fff; text-align: center; }
+.rs-card img { height: min(55cqh, 340px); object-fit: contain; filter: drop-shadow(0 6px 18px #0008); animation: rsPop .5s ease-out; }
+.rs-card b { font-size: clamp(22px, 7cqh, 40px); color: #ffe07a; text-shadow: 0 3px 0 #6b3d00; }
+.rs-card span { font-size: clamp(12px, 3.2cqh, 16px); }
+@keyframes rsPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }

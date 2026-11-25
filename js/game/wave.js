@@ -28,7 +28,8 @@ function writeSingleSave() {
 }
 // 영입 지급 (중복 지급 방지). 컷신 재생 전에 먼저 저장 → 스킵·종료해도 영입 유지
 function grantRecruit(missionId) {
-  const m = WAVE_MISSIONS[missionId];
+  const m = WAVE_MISSIONS[missionId] || STORY_MISSIONS[missionId];
+  if (!m) return;
   if (!singleSave.recruited.includes(m.reward)) singleSave.recruited.push(m.reward);
   singleSave.cleared[missionId] = (singleSave.cleared[missionId] || 0) + 1;
   writeSingleSave();

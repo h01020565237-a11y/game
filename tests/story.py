@@ -1,0 +1,106 @@
+"""싱글 영입 미션 테스트: python3 tests/story.py [index.html]
+- 새 저장: 동기만, 미션 잠금·출전 캐릭터 규칙, 기섭 2명 중 선택
+- 각 미션 빠르게 진행(적 즉시 처치·타이머 단축) → 단계·보스 체력·성공 → 영입 저장 → 컷신/영입 완료 화면 스킵 → 결과
+- 실패: 보호 대상 쓰러짐(은숙), 보스 제한시간(기섭), 사망 → 영입 없음
+- 새로고침 후 영입 유지, 재클리어 중복 없음"""
+import pathlib, sys, json
+from playwright.sync_api import sync_playwright
+f = sys.argv[1] if len(sys.argv) > 1 else 'index.html'
+url = pathlib.Path(f).resolve().as_uri()
+fails = 0
+def ok(n, c, x=''):
+    global fails
+    fails += not c
+    print(('PASS ' if c else 'FAIL ') + n, x if not c else '')
+RUN = r'''(async (id, who, mode) => {
+  const step = (s) => { for (let i = 0; i < Math.round(s * 60); i++) update(1 / 60); };
+  startMission(id, who);
+  syncResults(); // (실제 게임은 매 프레임 호출) 이전 결과 상태 초기화
+  document.body.classList.add("menuOpen"); // 루프 정지, 직접 진행
+  god = true;
+  const R = singleRun, info = { char: character, stages: [], bossHp: [] };
+  let guard = 0;
+  while (!over && guard++ < 4000) {
+    if (R.phase === "cards") { pickEndlessCard(0); continue; }
+    if (R.phase === "count" || R.phase === "intro") { step(0.2); continue; }
+    if (R.phase === "fight") {
+      if (!info.stages.includes(R.wave)) info.stages.push(R.wave);
+      R.timer = Math.min(R.timer, 0.5);
+      for (const b of bots) if (!b.bossId && b.hp > 0) b.hp = 0;
+      step(0.3); continue;
+    }
+    if (R.phase === "boss") {
+      if (!info.stages.includes(R.wave)) { info.stages.push(R.wave); info.bossHp.push([R.boss.bossId, Math.round(R.boss.max)]); }
+      if (mode === "ward") { R.ward.hp = 0; step(0.2); continue; }
+      if (mode === "limit") { god = true; step(1); continue; }
+      if (mode === "die") { god = false; p.hp = 0; step(0.2); continue; }
+      hit(p, R.boss, R.boss.max * 0.4); step(0.3); continue;
+    }
+    step(0.1);
+  }
+  info.over = over; info.fail = R.failReason; info.wave = R.wave; info.recruited = singleSave.recruited.slice();
+  return info;
+})'''
+with sync_playwright() as pw:
+    b = pw.chromium.launch(executable_path='/usr/bin/google-chrome')
+    ctx = b.new_context(viewport={'width': 844, 'height': 390})
+    pg = ctx.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto(url); pg.wait_for_timeout(1500)
+    pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(1500)
+    pg.evaluate('closeTitle(); chooseMode("single")'); pg.wait_for_timeout(200)
+    st = pg.evaluate('''(() => ({ rec: singleSave.recruited.slice(), qa: ROSTER.testMode, cards: [...document.querySelectorAll("#missionList .mission")].map(c => [c.querySelector("b").textContent, c.className.includes("locked"), [...c.querySelectorAll("button")].map(x => x.textContent)]) }))()''')
+    print(st)
+    ok('새 저장: 동기만 영입, QA 해금 꺼짐', st['rec'] == ['suit'] and not st['qa'])
+    locks = {c[0]: c[1] for c in st['cards']}
+    ok('열린 미션: 현곤(동기), 기섭(동기 또는 현곤) / 나머지 잠금', not locks['현곤 영입'] and not locks['기섭 영입'] and all(locks[k] for k in ['은숙 영입', '상훈 영입', '경수 영입', '재한 영입', '정용 영입']), locks)
+    gi = [c for c in st['cards'] if c[0] == '기섭 영입'][0]
+    ok('기섭 미션: 현곤 미영입이면 동기 출전 버튼만', gi[2] == ['동기(으)로 출전'], gi[2])
+    ok('지정되지 않은 캐릭터로 시작 불가', pg.evaluate('(startMission("eunsuk", "suit"), !singleRun)'))
+    # 성공 경로: 순서대로 (출전 캐릭터 영입되면서 열림)
+    order = [('giseop', 'suit'), ('hyeongon', 'suit'), ('eunsuk', 'summoner'), ('sanghun', 'runner'), ('gyeongsu', 'octo'), ('jaehan', 'stripe'), ('jeongyong', 'soccer')]
+    for mid, who in order:
+        if mid == 'hyeongon':  # 기존 웨이브 미션: 빠르게 클리어
+            r = pg.evaluate('''(() => { startMission("hyeongon", "suit"); syncResults(); document.body.classList.add("menuOpen"); god = true; const R = singleRun; let g = 0;
+              while (!over && g++ < 3000) { if (R.phase === "cards") { pickCard(0); continue; } for (const b of bots) b.hp = 0; R.queue && (R.queue.length = 0); for (let i = 0; i < 20; i++) update(1/60); }
+              return { over, recruited: singleSave.recruited.slice() }; })()''')
+        else:
+            r = pg.evaluate(RUN + f'("{mid}", "{who}", "win")')
+        print(mid, r)
+        ok(f'{mid}: {who}(으)로 출전 → 미션 성공 → 영입 저장', r['over'] == '미션 성공' and pg.evaluate(f'singleSave.recruited.includes(STORY_ORDER.find(m => m.id === "{mid}").reward)'), r)
+        if mid != 'hyeongon':
+            S = pg.evaluate(f'STORY_MISSIONS["{mid}"].stages.length')
+            ok(f'{mid}: 모든 단계 진행 ({S}단계)', r['stages'] == list(range(1, S + 1)), r['stages'])
+        # 결과로 넘어가는 영입 연출 (컷신 또는 영입 완료 화면) 스킵
+        pg.evaluate('document.body.classList.remove("menuOpen")'); pg.wait_for_timeout(1300)
+        shown = pg.evaluate('[!el("cutscene").hidden, !el("recruitSplash").hidden]')
+        if shown[0]: pg.evaluate('el("csSkip").click()')
+        if shown[1]: pg.evaluate('el("rsOk").click()')
+        pg.wait_for_timeout(900)
+        res = pg.evaluate('[!el("results").hidden, el("resTitle").textContent]')
+        ok(f'{mid}: 컷신/영입 완료 화면 → 결과 "{res[1]}"', res[0] and '영입' in res[1] and (shown[0] or shown[1]), (shown, res))
+        pg.evaluate('openLobby()')
+    ok('8명 모두 영입', sorted(pg.evaluate('singleSave.recruited')) == sorted(['suit', 'summoner', 'support', 'runner', 'octo', 'stripe', 'soccer', 'bear']))
+    ok('재한·정용: 컷신 없이 영입 완료 화면', pg.evaluate('!RECRUIT_STORIES.jaehan && !RECRUIT_STORIES.jeongyong'))
+    cleared = pg.evaluate('JSON.stringify(singleSave.cleared)')
+    # 재클리어: 중복 영입 없음
+    pg.evaluate(RUN + '("sanghun", "runner", "win")'); pg.evaluate('document.body.classList.remove("menuOpen")'); pg.wait_for_timeout(1300); pg.evaluate('el("csSkip").click(); el("rsOk").click()'); pg.wait_for_timeout(500)
+    ok('재클리어: 영입 목록 중복 없음', pg.evaluate('singleSave.recruited.length === new Set(singleSave.recruited).size && singleSave.recruited.length === 8'))
+    # 실패 경로
+    pg.evaluate('openLobby()')
+    r = pg.evaluate(RUN + '("eunsuk", "summoner", "ward")'); ok('은숙 미션: 은숙이 쓰러지면 실패', r['over'] == '패배' and '쓰러' in r['fail'], r)
+    pg.evaluate('document.body.classList.remove("menuOpen"); openLobby()')
+    r = pg.evaluate(RUN + '("giseop", "summoner", "limit")'); ok('기섭 미션: 보스 제한시간 초과 → 실패', r['over'] == '패배' and '시간' in r['fail'], r)
+    pg.evaluate('document.body.classList.remove("menuOpen"); openLobby()')
+    r = pg.evaluate(RUN + '("jaehan", "stripe", "die")'); ok('사망 → 실패', r['over'] == '패배', r)
+    pg.wait_for_timeout(1200)
+    ok('실패 결과 화면 "미션 실패"', pg.evaluate('el("resTitle").textContent') == '미션 실패')
+    # 새로고침 후 유지 + 웨이브에서 8명 사용 가능
+    pg.evaluate('document.body.classList.remove("menuOpen")')
+    pg.reload(); pg.wait_for_timeout(1500)
+    ok('새로고침 후 영입 8명 유지, QA 해금 없이 웨이브 출전 가능', pg.evaluate('singleSave.recruited.length === 8 && !ROSTER.testMode && LOBBY_ORDER.every(canPlay)'))
+    ok('웨이브 기록 초기화해도 영입 유지', pg.evaluate('(localStorage.removeItem("battlelab.endless"), JSON.parse(localStorage.getItem("battlelab.single")).recruited.length === 8)'))
+    ok('에러 없음', not errs, errs[:3])
+    b.close()
+print('ALL PASS' if not fails else f'{fails} FAIL')

@@ -656,3 +656,10 @@ export default {
   - 무한 생존 은신 적은 내 화면에서 완전히 안 보임 (예전: 흐린 실루엣)
 - 맵: 상자 지운 얼룩 24곳을 같은 풀숲/흙에서 떼어 온 조각으로 메움 (좌우 대칭). 원본 `docs/art_backup/`
 - 테스트: `tests/move_stealth.py`
+
+## 1차 빌드 1~3단계
+- 진입: 타이틀 → 플레이 모드 선택(assets/ui/mode_select.webp + 투명 버튼) → 싱글=미션 목록 / 웨이브=캐릭터 선택. PvP 준비 중(진입 차단)
+- 영입 기준 = singleSave.recruited 하나. QA 전체 해금은 localStorage "battlelab.qa" (모드 선택 → 설정)
+- 충돌·길찾기: js/game/ai.js 반경별 격자(상자 포함) A*, 끼임 재탐색, 못 닿으면 가장 가까운 곳. move/chargeStep/knock/separate 반경 판정. tests/collision.py
+- 보물상자·아이템: CHEST_RULES (js/data/combat.js). tests/chest_loot.py
+- 영입 미션: 현곤 = 기존 웨이브 미션, 나머지 6개 = js/data/story_missions.js 대본 + js/game/story.js (무한 생존 엔진 재사용: 적 유형·보스 패턴·카드). 보호 대상(은숙)·보스 제한시간(기섭)·단계별 튜토리얼 안내. 클리어 확정 즉시 영입 저장(update.js). 컷신 없는 재한·정용 = 영입 완료 화면(showRecruitSplash), RECRUIT_STORIES 에 추가하면 컷신 재생. tests/story.py

@@ -26,7 +26,7 @@ function updateEndlessHUD() {
   const R = singleRun;
   setText("aliveNum", String(bots.filter((b) => b.hp > 0 && !b.bossId).length));
   el("aliveHud").firstChild.textContent = "적 ";
-  setText("zoneHud", R.spec?.boss ? `W${R.wave} 보스` : `W${R.wave} · ${fmtTime(Math.max(0, Math.ceil(R.phase === "fight" ? R.timer : ENDLESS.normalTime)))}`);
+  setText("zoneHud", R.story ? storyHudText() : R.spec?.boss ? `W${R.wave} 보스` : `W${R.wave} · ${fmtTime(Math.max(0, Math.ceil(R.phase === "fight" ? R.timer : ENDLESS.normalTime)))}`);
   // 레벨·경험치
   const eh = el("expHud");
   if (eh.hidden) eh.hidden = false;
@@ -43,7 +43,7 @@ function updateEndlessHUD() {
   }
   // 배너·카운트다운
   const bn = el("waveBanner");
-  const txt = R.phase === "count" ? `W${R.wave} 시작까지 ${Math.ceil(R.t)}` : R.bannerT > 0 ? R.banner : "";
+  const txt = R.phase === "count" ? `${R.story ? R.spec?.stage?.label ?? "" : "W" + R.wave} 시작까지 ${Math.ceil(R.t)}` : R.bannerT > 0 ? R.banner : "";
   if (bn.hidden !== !txt) bn.hidden = !txt;
   if (txt && bn.textContent !== txt) bn.textContent = txt;
   // 카드

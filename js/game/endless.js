@@ -50,6 +50,7 @@ function setupEndless() {
   mobShots = [];
   hazards = [];
   loot = [];
+  if (R.story) setupStory(); // 싱글 영입 미션 (js/game/story.js)
   nextEndlessWave();
 }
 function endlessNeedExp(level) {
@@ -57,9 +58,11 @@ function endlessNeedExp(level) {
 }
 function waveScale(W) {
   const S = ENDLESS.scale;
+  if (singleRun?.story) W = singleRun.story.scaleW; // 영입 미션: 미션마다 고정 난이도
   return { hp: Math.pow(S.hp, W - 1), atk: Math.pow(S.atk, W - 1), spd: Math.min(S.spdMax, 1 + S.spdPer * (W - 1)) };
 }
 function waveSpec(W) {
+  if (singleRun?.story) return storyWaveSpec(W);
   if (W % ENDLESS.bossEvery === 0) return { boss: true };
   if (W < ENDLESS_WAVES.length && ENDLESS_WAVES[W]) return ENDLESS_WAVES[W];
   // 21 이후: 총수량 +5 씩 (최대 150), 구성은 전체 혼합
@@ -76,21 +79,24 @@ function nextEndlessWave() {
 }
 function startEndlessFight() {
   const R = singleRun, S = R.spec;
+  if (R.story) storyStageStart();
   if (S.boss) {
+    if (R.story) R.bossCycle = [S.stage.boss];
     spawnEndlessBoss();
+    if (R.story && R.boss) storyBossSetup(R.boss);
     R.phase = "intro";
     R.t = ENDLESS.bossIntro;
-    R.banner = `W${R.wave} 보스 · ${R.boss ? "타락한 " + DISPLAY_NAMES[R.boss.bossId] + " — " + ENDLESS_BOSSES[R.boss.bossId].name : ""}`;
+    R.banner = `${R.story ? S.stage.label : "W" + R.wave + " 보스"} · ${R.boss ? "타락한 " + DISPLAY_NAMES[R.boss.bossId] + " — " + ENDLESS_BOSSES[R.boss.bossId].name : ""}`;
     R.bannerT = ENDLESS.bossIntro + 0.5;
     sfx("zone_warning");
     return;
   }
   R.phase = "fight";
-  R.timer = ENDLESS.normalTime;
+  R.timer = R.stageTime = S.time || ENDLESS.normalTime;
   R.plan = S.count;
   R.spawned = 0;
   R.spawnT = 0;
-  R.banner = `W${R.wave} · ${ENDLESS.normalTime}초 생존`;
+  R.banner = R.story ? `${S.stage.label} · ${R.timer}초 버티기` : `W${R.wave} · ${ENDLESS.normalTime}초 생존`;
   R.bannerT = 1.6;
 }
 
@@ -151,6 +157,7 @@ function makeEnemy(kind, at, opts = {}) {
 // ----- 매 프레임 -----
 function updateEndless(dt) {
   const R = singleRun;
+  if (R.story) updateStory(dt);
   // 플레이어 강화: 자연 회복, 상태이상 저항(상훈 카드)
   if (p.regen) healActor(p, p.max * p.regen * dt, true);
   if (R.mods.resist) for (const k of ["stun", "slow", "root"]) if (p[k] > 0) p[k] = Math.max(0, p[k] - dt * R.mods.resist / (1 - R.mods.resist));
@@ -163,9 +170,10 @@ function updateEndless(dt) {
       const kinds = R.spec.kinds === "all" ? ENDLESS_ALL_KINDS : R.spec.kinds;
       let k = kinds[Math.floor(Math.random() * kinds.length)];
       if (k === "elite" && Math.random() > ELITE_SHARE * kinds.length) k = kinds.find((x) => x !== "elite") || "melee";
-      makeEnemy(k);
+      const e = makeEnemy(k);
+      if (R.story && e) storyMarkHunter(e, e.mob);
       R.spawned++;
-      R.spawnT = (ENDLESS.normalTime * 0.92) / R.plan;
+      R.spawnT = ((R.stageTime || ENDLESS.normalTime) * 0.92) / R.plan;
     }
     if (R.timer <= 0) endEndlessWave(false);
   }
@@ -186,7 +194,8 @@ function updateEndless(dt) {
       for (const k of ["stun", "slow", "root"]) if (a[k] > 0) a[k] = Math.max(0, a[k] - dt * m);
     }
     if (a.stun > 0) continue;
-    if (playerHidden() && !a.tele && !a.channel && !a.charge) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
+    if (a.hunt && R.ward && R.ward.hp > 0) wardAI(a, dt); // 영입 미션: 보호 대상을 노리는 적
+    else if (playerHidden() && !a.tele && !a.channel && !a.charge) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
     else if (a.bossId) endlessBossAI(a, dt);
     else enemyAI(a, dt);
   }
@@ -218,6 +227,7 @@ function gainExp(n) {
 }
 function endEndlessWave(boss) {
   const R = singleRun;
+  if (R.story && storyStageClear(boss)) return; // 영입 미션 마지막 단계 → 성공
   // 남은 적 제거 (경험치 없음), 남은 아이템 자동 획득, 회복 (중복 없음)
   for (const b of bots) {
     b.counted = true;

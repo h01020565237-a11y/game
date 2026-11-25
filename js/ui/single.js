@@ -1,13 +1,8 @@
 // ===== 싱글모드 화면: 미션 선택, 웨이브 HUD, 강화 카드, 결과, 영입 컷신, 스토리 극장 =====
 
-// 미션 목록 (현곤만 웨이브 생존전으로 구현. 나머지는 선행 조건만 표시)
-const SINGLE_MISSIONS = [
-  { id: "hyeongon", reward: "summoner", need: [], wave: true },
-  { id: "eunsuk", reward: "support", need: ["summoner"] },
-  { id: "giseop", reward: "runner", need: ["summoner", "suit"] },
-  { id: "sanghun", reward: "octo", need: ["runner"] },
-  { id: "gyeongsu", reward: "stripe", need: ["octo"] },
-];
+// 미션 목록: js/data/story_missions.js STORY_ORDER (출전 캐릭터 = 선행 조건)
+const SINGLE_MISSIONS = STORY_ORDER.map((m) => ({ ...m, need: m.players, wave: true }));
+const missionOpen = (ms) => ms.players.some((k) => singleSave.recruited.includes(k));
 
 function openSinglePanel() {
   renderSinglePanel();
@@ -18,30 +13,38 @@ function renderSinglePanel() {
   const list = el("missionList");
   list.innerHTML = "";
   for (const ms of SINGLE_MISSIONS) {
-    const got = singleSave.recruited.includes(ms.reward), ok = ms.need.every((k) => singleSave.recruited.includes(k));
+    const got = singleSave.recruited.includes(ms.reward), ok = missionOpen(ms) || ROSTER.testMode;
+    const S = STORY_MISSIONS[ms.id], W = WAVE_MISSIONS[ms.id];
     const card = document.createElement("div");
-    card.className = "mission" + (got ? " done" : "") + (!ok || !ms.wave ? " locked" : "");
+    card.className = "mission" + (got ? " done" : "") + (!ok ? " locked" : "");
     const im = document.createElement("img");
     im.src = lobbyArt[ms.reward].face.src;
     im.alt = "";
     const info = document.createElement("div");
-    const m = WAVE_MISSIONS[ms.id];
-    info.innerHTML = `<b>${DISPLAY_NAMES[ms.reward]} 영입</b><span>${m ? m.sub + " · " + DISPLAY_NAMES[canPlay(lobbySel) ? lobbySel : m.player] + "(으)로 출전" : "준비 중"}</span>` +
-      `<small>${got ? "영입 완료" : ok ? (ms.wave ? "도전 가능" : "미션 준비 중") : "조건: " + ms.need.map((k) => DISPLAY_NAMES[k]).join(" + ") + " 영입"}</small>`;
+    const sub = S ? `${S.title} · ${S.sub}` : W.sub;
+    const who = ms.players.map((k) => DISPLAY_NAMES[k]).join(ms.any ? " 또는 " : " + ");
+    const target = S ? S.target : "3~5분";
+    info.innerHTML = `<b>${DISPLAY_NAMES[ms.reward]} 영입</b><span>${sub}</span>` +
+      `<small>출전: ${who} · 목표 ${target} · ${got ? "영입 완료" : ok ? (missionOpen(ms) ? "도전 가능" : "QA 해금으로 도전 가능") : "조건: " + who + " 영입"}</small>`;
     card.append(im, info);
-    if (ok && ms.wave) {
-      const b = document.createElement("button");
-      b.className = "btn btn-gold";
-      b.textContent = got ? "다시 도전" : "시작";
-      b.onclick = () => startMission(ms.id);
-      card.append(b);
+    if (ok) {
+      const btns = document.createElement("div");
+      btns.className = "mission-btns";
+      for (const k of ms.players) {
+        if (!singleSave.recruited.includes(k) && !ROSTER.testMode) continue;
+        const b = document.createElement("button");
+        b.className = "btn btn-gold";
+        b.textContent = ms.players.length > 1 ? `${DISPLAY_NAMES[k]}(으)로 출전` : got ? "다시 도전" : "시작";
+        b.onclick = () => startMission(ms.id, k);
+        btns.append(b);
+      }
+      card.append(btns);
     }
     list.append(card);
   }
-  // 스토리 극장: 본 적 있는(영입 완료한) 컷신 다시 보기. 진행도는 바뀌지 않음
+  // 스토리 극장: 영입한 캐릭터의 컷신 다시 보기 (진행도·영입 변화 없음). 컷신이 없는 캐릭터(재한·정용)는 없음
   const th = el("theaterList");
   th.innerHTML = "";
-  // 영입한 캐릭터의 컷신만. (테스트 모드: 아직 영입 전인 컷신도 미리 보기 가능, 영입은 안 됨)
   const story = (id) => RECRUIT_STORIES[id] || CUTSCENES[id];
   const seen = SINGLE_MISSIONS.filter((ms) => story(ms.id) && (singleSave.cleared[ms.id] || singleSave.recruited.includes(ms.reward) || ROSTER.testMode));
   if (!seen.length) th.textContent = "영입을 완료하면 컷신을 다시 볼 수 있어요.";
@@ -54,14 +57,17 @@ function renderSinglePanel() {
     th.append(b);
   }
 }
-function startMission(id) {
-  const m = WAVE_MISSIONS[id];
+function startMission(id, who) {
+  const ms = SINGLE_MISSIONS.find((m) => m.id === id);
+  who = who || ms.players[0];
+  if (!ms.players.includes(who)) return; // 지정된 캐릭터로만
+  if (!singleSave.recruited.includes(who) && !ROSTER.testMode) return;
   el("singlePanel").hidden = true;
-  beginSingle(id);
+  if (STORY_MISSIONS[id]) beginStory(id, who);
+  else beginSingle(id);
   sfx("ui_click");
-  // 기존 시작 경로 그대로 사용. 출전 캐릭터 = 캐릭터 선택에서 고른 영입 캐릭터 (없으면 미션 기본)
-  const who = canPlay(lobbySel) ? lobbySel : m.player;
   document.querySelector("#character").value = who;
+  if (who === "summoner" && (lobbyDeck.length !== 3 || new Set(lobbyDeck).size !== 3)) lobbyDeck = [0, 1, 2];
   if (who === "summoner") deck = lobbyDeck.slice();
   document.querySelector("#charApply").click();
 }
@@ -69,6 +75,7 @@ el("lobbySingle").onclick = openSinglePanel;
 el("singleClose").onclick = () => {
   el("singlePanel").hidden = true;
   sfx("ui_click");
+  if (lobbyMode === "single") openModePanel(); // 싱글 모드 → 모드 선택으로
 
 };
 
@@ -94,6 +101,7 @@ function chooseMode(mode) {
   el("modePanel").hidden = true;
   document.body.classList.remove("modeOpen");
   openLobby();
+  if (mode === "single") openSinglePanel(); // 싱글: 미션마다 출전 캐릭터가 정해져 있어 미션 목록으로 바로
 }
 for (const b of document.querySelectorAll(".mode-hit.card")) b.onclick = () => chooseMode(b.dataset.mode);
 el("modeNext").onclick = () => chooseMode(lobbyMode);
@@ -158,8 +166,8 @@ function lockReason(k) {
   if (ROSTER.comingSoon.includes(k)) return `${DISPLAY_NAMES[k]}: 영입 미션 준비 중이에요.`;
   const ms = SINGLE_MISSIONS.find((m) => m.reward === k);
   if (!ms) return "아직 영입하지 않은 캐릭터예요.";
-  const need = ms.need.filter((n) => !singleSave.recruited.includes(n));
-  return `${DISPLAY_NAMES[k]}: 싱글 모드 「${DISPLAY_NAMES[k]} 영입」 미션을 깨면 영입돼요.` + (need.length ? ` (먼저 ${need.map((n) => DISPLAY_NAMES[n]).join(" + ")} 영입 필요)` : "");
+  const who = ms.players.map((n) => DISPLAY_NAMES[n]).join(ms.any ? " 또는 " : " + ");
+  return `${DISPLAY_NAMES[k]}: 싱글 모드 「${DISPLAY_NAMES[k]} 영입」 미션(출전: ${who})을 깨면 영입돼요.` + (missionOpen(ms) ? "" : ` (먼저 ${who} 영입 필요)`);
 }
 
 // ----- 웨이브 HUD (전투 화면 위쪽) -----
@@ -212,6 +220,7 @@ function renderCards() {
 
 // ----- 결과 (lobby.js syncResults 에서 호출) -----
 function showSingleResult() {
+  if (singleRun.story) return showStoryResult();
   if (singleRun.endless) return showEndlessResult();
   const R = singleRun, win = over === "미션 성공";
   el("resTitle").textContent = win ? `${DISPLAY_NAMES[R.m.reward]} 영입 성공!` : "미션 실패";
@@ -226,7 +235,10 @@ function restoreResultLabels() {
 }
 // 미션 성공: 먼저 영입을 저장하고(스킵·종료해도 유지) 컷신 → 결과 화면
 function onMissionClear(done) {
-  grantRecruit(singleRun.id);
+  if (!singleRun.granted) { // 보통은 update.js 에서 클리어 즉시 저장됨
+    singleRun.granted = true;
+    grantRecruit(singleRun.id);
+  }
   playCutscene(singleRun.id, done);
 }
 
@@ -246,6 +258,7 @@ const CUTSCENES = {
 let csTimer = null, csDone = null, csId = null;
 function playCutscene(id, done) {
   if (RECRUIT_STORIES[id]) return playStory(id, done); // 승인된 그림 컷 컷신 (js/ui/cutscene.js)
+  if (!CUTSCENES[id]) return showRecruitSplash(id, done); // 컷신 없음(재한·정용): 영입 완료 화면만. 나중에 RECRUIT_STORIES 에 추가하면 컷신 재생
   const cs = CUTSCENES[id];
   csId = id;
   csDone = done;
@@ -302,3 +315,34 @@ el("csSkip").onclick = () => {
   sfx("ui_click");
   endCutscene();
 };
+
+// 영입 미션 결과 (무한 생존 기록에는 넣지 않음)
+function showStoryResult() {
+  const R = singleRun, win = over === "미션 성공", S = R.story;
+  el("resTitle").textContent = win ? `${DISPLAY_NAMES[S.reward]} 영입 성공!` : "미션 실패";
+  el("resTitle").classList.toggle("lose", !win);
+  el("resRank").previousElementSibling.textContent = win ? "단계" : "실패 이유";
+  el("resRank").textContent = win ? `${S.stages.length}/${S.stages.length}` : R.failReason || (p.hp <= 0 ? "쓰러짐" : "") || `${Math.max(1, R.wave)}/${S.stages.length}단계`;
+  el("overBtn").textContent = win ? "다시 하기" : "재도전";
+}
+
+// 영입 완료 화면 (컷신이 없는 캐릭터). 확인 또는 4초 뒤 결과로
+function showRecruitSplash(id, done) {
+  const m = STORY_MISSIONS[id] || WAVE_MISSIONS[id];
+  if (!m) return done && done();
+  const box = el("recruitSplash");
+  el("rsFace").src = lobbyArt[m.reward].full.src;
+  el("rsName").textContent = `${DISPLAY_NAMES[m.reward]} 영입 완료!`;
+  box.hidden = false;
+  sfx("victory");
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    box.hidden = true;
+    clearTimeout(t);
+    if (done) done();
+  };
+  const t = setTimeout(close, 4000);
+  el("rsOk").onclick = close;
+}

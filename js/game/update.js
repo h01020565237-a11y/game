@@ -304,9 +304,15 @@ function update(dt) {
   }
   compact(shots, (s) => !s.dead);
   compact(fx, (f) => (f.t -= dt) > 0);
-  if (p.hp <= 0) over = "패배";
+  if (p.hp <= 0 || singleRun?.failReason) over = "패배"; // 영입 미션: 보호 대상 쓰러짐·시간 초과도 실패
   else if (singleRun) {
-    if (singleRun.phase === "clear") over = "미션 성공";
+    if (singleRun.phase === "clear") {
+      over = "미션 성공";
+      if (!singleRun.granted) { // 클리어 확정 즉시 영입 저장 (컷신 유무·스킵·종료와 관계없이)
+        singleRun.granted = true;
+        grantRecruit(singleRun.id);
+      }
+    }
   } else if (!bots.some((a) => a.hp > 0)) over = "승리!";
   if (over) {
     sfx(over === "패배" ? "defeat" : "victory");

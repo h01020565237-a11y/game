@@ -71,7 +71,7 @@ const LOBBY_ORDER = ["suit", "summoner", "support", "runner", "octo", "stripe", 
 // QA 전체 해금(testMode)은 일반 저장과 분리된 별도 키 "battlelab.qa" — 저장된 영입 상태는 바꾸지 않고 플레이만 허용
 const ROSTER = {
   unlocked: ["suit"],             // 처음부터 영입 (새 저장 기본값)
-  comingSoon: ["soccer", "bear"], // 영입 미션 준비 중
+  comingSoon: [], // 영입 미션 준비 중 (1차 빌드: 8명 모두 영입 가능)
   testMode: (() => {
     try {
       return localStorage.getItem("battlelab.qa") === "1";

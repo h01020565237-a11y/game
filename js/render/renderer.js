@@ -234,6 +234,7 @@ function draw() {
   // 쓰러진 캐릭터: 사라지기 전 잠깐 바래는 효과
   for (const a of [p, ...bots]) if (a.hp <= 0 && !a.mob) drawDeath(a, a === p ? character : a.visual);
   if (singleRun?.endless) drawHazards();
+  if (singleRun?.ward) drawStoryWard();
   if (singleRun) for (const a of bots) {
     if (a.mob === "boss") a.bossId ? drawEndlessTele(a) : drawBossTele(a);
     if (a.mob && a.hp <= 0) drawMob(a); // 쓰러지는 중
