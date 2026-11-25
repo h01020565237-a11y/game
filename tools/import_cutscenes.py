@@ -10,14 +10,17 @@ import json, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 tl = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
 # 스토리 → 영입 보상 캐릭터 (SINGLE_MISSIONS 와 같은 id)
-REWARD = {'hyeongon': 'summoner', 'eunsuk': 'support', 'giseop': 'runner', 'sanghun': 'octo', 'gyeongsu': 'stripe'}
+REWARD = {'hyeongon': 'summoner', 'eunsuk': 'support', 'giseop': 'runner', 'sanghun': 'octo', 'gyeongsu': 'stripe', 'jeongyong': 'bear'}
 # 원본 그림 왼쪽 위 번호/타임코드 표기 크기 (그림 픽셀). 이 영역을 UI 표시로 가림
-LABEL = {'hyeongon': [196, 35], 'eunsuk': [196, 35], 'giseop': [226, 40], 'sanghun': [226, 40], 'gyeongsu': [226, 40]}
+LABEL = {'hyeongon': [196, 35], 'eunsuk': [196, 35], 'giseop': [226, 40], 'sanghun': [226, 40], 'gyeongsu': [226, 40], 'jeongyong': [0, 0]}  # 정용: 그림에서 시간 표기를 이미 지움 → 가림 없음
+# 목표 길이 (2026-11-25 정용 컷신 README): 영입 장면 UNLOCK 초 고정, 나머지 장면을 비율대로 줄임. 실제 음성이 길면 재생 중 기다림(CUTSCENE_RULES.voiceHold)
+TARGET = {'hyeongon': 15, 'eunsuk': 19, 'giseop': 15, 'sanghun': 14, 'gyeongsu': 15, 'jeongyong': 15}
+UNLOCK = 2
 # 녹음 음성 (스토리, 장면 번호, 시작초, 화자) → 파일. 은숙: docs/recruitment_pack/eunsuk_voice_mapping.json (사용자 선택 4개, HeyGen 2개는 파일 없음 → TTS)
 VOICE_FILES = {}
 for e in json.loads((ROOT / 'docs/recruitment_pack/eunsuk_voice_mapping.json').read_text(encoding='utf-8')):
     if e['included'] and (ROOT / e['asset']).exists(): VOICE_FILES[('eunsuk', e['scene'], e['start'], e['speaker'])] = e['asset']
-GENDER = {'donggi': 'm', 'hyeongon': 'm', 'eunsuk': 'f', 'giseop': 'm', 'sanghun': 'm', 'gyeongsu': 'm', 'church': None}
+GENDER = {'donggi': 'm', 'hyeongon': 'm', 'eunsuk': 'f', 'giseop': 'm', 'sanghun': 'm', 'gyeongsu': 'm', 'jeongyong': 'm', 'church': None}
 q = lambda v: json.dumps(v, ensure_ascii=False)
 out = ['// ===== 영입 컷신 데이터 (tools/import_cutscenes.py 로 timeline.json 에서 생성) =====',
        '// 그림은 승인본 그대로 사용 (수정 금지). 음성·효과음은 테스트용 → 파일만 바꾸면 교체됨',
@@ -40,12 +43,21 @@ for k, st in tl['stories'].items():
     out.append(f'  {k}: {{')
     out.append(f'    name: {q(st["name"])}, title: {q(st["title"])}, reward: {q(REWARD[k])}, label: {q(LABEL[k])},')
     out.append('    scenes: [')
+    total = sum(x['duration'] for x in st['scenes'])
+    un = sum(UNLOCK for x in st['scenes'] if x['unlock'])
+    rest = sum(x['duration'] for x in st['scenes'] if not x['unlock'])
+    k_ = (TARGET.get(k, total) - un) / rest if rest else 1
     for i, sc in enumerate(st['scenes']):
         img = sc['image']
+        orig = sc
+        if sc['unlock']: f_ = UNLOCK / sc['duration']; sc = {**sc, 'duration': UNLOCK}
+        else: f_ = min(1, k_); sc = {**sc, 'duration': round(sc['duration'] * f_, 2)}
+        sc['sfx'] = [[round(a * f_, 2), w] for a, w in sc['sfx']]
+        sc['voice'] = [[round(a * f_, 2), w, t, VOICE_FILES.get((k, i + 1, a, w))] for a, w, t in orig['voice']]
         assert (ROOT / 'assets/cutscenes' / img.split('/', 1)[1]).exists(), img
-        voice = [[a, w, t, VOICE_FILES.get((k, i + 1, a, w))] for a, w, t in sc['voice']]
+        voice = sc['voice']
         out.append(f'      {{ img: "assets/cutscenes/{img.split("/", 1)[1]}", size: {q(sc["size"])}, t: {sc["duration"]}, motion: {q(sc["motion"])}, bgm: {q(sc["bgm"])}, '
-                   f'cover: {q(sc["hideSourceTimecode"])}, unlock: {q(sc["unlock"])}, sfx: {q(sc["sfx"])}, voice: {q(voice)} }},')
+                   f'cover: {q(sc["hideSourceTimecode"] and LABEL[k][0] > 0)}, unlock: {q(sc["unlock"])}, sfx: {q(sc["sfx"])}, voice: {q(voice)} }},')
     out.append('    ],')
     out.append('  },')
 out.append('};')

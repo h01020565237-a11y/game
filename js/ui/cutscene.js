@@ -5,7 +5,7 @@
 // - 스킵/종료: 예약된 타이머, 음성, 효과음, BGM 을 모두 멈춤. 영입 저장은 컷신 시작 전에 이미 끝남(single.js)
 // - 음량: 음성(voice) / 배경음(bgm) / 효과음(sfx) 따로 (로비 설정 + 컷신 안 소리 버튼)
 
-const cs = { run: 0, timers: [], srcs: [], bgm: null, story: null, idx: 0, buf: {}, gain: null, voiceGain: null, bgmGain: null, front: 0, utter: null };
+const cs = { run: 0, timers: [], srcs: [], bgm: null, story: null, idx: 0, buf: {}, gain: null, voiceGain: null, bgmGain: null, front: 0, utter: null, talking: 0, pending: 0 };
 
 // 음량 노드: 효과음은 게임 효과음 음량, 음성은 음성 음량, BGM 은 배경음 음량을 따름
 function csNodes() {
@@ -83,9 +83,27 @@ function csPickVoice(who) {
   const hint = V.gender === "m" ? MALE_HINT : V.gender === "f" ? FEMALE_HINT : null;
   return (hint && list.find((v) => hint.test(v.name))) || list[0];
 }
+// 대사가 나오는 동안 장면이 넘어가지 않게: talking = 재생 중인 대사 수 (끝·오류·스킵이면 줄어듦)
+function csTalkStart() {
+  const tok = cs.run, sc = cs.sceneTok;
+  cs.talking++;
+  let done = false;
+  return () => {
+    if (done || tok !== cs.run || sc !== cs.sceneTok) return;
+    done = true;
+    cs.talking = Math.max(0, cs.talking - 1);
+  };
+}
 function csSpeak(line) {
   const [, who, text, file] = line;
-  if (file && cs.buf["voice:" + file]) return csPlayBuf("voice:" + file, cs.voiceGain, 1);
+  if (file && cs.buf["voice:" + file]) {
+    const r = csPlayBuf("voice:" + file, cs.voiceGain, 1);
+    if (r) {
+      const end = csTalkStart();
+      r.s.addEventListener("ended", end);
+    }
+    return r;
+  }
   if (!CUTSCENE_RULES.ttsFallback || !window.speechSynthesis || audio.settings.muted) return;
   const vol = audio.settings.voice ?? 0.9;
   if (vol <= 0) return;
@@ -97,6 +115,9 @@ function csSpeak(line) {
     u.pitch = V.pitch ?? 1;
     u.rate = V.rate ?? 1;
     u.volume = vol;
+    const end = csTalkStart();
+    u.onend = u.onerror = end;
+    csLater(end, CUTSCENE_RULES.voiceHold + text.length * 0.25); // 끝 신호가 안 오는 브라우저 대비
     speechSynthesis.speak(u); // 음성 미지원이어도 컷신은 그대로 진행
   } catch (e) {}
 }
@@ -136,6 +157,8 @@ function csShowScene(i) {
     s.stop();
   } catch (e) {}
   cs.srcs = cs.bgm ? [cs.bgm.s] : [];
+  cs.talking = 0;
+  cs.sceneTok = (cs.sceneTok || 0) + 1;
   try {
     window.speechSynthesis?.cancel();
   } catch (e) {}
@@ -175,7 +198,15 @@ function csShowScene(i) {
   const bar = el("csBar");
   bar.getAnimations().forEach((a) => a.cancel());
   bar.animate([{ width: (100 * done / total) + "%" }, { width: (100 * (done + sc.t) / total) + "%" }], { duration: sc.t * 1000, fill: "forwards" });
-  csLater(() => (i + 1 < st.scenes.length ? csShowScene(i + 1) : endCutscene()), sc.t);
+  // 장면 시간이 끝나도 대사가 남았으면 최대 voiceHold 초까지 기다림 (예정된 대사가 아직 시작 전이면 그것도 기다림)
+  const startAt = performance.now(), lastVoice = Math.max(0, ...sc.voice.map((v) => v[0]));
+  const next = () => {
+    const waited = (performance.now() - startAt) / 1000 - sc.t;
+    const notYet = (performance.now() - startAt) / 1000 < lastVoice + 0.05;
+    if ((cs.talking > 0 || notYet) && waited < CUTSCENE_RULES.voiceHold) return csLater(next, 0.1);
+    i + 1 < st.scenes.length ? csShowScene(i + 1) : endCutscene();
+  };
+  csLater(next, sc.t);
 }
 // 그림 경로 → 미리 불러 둔 Image 의 src (빌드에서는 data URI)
 const csImgCache = {};
@@ -216,6 +247,7 @@ function playStory(id, done) {
 // 재생 중인 것 전부 정지 (스킵·종료·다른 컷신 시작)
 function csStop() {
   cs.run++;
+  cs.talking = 0;
   cs.timers.forEach(clearTimeout);
   cs.timers = [];
   for (const s of cs.srcs) try {

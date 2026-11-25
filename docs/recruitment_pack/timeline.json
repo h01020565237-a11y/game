@@ -42,6 +42,12 @@
       "pitch": 1.0,
       "rate": 0.92,
       "direction": "태연하게, 성별/연령 고정하지 않음"
+    },
+    "jeongyong": {
+      "name": "정용",
+      "pitch": 0.72,
+      "rate": 1.0,
+      "direction": "묵직한 남성 저음, 걱정→분노"
     }
   },
   "stories": {
@@ -743,11 +749,198 @@
         }
       ],
       "duration": 21
+    },
+    "jeongyong": {
+      "name": "정용",
+      "title": "안 나오면 너 죽어!",
+      "reward": "bear",
+      "scenes": [
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0,
+              "car"
+            ],
+            [
+              0.1,
+              "ding"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "jeongyong",
+              "아… 기름 없는데…"
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/jeongyong/01.webp",
+          "size": [
+            555,
+            294
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0,
+              "car"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "hyeongon",
+              "괜찮아~ 그냥 가봐. 가다 보면 나와."
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/jeongyong/02.webp",
+          "size": [
+            559,
+            294
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 1.5,
+          "sfx": [
+            [
+              0,
+              "car"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "hyeongon",
+              "괜찮아~ 더 가봐."
+            ]
+          ],
+          "motion": "pan",
+          "unlock": false,
+          "image": "scenes/jeongyong/03.webp",
+          "size": [
+            540,
+            294
+          ],
+          "bgm": "play",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 1.5,
+          "sfx": [
+            [
+              0.1,
+              "huff"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "jeongyong",
+              "하…"
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/jeongyong/04.webp",
+          "size": [
+            533,
+            287
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0,
+              "ding"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "hyeongon",
+              "거봐! 나온다니까!"
+            ]
+          ],
+          "motion": "zoom",
+          "unlock": false,
+          "image": "scenes/jeongyong/05.webp",
+          "size": [
+            536,
+            287
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 3,
+          "sfx": [
+            [
+              0.1,
+              "impact"
+            ]
+          ],
+          "voice": [
+            [
+              0.08,
+              "jeongyong",
+              "너 주유소 안 나왔으면 진짜 때리려고 했어!"
+            ]
+          ],
+          "motion": "shake",
+          "unlock": false,
+          "image": "scenes/jeongyong/06.webp",
+          "size": [
+            585,
+            287
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        },
+        {
+          "duration": 2,
+          "sfx": [
+            [
+              0,
+              "fanfare"
+            ]
+          ],
+          "voice": [],
+          "motion": "still",
+          "unlock": true,
+          "image": "scenes/jeongyong/07.webp",
+          "size": [
+            1664,
+            275
+          ],
+          "bgm": "stop",
+          "hideSourceTimecode": true
+        }
+      ],
+      "duration": 15
     }
   },
   "audio": {
     "mode": "browser Korean speechSynthesis placeholder, replace with recorded voice assets",
     "sfx": "sfx/{id}.wav",
     "bgm": "sfx/bgm_loop.wav (original synthetic demo loop; replace with game music if desired)"
+  },
+  "temporaryVoice": {
+    "engine": "Web Speech API",
+    "language": "ko-KR",
+    "holdUntilSpeechEnd": true,
+    "maxExtraSeconds": 5
   }
 }

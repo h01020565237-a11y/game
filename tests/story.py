@@ -93,7 +93,7 @@ with sync_playwright() as pw:
             ok(f'{mid}: 마지막 → 전체 캐릭터 영입 완료 화면', res[4] and '전체' in res[1], res)
         pg.evaluate('el("recruitResult").hidden = true; openLobby()')
     ok('8명 모두 영입', sorted(pg.evaluate('singleSave.recruited')) == sorted(['suit', 'summoner', 'support', 'runner', 'octo', 'stripe', 'soccer', 'bear']))
-    ok('재한·정용: 컷신 없이 영입 완료 화면', pg.evaluate('!RECRUIT_STORIES.jaehan && !RECRUIT_STORIES.jeongyong'))
+    ok('재한: 컷신 없이 영입 완료 화면 / 정용: 영입 컷신', pg.evaluate('!RECRUIT_STORIES.jaehan && !!RECRUIT_STORIES.jeongyong'))
     cleared = pg.evaluate('JSON.stringify(singleSave.cleared)')
     # 재클리어: 중복 영입 없음
     pg.evaluate(RUN + '("sanghun", "runner", "win")'); pg.evaluate('document.body.classList.remove("menuOpen")'); pg.wait_for_timeout(1300); pg.evaluate('el("csSkip").click(); el("rsOk").click()'); pg.wait_for_timeout(500)
