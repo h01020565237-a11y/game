@@ -20,16 +20,16 @@ const ENDLESS = {
 };
 
 // 적 유형 (일반 적은 대표 패턴만). visual = 타락한 캐릭터 그림, exp 경험치 — 기획서. 능력치는 제안
-//   hp 체력, spd 이동 배율(150 기준), dmg 공격 피해, range 공격 거리, cd 공격 간격, r 몸 크기
+//   hp 체력 (2026-11-25 상향: 기본 공격 3번 안에 죽던 문제 → 근접 520·원거리 400·기동 450·탱커 1300·투척 450·암살 480·지원 500·소환 600, 초기 제안), spd 이동 배율(150 기준), dmg 공격 피해, range 공격 거리, cd 공격 간격, r 몸 크기
 const ENEMY_TYPES = {
-  melee: { name: "근접", visual: "suit", exp: 10, hp: 260, spd: 0.62, dmg: 55, range: 34, cd: 1.1, r: 16 },
-  ranged: { name: "원거리", visual: "soccer", exp: 15, hp: 200, spd: 0.52, dmg: 50, range: 270, cd: 2.0, r: 16, keep: [170, 250], shot: 240 },
-  mobile: { name: "기동", visual: "runner", exp: 15, hp: 220, spd: 0.8, dmg: 60, range: 34, cd: 1.0, r: 16, dash: { every: 3.5, speed: 3.2, dur: 0.35 } },
-  tank: { name: "탱커", visual: "bear", exp: 25, hp: 900, spd: 0.42, dmg: 90, range: 40, cd: 1.6, r: 22, scale: 1.2 },
-  thrower: { name: "투척", visual: "octo", exp: 20, hp: 230, spd: 0.5, dmg: 70, range: 300, cd: 2.6, r: 16, keep: [190, 280], lob: { radius: 60, tele: 0.8 } },
-  assassin: { name: "암살", visual: "stripe", exp: 25, hp: 240, spd: 0.75, dmg: 120, range: 34, cd: 1.6, r: 16, stealthUntil: 120 },
-  support: { name: "지원", visual: "support", exp: 25, hp: 260, spd: 0.5, dmg: 40, range: 240, cd: 2.4, r: 16, keep: [200, 300], heal: { every: 4, radius: 200, amount: 0.15 } },
-  summoner: { name: "소환", visual: "summoner", exp: 30, hp: 300, spd: 0.48, dmg: 45, range: 240, cd: 2.4, r: 16, keep: [220, 320], summon: { every: 7, count: 2, cap: 4 } },
+  melee: { name: "근접", visual: "suit", exp: 10, hp: 520, spd: 0.62, dmg: 55, range: 34, cd: 1.1, r: 16 },
+  ranged: { name: "원거리", visual: "soccer", exp: 15, hp: 400, spd: 0.52, dmg: 50, range: 270, cd: 2.0, r: 16, keep: [170, 250], shot: 240 },
+  mobile: { name: "기동", visual: "runner", exp: 15, hp: 450, spd: 0.8, dmg: 60, range: 34, cd: 1.0, r: 16, dash: { every: 3.5, speed: 3.2, dur: 0.35 } },
+  tank: { name: "탱커", visual: "bear", exp: 25, hp: 1300, spd: 0.42, dmg: 90, range: 40, cd: 1.6, r: 22, scale: 1.2 },
+  thrower: { name: "투척", visual: "octo", exp: 20, hp: 450, spd: 0.5, dmg: 70, range: 300, cd: 2.6, r: 16, keep: [190, 280], lob: { radius: 60, tele: 0.8 } },
+  assassin: { name: "암살", visual: "stripe", exp: 25, hp: 480, spd: 0.75, dmg: 120, range: 34, cd: 1.6, r: 16, stealthUntil: 120 },
+  support: { name: "지원", visual: "support", exp: 25, hp: 500, spd: 0.5, dmg: 40, range: 240, cd: 2.4, r: 16, keep: [200, 300], heal: { every: 4, radius: 200, amount: 0.15 } },
+  summoner: { name: "소환", visual: "summoner", exp: 30, hp: 600, spd: 0.48, dmg: 45, range: 240, cd: 2.4, r: 16, keep: [220, 320], summon: { every: 7, count: 2, cap: 4 } },
   elite: { name: "엘리트", exp: 50, hpMul: 4, dmgMul: 1.6, scale: 1.35, aura: 0.85 }, // 무작위 유형 + 강화 — 능력치 제안
   boss: { name: "보스", exp: 200 }, // 기획서
   minion: { name: "졸개", visual: "summoner", exp: 0, hp: 90, spd: 0.7, dmg: 30, range: 30, cd: 1.0, r: 12, scale: 0.75 }, // 소환된 적: 경험치 0 (반복 파밍 방지)
