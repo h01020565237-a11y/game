@@ -28,7 +28,9 @@ const inBush = (a) => {
   }
   return a._bush;
 };
-const visible = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && (!(b.stealth > 0) && (!inBush(b) || inBush(a)) || dist(a, b) < 75 || b.reveal > 0);
+// 보임(자동 조준·자동 타겟·화면 표시): 은신 중이면 가까워도 안 보임 (풀숲은 예전처럼 75 이내·노출 시 보임)
+const seenIgnoringStealth = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && ((!inBush(b) || inBush(a)) || dist(a, b) < 75 || b.reveal > 0);
+const visible = (a, b) => !b.max || !(b.stealth > 0) && seenIgnoringStealth(a, b);
 // 성능: 임시 배열 없이 같은 순서로 5점 검사
 const terrain = (x, y, r = 16) => wet(x, y) || wet(x + r, y) || wet(x - r, y) || wet(x, y + r) || wet(x, y - r);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -45,6 +47,24 @@ function blocked(x, y, r = 16) {
     if (x + r > q[0] && x - r < q[0] + q[2] && y + r > q[1] && y - r < q[1] + q[3]) return true;
   }
   return false;
+}
+// 정해진 거리만큼 이동 (속도 버프·둔화 영향 없음, 지형 충돌 규칙은 move 와 같음: 축마다 따로 막힘 → 벽을 타고 미끄러짐)
+// 이동형 스킬 미리보기(simMovePath)와 실제 이동이 같은 함수를 써서 경로가 정확히 일치
+function moveRaw(a, dx, dy, d) {
+  const n = Math.hypot(dx, dy);
+  if (!n || d <= 0) return;
+  const x = clamp(a.x + dx / n * d, 18, W - 18), y = clamp(a.y + dy / n * d, 18, H - 18);
+  if (!terrain(x, a.y) && !blocked(x, a.y) && !nearBox(x, a.y, 30)) a.x = x;
+  if (!terrain(a.x, y) && !blocked(a.x, y) && !nearBox(a.x, y, 30)) a.y = y;
+}
+const MOVE_STEP = 4;
+function simMovePath(x0, y0, dx, dy, len) {
+  const t = { x: x0, y: y0 }, pts = [[x0, y0]];
+  for (let d = 0; d < len; d += MOVE_STEP) {
+    moveRaw(t, dx, dy, Math.min(MOVE_STEP, len - d));
+    pts.push([t.x, t.y]);
+  }
+  return pts;
 }
 function move(a, dx, dy, dt) {
   if (a.stun > 0 || a.root > 0 || (a === p && p.jump)) { // 기절·이동불가(촉수 함정)·점프 중

@@ -60,6 +60,7 @@ function drawCorruptAura(a, s, power, fade) {
   g.restore();
 }
 function drawMob(a) {
+  if (a.stealth > 0 && a.hp > 0) return; // 은신한 적: 내 화면에서 완전히 안 보임 (근접 감지 ! 만)
   const L = a.look || CORRUPT_LOOK[a.mob], s = L.scale; // 무한 생존 적은 a.look (크기·오라)
   const appear = a.spawnT > 0 ? 1 - a.spawnT / 0.6 : 1;
   const fade = a.hp <= 0 ? Math.max(0, 1 - a.deadT / 0.6) : 1;

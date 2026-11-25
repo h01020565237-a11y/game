@@ -42,8 +42,8 @@ const SkillTip = (() => {
       tip.append(f);
     }
   }
-  function show(el, provider) {
-    const model = provider();
+  function show(el, provider, touch = false) {
+    const model = provider(touch); // touch: 터치 길게 누르기 (전투 중 조준 스킬은 null → 조준 표시 우선)
     if (!model) return false;
     render(model);
     tip.hidden = false;
@@ -79,7 +79,7 @@ const SkillTip = (() => {
       clearTimeout(press?.timer);
       press = { id: e.pointerId, x: e.clientX, y: e.clientY };
       press.timer = setTimeout(() => {
-        if (press && show(el, provider)) {
+        if (press && show(el, provider, true)) {
           el._tipUsed = true;
           if (navigator.vibrate) try { navigator.vibrate(12); } catch (err) {}
         }

@@ -248,6 +248,7 @@ function draw() {
     if (a === p && p.jumpZ) g.translate(0, -p.jumpZ); // 정용 점프
     drawActorWithFeel(a, a === p ? character : a.visual);
     g.restore();
+    if (a === p && p.stealthAlert) drawStealthAlert(); // 은신한 적이 가까이 있음 (위치·방향은 안 알려줌)
     if (a === p && character === "runner") {
       g.fillStyle = "#ffd35b";
       g.fillRect(a.x - 23, a.y - 63, 46 * a.energy / 100, 5);

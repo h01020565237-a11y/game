@@ -61,12 +61,39 @@ function drawSkillPreview() {
   g.fillStyle = `rgba(${col}, 0.18)`;
   g.lineWidth = 2;
   g.setLineDash([8, 6]);
-  if (S.preview === "line") {
+  if (S.preview === "line" && S.pathPreview) { // 실제 이동 경로(벽 충돌·미끄러짐 반영)와 도착 위치
+    const pts = simMovePath(p.x, p.y, ux, uy, S.range), [ex, ey] = pts[pts.length - 1];
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.setLineDash([]);
+    g.lineWidth = S.width || 20;
+    g.strokeStyle = `rgba(${col}, 0.22)`;
+    g.beginPath();
+    pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    g.stroke();
+    g.lineWidth = 2;
+    g.strokeStyle = `rgba(${col}, 0.9)`;
+    g.setLineDash([6, 5]);
+    g.stroke();
+    g.setLineDash([]);
+    g.beginPath(); // 도착 위치: 캐릭터 발밑 원
+    g.ellipse(ex, ey + 6, 18, 9, 0, 0, 7);
+    g.fill();
+    g.stroke();
+    skillAim.end = [ex, ey];
+  } else if (S.preview === "line") {
     const len = S.range, w = S.width || 20, ang = Math.atan2(uy, ux);
     g.translate(p.x, p.y);
     g.rotate(ang);
     g.fillRect(0, -w / 2, len, w);
     g.strokeRect(0, -w / 2, len, w);
+    if (S.move) { // 이동형: 도착 지점 표시 (+ 도착 판정 범위)
+      g.setLineDash([]);
+      g.beginPath();
+      g.arc(len, 0, S.radius || 8, 0, 7);
+      if (S.radius) g.fill();
+      g.stroke();
+    }
     if (S.blastRadius) { // 재한 궁극기: 끝 폭발 범위
       g.beginPath();
       g.arc(len, 0, S.blastRadius, 0, 7);
@@ -166,4 +193,21 @@ function drawUltGround() {
     g.stroke();
     g.restore();
   }
+}
+
+// 은신 근접 감지: 내 캐릭터 머리 위 빨간 느낌표
+function drawStealthAlert() {
+  const bob = Math.sin(elapsed * 10) * 2, x = p.x, y = p.y - 92 + bob - (p.jumpZ || 0);
+  g.save();
+  g.font = "bold 34px sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.lineWidth = 5;
+  g.strokeStyle = "#2a0000";
+  g.strokeText("!", x, y);
+  g.fillStyle = "#ff2a2a";
+  g.shadowColor = "#ff0000";
+  g.shadowBlur = 12;
+  g.fillText("!", x, y);
+  g.restore();
 }

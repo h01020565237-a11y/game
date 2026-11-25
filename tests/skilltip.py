@@ -28,14 +28,20 @@ with sync_playwright() as pw:
             pg.evaluate('god=true; freeze=true; p.skcd.q=p.skcd.e=0; p.energy=100')
             for sel, slot in [('#summonBtn', 'q'), ('#bearHeal', 'e')]:
                 c = ctr(sel)
-                touch('touchStart', *c); pg.wait_for_timeout(400); early = tipText(); pg.wait_for_timeout(250); t = tipText(); touch('touchEnd'); pg.wait_for_timeout(60)
+                aimable = pg.evaluate(f'SKILL_DATA["{ch}"].{slot}.aim !== "none"')
+                pg.evaluate(f'p.skcd.{slot}=0; p.energy=100')
+                touch('touchStart', *c); pg.wait_for_timeout(400); early = tipText(); pg.wait_for_timeout(250); t = tipText(); prev = pg.evaluate('!!skillAim'); touch('touchEnd'); pg.wait_for_timeout(60)
                 name = pg.evaluate(f'SKILL_DATA["{ch}"].{slot}.name'); cdv = pg.evaluate(f'fmtNum(SKILL_DATA["{ch}"].{slot}.cd)')
                 fired = pg.evaluate(f'skillCdLeft("{slot}") > 0')
-                ok(f'[{mode}] {ch} {slot}: 0.4초엔 안 뜨고 0.6초에 설명(이름·쿨타임 {cdv}초) → 떼도 발동 안 함', not early and name in t and f'쿨타임 {cdv}초' in t and not fired and tipText() == '')
+                if aimable:  # 전투 중 조준 스킬: 길게 누르면 조준 표시 우선(설명창 없음), 떼면 발동
+                    ok(f'[{mode}] {ch} {slot}: 길게 누르면 조준 표시(설명창 대신) → 떼면 발동', not t and prev and fired)
+                else:
+                    ok(f'[{mode}] {ch} {slot}: 0.4초엔 안 뜨고 0.6초에 설명(이름·쿨타임 {cdv}초) → 떼도 발동 안 함', not early and name in t and f'쿨타임 {cdv}초' in t and not fired and tipText() == '')
+                pg.evaluate(f'p.skcd.{slot}=0')
                 touch('touchStart', *c); pg.wait_for_timeout(80); touch('touchEnd'); pg.wait_for_timeout(60)
                 ok(f'[{mode}] {ch} {slot}: 짧게 탭하면 발동', pg.evaluate(f'skillCdLeft("{slot}") > 0'))
         # 끌기 시작하면 닫힘
-        pg.evaluate('p.skcd.q=0'); c = ctr('#summonBtn'); touch('touchStart', *c); pg.wait_for_timeout(650); shown = tipText() != ''
+        pg.evaluate('p.skcd.e=0'); c = ctr('#bearHeal'); touch('touchStart', *c); pg.wait_for_timeout(650); shown = tipText() != ''  # 은숙 E: 조준 없는 스킬
         touch('touchMove', *L(c, 30, 0)); pg.wait_for_timeout(60); closed = tipText() == ''; touch('touchEnd')
         ok(f'[{mode}] 설명 중 끌기 시작하면 닫힘', shown and closed)
         # 현곤 포켓몬 버튼

@@ -5,18 +5,7 @@ onkeydown = (e) => {
   keys[e.code] = true;
   if (e.code === "Space") {
     e.preventDefault();
-    if (!e.repeat && !over && p.dashCD <= 0 && !(p.tackle > 0)) {
-      let x = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), y = (keys.KeyS ? 1 : 0) - (keys.KeyW ? 1 : 0);
-      if (!x && !y) {
-        x = Math.sin(p.dir * Math.PI / 4);
-        y = -Math.cos(p.dir * Math.PI / 4);
-      }
-      p.dx = x;
-      p.dy = y;
-      p.dash = 0.1;
-      p.dashCD = 3;
-      sfx("dash", p);
-    }
+    if (!e.repeat) castDash(); // 이동 키 방향 → 마지막 이동 방향
   }
   if (!over && !e.repeat) {
     // PC: 스킬은 마우스 위치로 조준 (현곤 Q·E 는 소환·교체 그대로)

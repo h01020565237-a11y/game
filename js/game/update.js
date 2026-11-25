@@ -110,7 +110,7 @@ function update(dt) {
     move(p, p.dx, p.dy, step);
     p.dash = Math.max(0, p.dash - step);
   } else {
-    let [ix, iy] = tackleInput();
+    let [ix, iy] = p.moveLock ? [p.moveLock.x, p.moveLock.y] : tackleInput(); // 이동형 스킬 중엔 발동 방향 고정
     if (Math.hypot(ix, iy) > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
     move(p, ix, iy, dt);
     if (aiming) {
@@ -240,7 +240,7 @@ function update(dt) {
           break;
         }
         forEachCandidate((b) => {
-          if (b.max && canTarget(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22) {
+          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22) {
             s.hitSet.add(b);
             hit(s.a, b, s.d);
           }
@@ -265,7 +265,7 @@ function update(dt) {
       }
       if (s.pierce) { // 관통: 대상마다 1번
         forEachCandidate((b) => {
-          if (b.max && canTarget(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 24) {
+          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 24) {
             s.hitSet.add(b);
             hit(s.a, b, s.d, { ult: s.ult });
             if (s.push) knock(b, s.vx, s.vy, s.push);

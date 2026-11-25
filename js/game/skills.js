@@ -10,7 +10,38 @@ function tackleInput() {
   return Math.hypot(mvX, mvY) > 0.15 ? [mvX, mvY] : [(keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), (keys.KeyS ? 1 : 0) - (keys.KeyW ? 1 : 0)];
 }
 function skillOf(slot, ch = character) {
+  if (slot === "dash") return DASH; // 공통 대시 (이동형 스킬 조작 공유)
   return SKILL_DATA[ch] && SKILL_DATA[ch][slot];
+}
+// ----- 이동형 스킬 공통 방향 (js/data/skills.js DASH 위 설명) -----
+// aim: 끌어서 정한 지점(또는 PC 마우스). 없으면 이동 조이스틱 → 마지막 이동 방향. 적 자동 조준 안 함
+function moveDir(aim) {
+  if (aim) {
+    const dx = aim.x - p.x, dy = aim.y - p.y, n = Math.hypot(dx, dy);
+    if (n >= 1) return [dx / n, dy / n, n];
+  }
+  const [ix, iy] = tackleInput(), m = Math.hypot(ix, iy);
+  if (m > 0.15) return [ix / m, iy / m, 0];
+  const [fx0, fy0] = facingVec();
+  return [fx0, fy0, 0];
+}
+// 이동형 스킬의 목표 지점: 방향 스킬은 이동 거리만큼, 위치 스킬(점프)은 끈 거리(탭이면 최대 거리)
+function moveAim(slot, aim) {
+  const S = skillOf(slot), [x, y, n] = moveDir(aim);
+  const len = S.aim === "point" && n > 0 ? Math.min(n, S.range) : S.range || 120;
+  const t = { x: p.x + x * len, y: p.y + y * len, dir: [x, y] };
+  return S.aim === "point" ? { ...clampAim(slot, t), dir: [x, y] } : t;
+}
+function castDash(aim) {
+  if (over || p.hp <= 0 || p.dashCD > 0 || p.tackle > 0 || p.stun > 0 || p.jump) return false;
+  const [x, y] = moveDir(aim);
+  p.dx = x;
+  p.dy = y;
+  p.dash = DASH.t;
+  p.dashCD = DASH.cd;
+  faceVec(x, y);
+  sfx("dash", p);
+  return true;
 }
 function facingVec() {
   return [Math.sin((p.lastMoveDir ?? p.dir) * Math.PI / 4), -Math.cos((p.lastMoveDir ?? p.dir) * Math.PI / 4)];
@@ -60,11 +91,14 @@ function sulkMul() {
 
 function castSkill(slot, aim) {
   if (over || p.hp <= 0 || p.stun > 0 || p.jump) return false;
+  if (slot === "dash") return castDash(aim);
   const S = skillOf(slot);
   if (!S) return false;
   if (character === "summoner" && slot !== "r") return slot === "q" ? summon() : summon(true);
   if (slot === "r" ? !ultReady() : p.skcd[slot] > 0) return false;
-  const t = S.aim === "none" ? null : clampAim(slot, aim || autoAimPoint(slot));
+  // 이동형 스킬: 공통 방향 규칙 (자동 조준 없음). 그 밖의 스킬: 자동 조준
+  const t = S.move ? moveAim(slot, aim) : S.aim === "none" ? null : clampAim(slot, aim || autoAimPoint(slot));
+  if (character === "stripe" && slot !== "q") p.stealth = 0; // 은신 중 공격 스킬을 쓰면 해제
   const impl = SKILL_IMPL[character] && SKILL_IMPL[character][slot];
   if (!impl || impl(S, t) === false) return false;
   if (slot === "r") {
@@ -93,10 +127,10 @@ const SKILL_IMPL = {
       p.rush = { vx: x, vy: y, left: S.range, S, hitDone: false };
       return true;
     },
-    e(S) { // 위빙: 짧게 옆으로 빠지며 회피
-      const [x, y] = facingVec(), side = (p.weaveSide = -(p.weaveSide || 1));
+    e(S, t) { // 위빙: 정한 방향으로 짧게 몸을 빼며 회피 (공통 이동형 조작)
+      const [x, y] = t.dir || unitTo(t);
       p.weave = S.dur;
-      p.sideStep = { vx: -y * side, vy: x * side, left: S.side };
+      p.sideStep = { vx: x, vy: y, left: S.range }; // 미리보기와 같은 거리
       return true;
     },
     r(S, t) { // 펀치 러시
@@ -182,8 +216,9 @@ const SKILL_IMPL = {
     },
   },
   stripe: {
-    q(S) {
+    q(S) { // 나 안 놀아: 은신. 적은 은신 시작 위치만 기억 (실제 위치 추적 안 함)
       p.stealth = S.dur;
+      p.ghost = { x: p.x, y: p.y };
       return true;
     },
     e(S, t) { // 두고 보자: 돌진 후 주변 피해
@@ -232,9 +267,12 @@ const SKILL_IMPL = {
     },
   },
   bear: {
-    q(S) { // 네발 질주 + 부딪힌 적 넉백
+    q(S, t) { // 네발 질주 + 부딪힌 적 넉백. 발동 순간 방향 고정, 끝나면 조이스틱대로 이동
+      const [x, y] = t.dir || unitTo(t);
+      faceVec(x, y);
       p.run = S.dur;
       p.runHits = new Set();
+      p.moveLock = { x, y, t: S.dur };
       return true;
     },
     e(S) {
@@ -316,6 +354,9 @@ function updateSkills(dt) {
   const rate = p.cdRate || 1;
   if (p.skcd) for (const k in p.skcd) p.skcd[k] = Math.max(0, p.skcd[k] - dt * rate);
   for (const k of ["stealth", "weave", "guardT", "bearGuard"]) p[k] = Math.max(0, (p[k] || 0) - dt);
+  if (p.moveLock && (p.moveLock.t -= dt) <= 0) p.moveLock = null; // 이동형 스킬 방향 고정 끝 → 조이스틱대로
+  if (!(p.stealth > 0)) p.ghost = null;
+  updateStealthAlert();
   if (p.ultT > 0) p.ultT = Math.max(0, p.ultT - dt);
   // 은숙 패시브: 안 맞은 지 idle 초 지나면 자신·주변 아군 회복
   if (character === "support") {
@@ -359,9 +400,18 @@ function updateSkills(dt) {
     fx.push({ x: p.x, y: p.y, t: 0.15, trail: true, dir: p.dir, frame: 0 });
   }
   if (p.sideStep) {
-    const s = p.sideStep, step = Math.min(s.left, 320 * dt);
-    move(p, s.vx, s.vy, step / 150);
-    s.left -= step;
+    // 위빙: 미리보기(simMovePath)와 같은 방식으로 정확히 S.side 만큼, 같은 충돌 규칙
+    // 프레임과 상관없이 MOVE_STEP 단위로 같은 순서로 이동 → 미리보기 경로와 완전히 같음
+    const s = p.sideStep;
+    let budget = (s.carry || 0) + 320 * dt;
+    while (s.left > 0 && budget >= Math.min(MOVE_STEP, s.left) && !(p.root > 0) && !(p.stun > 0)) {
+      const st = Math.min(MOVE_STEP, s.left);
+      moveRaw(p, s.vx, s.vy, st);
+      s.left -= st;
+      budget -= st;
+    }
+    s.carry = budget;
+    if (s.left > 0) p.dir = (Math.round(Math.atan2(s.vx, -s.vy) / (Math.PI / 4)) + 8) % 8;
     if (s.left <= 0) p.sideStep = null;
   }
   if (p.punchRush) {
@@ -475,7 +525,7 @@ function knock(b, dx, dy, distPx) {
 function updateClones(dt) {
   if (!clones.length) return;
   const S = SKILL_DATA.stripe.r;
-  const foes = bots.filter((b) => b.hp > 0 && dist(p, b) < 420).sort((a, b) => dist(p, a) - dist(p, b));
+  const foes = bots.filter((b) => b.hp > 0 && !(b.stealth > 0) && dist(p, b) < 420).sort((a, b) => dist(p, a) - dist(p, b));
   for (const c of clones) {
     c.life -= dt;
     c.atkT -= dt;
@@ -501,4 +551,39 @@ function updateClones(dt) {
     c.aimT = Math.max(0, (c.aimT || 0) - dt);
   }
   clones = clones.filter((c) => c.life > 0 || (fx.push({ x: c.x, y: c.y, t: 0.4, recall: true }), false));
+}
+
+// ===== 은신 공통 규칙 (경수 Q 「나 안 놀아」, 무한 생존 은신 적) =====
+// - 은신한 쪽은 상대 화면에서 안 보이고 자동 조준·자동 타겟(공격·스킬·소환수·AI) 대상에서 빠짐 (visible())
+// - 무적 아님: 수동 조준·광역·이미 날아간 투사체는 맞음 (canHit()), 맞아도 은신 유지, 공격하면 해제
+// - 근접 감지: 은신한 적이 감지 범위(SKILL_DATA.stripe.q.detect) 안에 들어오면 내 캐릭터 머리 위에 빨간 ! (위치·방향은 안 알려줌)
+function playerHidden() {
+  return p.stealth > 0 && p.hp > 0;
+}
+// 적 AI: 은신한 플레이어의 실제 위치 대신 은신 시작 위치까지만 가서 두리번거림
+function searchGhost(a, dt) {
+  const gp = p.ghost || { x: a.x, y: a.y };
+  a.moving = false;
+  if (Math.hypot(gp.x - a.x, gp.y - a.y) > 36) steer(a, gp.x, gp.y, dt);
+  else {
+    a.lookT = (a.lookT || 0) - dt;
+    if (a.lookT <= 0) {
+      a.lookT = 0.6 + Math.random() * 0.6;
+      a.dir = Math.floor(Math.random() * 8);
+    }
+  }
+}
+function stealthDetect() {
+  return SKILL_DATA.stripe.q.detect;
+}
+// 내 화면: 은신한 적이 가까이 오면 내 캐릭터 머리 위에 ! (처음 들어올 때 경고음 1번)
+function updateStealthAlert() {
+  const R = stealthDetect();
+  let near = false;
+  if (p.hp > 0) for (let i = 0; i < bots.length && !near; i++) {
+    const b = bots[i];
+    if (b.hp > 0 && b.stealth > 0 && Math.hypot(b.x - p.x, b.y - p.y) <= R) near = true;
+  }
+  if (near && !p.stealthAlert) sfx("stealth_alert");
+  p.stealthAlert = near;
 }

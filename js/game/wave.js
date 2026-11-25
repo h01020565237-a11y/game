@@ -123,7 +123,8 @@ function updateWave(dt) {
       continue;
     }
     if (a.stun > 0) continue;
-    if (a.mob === "boss") bossAI(a, dt);
+    if (playerHidden() && !a.tele) searchGhost(a, dt); // 은신: 실제 위치를 모르고 은신 시작 위치만 수색
+    else if (a.mob === "boss") bossAI(a, dt);
     else mobAI(a, dt);
   }
   // 쓰러진 적은 잠깐 보인 뒤 정리

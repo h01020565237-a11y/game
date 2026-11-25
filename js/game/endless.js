@@ -179,7 +179,8 @@ function updateEndless(dt) {
       for (const k of ["stun", "slow", "root"]) if (a[k] > 0) a[k] = Math.max(0, a[k] - dt * m);
     }
     if (a.stun > 0) continue;
-    if (a.bossId) endlessBossAI(a, dt);
+    if (playerHidden() && !a.tele && !a.channel && !a.charge) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
+    else if (a.bossId) endlessBossAI(a, dt);
     else enemyAI(a, dt);
   }
   compact(bots, (b) => b.hp > 0 || b.deadT < 0.6);

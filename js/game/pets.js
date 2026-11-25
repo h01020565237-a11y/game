@@ -46,7 +46,7 @@ function runPet(pt, dt) {
   pt.skillCD = Math.max(0, (pt.skillCD || 0) - dt);
   if (pt.life <= 0 || pt.hp <= 0) return;
   command(pt);
-  const b = minBy(bots.filter((b2) => b2.hp > 0), (b2) => dist(pt, b2)), m = mons[pt.id];
+  const b = minBy(bots.filter((b2) => b2.hp > 0 && !(b2.stealth > 0)), (b2) => dist(pt, b2)), m = mons[pt.id];
   if (!b) return;
   if (dist(pt, b) > m[3] || blocked((pt.x + b.x) / 2, (pt.y + b.y) / 2, 2)) steer(pt, b.x, b.y, dt); // AI: 경로 탐색
   else {
@@ -65,7 +65,7 @@ function command(pt = pet) {
   const pet = pt; // 아래 코드는 pet 이름 그대로 사용 (일반 포켓몬·궁극기 포켓몬 공통)
   // 기술 수치는 PET_SKILLS / PET_RULES (js/data/skills.js)
   const id = pet.id, S = PET_SKILLS[id], reach = S.radius || PET_RULES.range;
-  let enemies = bots.filter((b) => b.hp > 0 && dist(pet, b) < reach && !blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)).sort((a, b) => dist(pet, a) - dist(pet, b));
+  let enemies = bots.filter((b) => b.hp > 0 && !(b.stealth > 0) && dist(pet, b) < reach && !blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)).sort((a, b) => dist(pet, a) - dist(pet, b));
   if (!enemies.length) return;
   if (S.minFoes && enemies.length < S.minFoes && pet.life > 7) return;
   pet.skillCD = PET_RULES.skillCD;

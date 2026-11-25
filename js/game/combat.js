@@ -174,6 +174,17 @@ function pickup(a, pred = isUsefulLoot) {
 function canTarget(a, b) {
   return b !== a && b.hp > 0 && visible(a, b) && !(isMine(a) && isMine(b));
 }
+// 실제로 맞는지(수동 조준 근접·투사체·관통): 은신은 무적이 아니라서 은신 여부는 보지 않음
+function canHit(a, b) {
+  return b !== a && b.hp > 0 && seenIgnoringStealth(a, b) && !(isMine(a) && isMine(b));
+}
+function hitTargets(a) {
+  const out = [];
+  forEachCandidate((b) => {
+    if (canHit(a, b)) out.push(b);
+  });
+  return out;
+}
 // 대상 후보 순서: 플레이어, 봇, 상자, 펫 (원본과 동일)
 function forEachCandidate(fn) {
   if (fn(p)) return true;
@@ -193,7 +204,7 @@ function targets(a) {
 // 성능: targets(a).find(b => dist(c, b) < r) 와 같은 결과, 배열을 만들지 않음
 function firstTargetNear(a, c, r) {
   let hitB;
-  forEachCandidate((b) => dist(c, b) < r && canTarget(a, b) && (hitB = b, true));
+  forEachCandidate((b) => dist(c, b) < r && canHit(a, b) && (hitB = b, true)); // 투사체: 은신해도 맞음
   return hitB;
 }
 // 성능: arr.sort((x, y) => key(x) - key(y))[0] 와 같은 결과 (동점이면 앞쪽 우선)
@@ -280,7 +291,7 @@ function attack(a, x, y) {
   a.attackAng = ang;
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
-    for (let b of targets(a)) {
+    for (let b of hitTargets(a)) { // 휘두른 범위 안이면 은신해도 맞음
       let delta = Math.atan2(Math.sin(Math.atan2(b.y - a.y, b.x - a.x) - ang), Math.cos(Math.atan2(b.y - a.y, b.x - a.x) - ang));
       if (dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b)) {
         hit(a, b, d, { basic: true });

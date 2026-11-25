@@ -19,6 +19,7 @@ const SOUNDS = {
   heal: { src: "assets/audio/sfx/heal.wav", vol: 0.7 },
   reload: { src: "assets/audio/sfx/reload.wav", vol: 0.35 },
   ui_click: { src: "assets/audio/sfx/ui_click.wav", vol: 0.6, ui: true },
+  stealth_alert: { src: "assets/audio/sfx/stealth_alert.wav", vol: 0.7, ui: true, gap: 0.3 }, // 은신 적 근접 감지 (테스트용 합성음)
   zone_warning: { src: "assets/audio/sfx/zone_warning.wav", vol: 0.6, ui: true },
   victory: { src: "assets/audio/sfx/victory.wav", vol: 0.9, ui: true },
   defeat: { src: "assets/audio/sfx/defeat.wav", vol: 0.9, ui: true },

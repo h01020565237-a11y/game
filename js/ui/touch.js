@@ -14,10 +14,16 @@ function toLocal(dx, dy) {
 // 길게 누르기(0.5초): 설명창 + 예상 경로(자동 조준 방향). 그대로 떼면 발동하지 않음
 // 누른 채 끌기: 설명 닫고 경로를 손가락 방향으로 조준, 떼면 그 방향·위치로 발동. 처음 자리로 되돌려 떼면 취소
 let skillAim = null; // 미리보기 { slot, x, y } (렌더러가 그림)
+// 스킬 버튼 공통 조작
+// - 일반 조준 스킬: 탭 = 자동 조준 발동 / 길게 = 경로 표시 / 끌기 = 직접 조준 / 떼면 발동 / 가운데로 되돌려 떼면 취소
+// - 이동형 스킬(move: true, 공통 대시 포함): 같은 조작, 단 방향은 끈 방향 > 이동 조이스틱 > 마지막 이동 방향 (자동 조준 없음)
+//   길게 누르는 동안 미리보기는 조이스틱 방향을 실시간으로 따라감
+// - 전투 중 터치로 길게 누르면 조준 표시가 설명창보다 우선 (조준 없는 스킬은 설명창)
 function skillButton(btn, slot) {
   let press = null;
-  SkillTip.attach(btn, () => skillTipModel(character, slot));
   const S = () => skillOf(slot);
+  const aimable = () => S() && S().aim !== "none" && !(character === "summoner" && slot !== "r");
+  SkillTip.attach(btn, (touch) => (touch && aimable() ? null : slot === "dash" ? dashTipModel() : skillTipModel(character, slot)));
   btn.onpointerdown = (e) => {
     e.preventDefault();
     if (over || press) return;
@@ -25,13 +31,14 @@ function skillButton(btn, slot) {
     press = { id: e.pointerId, x: e.clientX, y: e.clientY, aiming: false, cancel: false };
     const pr = press;
     pr.timer = setTimeout(() => {
-      if (press === pr && !pr.aiming && S() && S().aim !== "none" && character !== "summoner") skillAim = { slot, ...clampAim(slot, autoAimPoint(slot)) };
+      if (press !== pr || pr.aiming || !aimable()) return;
+      skillAim = S().move ? { slot, live: true, ...moveAim(slot) } : { slot, ...clampAim(slot, autoAimPoint(slot)) };
     }, SKILL_HOLD * 1000);
   };
   btn.onpointermove = (e) => {
     if (press?.id !== e.pointerId) return;
+    if (!aimable()) return;
     const sk = S();
-    if (!sk || sk.aim === "none" || (character === "summoner" && slot !== "r")) return;
     const [dx, dy] = toLocal(e.clientX - press.x, e.clientY - press.y), m = Math.hypot(dx, dy);
     if (m > AIM_DEAD) press.aiming = true;
     if (!press.aiming) return;
@@ -54,8 +61,8 @@ function skillButton(btn, slot) {
       if (!pr.cancel && aimAt) castSkill(slot, aimAt);
       return;
     }
-    if (SkillTip.used(btn)) return; // 설명·경로만 보고 뗌
-    castSkill(slot);
+    if (SkillTip.used(btn)) return; // 설명만 보고 뗌 (조준 없는 스킬)
+    castSkill(slot); // 탭 또는 길게 누른 뒤 뗌: 이동형은 조이스틱/마지막 이동 방향, 그 밖은 자동 조준
   };
   btn.onpointercancel = btn.onlostpointercapture = (e) => {
     if (press?.id !== e.pointerId) return;
@@ -63,6 +70,13 @@ function skillButton(btn, slot) {
     press = null;
     skillAim = null;
   };
+}
+// 길게 누르는 중(끌기 전) 이동형 스킬 미리보기: 매 프레임 조이스틱 방향을 따라감
+function tickSkillAim() {
+  if (skillAim?.live) Object.assign(skillAim, moveAim(skillAim.slot));
+}
+function dashTipModel() {
+  return { title: DASH.name, desc: skillText(DASH), chips: skillChips(DASH) };
 }
 const SKILL_HOLD = 0.5;
 
@@ -138,7 +152,7 @@ function aimSummon() {
 }
 // 자동 투척 위치
 function autoSummonSpot() {
-  const foe = minBy(bots.filter((b) => b.hp > 0 && dist(p, b) <= SUMMON_RANGE + 60), (b) => dist(p, b));
+  const foe = minBy(bots.filter((b) => b.hp > 0 && !(b.stealth > 0) && dist(p, b) <= SUMMON_RANGE + 60), (b) => dist(p, b));
   let ang, d;
   if (foe) {
     ang = Math.atan2(foe.y - p.y, foe.x - p.x);
@@ -243,20 +257,7 @@ function checkHoldAttack() {
   if (atkPress && !manualAim && !aiming && performance.now() - atkPress.t > 200) aiming = true;
 }
 // 반응 속도: 손을 뗄 때(click)가 아니라 누르는 순간(pointerdown) 발동
-document.querySelector("#dashBtn").onpointerdown = (e) => {
-  e.preventDefault();
-  if (over || p.dashCD > 0 || p.tackle > 0) return;
-  let x = mvX, y = mvY;
-  if (Math.hypot(x, y) < 0.15) {
-    x = Math.sin(p.dir * Math.PI / 4);
-    y = -Math.cos(p.dir * Math.PI / 4);
-  }
-  p.dx = x;
-  p.dy = y;
-  p.dash = 0.1;
-  p.dashCD = 3;
-  sfx("dash", p);
-};
+skillButton(document.querySelector("#dashBtn"), "dash"); // 공통 대시: 이동형 스킬 조작 공유
 document.querySelector("#pickBtn").onpointerdown = (e) => {
   e.preventDefault();
   if (!over) pickup(p, isSwapLoot);
@@ -285,6 +286,7 @@ window.addEventListener("blur", () => {
 const ammoText = (a) => "●".repeat(a.ammo) + "○".repeat(Math.max(0, AMMO.max - a.ammo));
 function touchHUD() {
   checkHoldAttack();
+  tickSkillAim();
   setText("atk", "공격\n" + ammoText(p));
   setText("grenBtn", "수류탄\n" + (p.grenades || 0) + "/" + GRENADE.max);
   const gOn = (p.grenades || 0) > 0;

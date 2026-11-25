@@ -16,8 +16,8 @@
 const SKILL_DATA = {
   suit: { // 동기: 민첩형 복서 (DONGI_SKILLSET.md)
     combo: { name: "잽-스트레이트-훅", mults: [1, 1.2, 1.6], reset: 0.9, hookPush: 30 }, // 맨손 기본 공격 3연타 (초기 테스트값)
-    q: { name: "순간 돌진", cd: 6, dmg: 280, range: 200, stun: 0.4, aim: "dir", preview: "line", width: 34, text: "적에게 빠르게 돌진해 바디블로 {dmg} 피해, {stun}초 기절" },
-    e: { name: "위빙", cd: 5, dur: 0.5, side: 40, aim: "none", text: "{dur}초간 좌우로 몸을 빼 적의 공격을 회피 (IMMUNE)" },
+    q: { name: "순간 돌진", cd: 6, dmg: 280, range: 200, stun: 0.4, aim: "dir", move: true, preview: "line", width: 34, text: "적에게 빠르게 돌진해 바디블로 {dmg} 피해, {stun}초 기절" },
+    e: { name: "위빙", cd: 5, dur: 0.5, range: 40, aim: "dir", move: true, preview: "line", pathPreview: true, width: 30, text: "{dur}초간 몸을 빼 적의 공격을 회피 (IMMUNE)" },
     r: { name: "펀치 러시", dur: 2, tick: 0.15, dmg: 110, radius: 110, arc: 150, moveMul: 0.5, aim: "dir", preview: "cone", text: "{dur}초간 앞쪽 부채꼴로 연속 펀치, {tick}초마다 {dmg} 피해" },
     passive: { name: "카운터 펀치", perDodge: 0.34, mult: 2, text: "위빙으로 회피하면 카운터 게이지 충전, 가득 차면 다음 공격 피해 ×{mult}" },
   },
@@ -35,7 +35,7 @@ const SKILL_DATA = {
   },
   runner: { // 기섭
     q: { name: "나 좀 봐라!", cd: 6, dur: 2, cost: 50, speed: 1.6, aim: "none", text: "자신감 게이지 {cost} 사용, {dur}초간 이동속도 ×{speed}" },
-    e: { name: "비켜 내가 간다", cd: 8, dmg: 400, dmgRun: 600, dashT: 0.22, range: 110, aim: "dir", preview: "line", width: 40, text: "돌진 태클 {dmg} 피해와 넉백 (질주 중 {dmgRun}), 벽에 부딪히면 멈춤" },
+    e: { name: "비켜 내가 간다", cd: 8, dmg: 400, dmgRun: 600, dashT: 0.22, range: 124, aim: "dir", move: true, preview: "line", width: 76, text: "돌진 태클 {dmg} 피해와 넉백 (질주 중 {dmgRun}), 벽에 부딪히면 멈춤" },
     r: { name: "나란 남자", pose: 0.6, dur: 5, tick: 0.3, hearts: 6, dmg: 45, slow: 1, range: 300, speed: 420, aim: "none", text: "하트 포즈 후 {dur}초간 사방으로 하트 발사, 한 발 {dmg} 피해와 둔화 (이동·공격 가능)" },
     passive: { name: "역시 나야", per: 6, max: 100, text: "{per}px 이동할 때마다 자신감 게이지 1 충전 (최대 {max})" },
   },
@@ -46,21 +46,21 @@ const SKILL_DATA = {
     passive: { name: "나 삐졌어", perDmg: 1500, mult: 1.3, text: "맞으면 삐짐 게이지 충전, 가득 차면 다음 스킬 피해 ×{mult} (투척은 벽·강을 넘어감)" },
   },
   stripe: { // 경수
-    q: { name: "나 안 놀아", cd: 7, dur: 3, aim: "none", text: "{dur}초간 은신 (공격하면 풀림)" },
-    e: { name: "두고 보자", cd: 9, dmg: 450, radius: 65, range: 84, aim: "dir", preview: "line", width: 50, text: "앞으로 돌진해 주변에 {dmg} 피해" },
+    q: { name: "나 안 놀아", cd: 7, dur: 3, detect: 120, aim: "none", text: "{dur}초간 은신: 적 화면에서 사라지고 자동 조준·추적 대상에서 빠짐 (공격하면 풀림, 맞아도 유지)" },
+    e: { name: "두고 보자", cd: 9, dmg: 450, radius: 65, range: 84, aim: "dir", move: true, preview: "line", width: 50, text: "앞으로 돌진해 주변에 {dmg} 피해" },
     r: { name: "나 건드리지 마!", count: 4, dur: 5, dmg: 90, atkCd: 0.6, spd: 1.6, aim: "none", text: "분신 {count}개가 {dur}초간 적을 쫓아 공격 (한 번에 {dmg} 피해)" },
     passive: { name: "뒤끝 있어", mult: 1.5, text: "적의 등 뒤를 공격하면 피해 ×{mult}" },
   },
   soccer: { // 재한
-    q: { name: "가볍게 제쳐볼까", cd: 7, dmg: 300, radius: 60, range: 72, aim: "dir", preview: "line", width: 44, text: "드리블 돌진, 주변에 {dmg} 피해" },
+    q: { name: "가볍게 제쳐볼까", cd: 7, dmg: 300, radius: 60, range: 72, aim: "dir", move: true, preview: "line", width: 44, text: "드리블 돌진, 주변에 {dmg} 피해" },
     e: { name: "감각적인 감아차기", cd: 9, dmg: 400, range: 520, bend: 120, speed: 600, aim: "dir", preview: "curve", text: "좌우로 휘는 관통 슈팅 {dmg} 피해, 벽에 맞으면 멈춤 (쏠 때마다 휘는 방향 번갈아)" },
     r: { name: "내가 마무리할게", dmg: 600, range: 650, speed: 900, push: 80, blastRadius: 110, blastDmg: 400, aim: "dir", preview: "line", width: 36, text: "직선 관통 슈팅 {dmg} 피해와 넉백, 최대 거리에서 폭발 {blastDmg} 피해" },
     passive: { name: "이 정도쯤이야", every: 4, mult: 1.3, text: "{every}번째 기본 공격마다 피해 ×{mult}" },
   },
   bear: { // 정용
-    q: { name: "나 원래 빠른데", cd: 7, dur: 1, speed: 1.7, push: 60, aim: "none", text: "{dur}초간 네발 질주 이동속도 ×{speed}, 부딪힌 적 넉백" },
+    q: { name: "나 원래 빠른데", cd: 7, dur: 1, speed: 1.7, push: 60, range: 255, aim: "dir", move: true, preview: "line", width: 68, text: "{dur}초간 네발 질주 이동속도 ×{speed}, 부딪힌 적 넉백" },
     e: { name: "나 안 삐졌는데", cd: 12, dur: 2.5, perSec: 0.1, moveMul: 0.7, aim: "none", text: "{dur}초간 꿀을 먹으며 총 최대 HP 25% 회복 (이동속도 ×{moveMul})" },
-    r: { name: "나 진짜 세거든", range: 320, jumpT: 0.6, radius: 120, dmg: 500, stun: 1, guard: 0.3, guardDur: 3, aim: "point", preview: "circle", text: "지정 위치로 점프, 착지 범위 {dmg} 피해와 {stun}초 기절, 착지 후 {guardDur}초간 받는 피해 -{guard%}" },
+    r: { name: "나 진짜 세거든", range: 320, jumpT: 0.6, radius: 120, dmg: 500, stun: 1, guard: 0.3, guardDur: 3, aim: "point", move: true, preview: "circle", text: "지정 위치로 점프, 착지 범위 {dmg} 피해와 {stun}초 기절, 착지 후 {guardDur}초간 받는 피해 -{guard%}" },
     passive: { name: "별로 안 아픈데", perFoe: 0.08, maxFoes: 3, radius: 120, text: "주변 적 1명당 받는 피해 -{perFoe%} (최대 {maxFoes}명)" },
   },
 };
@@ -99,6 +99,12 @@ function fmtNum(v) {
 function skillText(s) {
   return s.text.replace(/\{(\w+)(%?)\}/g, (_, k, pct) => (s[k] === undefined ? "?" : pct ? fmtNum(s[k] * 100) + "%" : fmtNum(s[k])));
 }
+// ===== 이동형 스킬 공통 조작 (move: true 인 모든 스킬 + 공통 대시) =====
+// 방향: 1) 스킬 버튼을 끈 방향  2) 이동 조이스틱 방향  3) 마지막 이동 방향   (적 자동 조준 없음)
+// 짧게 탭: 바로 발동 / 길게 누름: 이동 거리·방향·판정 범위 표시 / 끌기: 방향 바꾸기 / 떼면 발동 / 가운데로 되돌려 떼면 취소
+// range: 이동 거리(미리보기), width: 이동 경로 판정 폭, radius: 도착 지점 판정 반경
+// 새 이동형 스킬은 move: true 만 달면 같은 조작이 적용됨
+const DASH = { name: "대시", cd: 3, t: 0.1, speedMul: 4, range: 60, aim: "dir", move: true, preview: "line", width: 30, text: "짧게 빠르게 이동 (쿨타임 {cd}초)" };
 const STAT_CHIPS = [["dmg", "피해", ""], ["dur", "지속", "초"], ["stun", "기절", "초"], ["root", "이동불가", "초"], ["slow", "둔화", "초"], ["radius", "범위", ""], ["range", "사거리", ""], ["cd", "쿨타임", "초"]];
 function skillChips(s) {
   return STAT_CHIPS.filter(([k]) => s[k] !== undefined).map(([k, label, unit]) => `${label} ${fmtNum(s[k])}${unit}`);
