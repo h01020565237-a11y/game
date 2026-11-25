@@ -92,7 +92,7 @@ function sulkMul() {
 function castSkill(slot, aim) {
   if (over || p.hp <= 0 || p.stun > 0 || p.jump) return false;
   if (slot === "dash") return castDash(aim);
-  const S = skillOf(slot);
+  const S0 = skillOf(slot), S = slot === "r" && !singleRun && S0?.pvp ? { ...S0, ...S0.pvp } : S0; // 배틀로얄 전용 궁극기 수치(있으면)
   if (!S) return false;
   if (character === "summoner" && slot !== "r") return slot === "q" ? summon() : summon(true);
   if (slot === "r" ? !ultReady() : p.skcd[slot] > 0) return false;
@@ -151,7 +151,7 @@ const SKILL_IMPL = {
         const ang = -Math.PI / 2 + (i - 1) * 1.1, x = clamp(p.x + Math.cos(ang) * 70, 30, W - 30), y = clamp(p.y + Math.sin(ang) * 70, 30, H - 30);
         const m = mons[id];
         fx.push({ x, y, t: 0.55, burst: true });
-        return { ...actor(terrain(x, y) || blocked(x, y) ? p.x : x, terrain(x, y) || blocked(x, y) ? p.y : y), id, hp: m[4], max: m[4], life: S.dur, owner: p, atkMul: S.atkMul, ult: true, skillCD: 0 };
+        return { ...actor(terrain(x, y) || blocked(x, y) ? p.x : x, terrain(x, y) || blocked(x, y) ? p.y : y), id, hp: petMaxHp(id), max: petMaxHp(id), life: S.dur, owner: p, atkMul: S.atkMul, ult: true, skillCD: 0 };
       });
       return true;
     },
@@ -261,7 +261,7 @@ const SKILL_IMPL = {
       const base = Math.atan2(y, x);
       for (const off of S.multi === 3 ? [-0.26, 0, 0.26] : [0]) { // 무한 생존 카드: 3방향
         const v = base + off;
-        shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, pierce: true, hitSet: new Set(), push: S.push, blast: S, soccer: true, big: true, ult: true });
+        shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, dFirst: S.dmgFirst, pierce: true, hitSet: new Set(), push: S.push, blast: S, soccer: true, big: true, ult: true });
       }
       return true;
     },
@@ -340,7 +340,7 @@ function healActor(a, amount, quiet) {
 function chargeUlt(amount) {
   if (amount <= 0 || p.hp <= 0) return;
   if (p.ultT > 0 && !ULT_RULES.chargeDuringUlt) return;
-  const base = (singleRun ? ULT_RULES.pve : ULT_RULES.pvp).base, mul = ULT_RULES.mult[character] || 1;
+  const base = (singleRun ? ULT_RULES.pve : ULT_RULES.pvp).base, mul = ULT_RULES.mult[singleRun ? "pve" : "pvp"][character] || 1;
   const was = p.ult;
   p.ult = Math.min(1, p.ult + amount * mul * (p.ultMul || 1) / base); // ultMul: 무한 생존 카드
   if (was < 1 && p.ult >= 1) {
@@ -419,7 +419,10 @@ function updateSkills(dt) {
     U.t -= dt;
     if ((U.tick -= dt) <= 0) {
       U.tick += S.tick;
-      for (const b of bots) if (b.hp > 0 && dist(p, b) <= S.radius && angleDiff(Math.atan2(b.y - p.y, b.x - p.x), U.ang) <= S.arc * Math.PI / 360) hit(p, b, S.dmg, { ult: true });
+      // 주 대상(조준 방향에 가장 가까운 적) dmg, 나머지 dmgSide
+      const inCone = bots.filter((b) => b.hp > 0 && dist(p, b) <= S.radius && angleDiff(Math.atan2(b.y - p.y, b.x - p.x), U.ang) <= S.arc * Math.PI / 360);
+      const main = minBy(inCone, (b) => angleDiff(Math.atan2(b.y - p.y, b.x - p.x), U.ang) * 60 + dist(p, b));
+      for (const b of inCone) hit(p, b, b === main ? S.dmg : S.dmgSide ?? S.dmg, { ult: true });
       fx.push({ x: p.x, y: p.y, t: 0.12, cone: true, ang: U.ang, r: S.radius, half: S.arc * Math.PI / 360 });
       p.attackAng = U.ang;
       p.aimT = 0.2;
@@ -452,7 +455,7 @@ function updateSkills(dt) {
         H.spin += 0.35;
         for (let i = 0; i < S.hearts; i++) {
           const v = H.spin + i / S.hearts * Math.PI * 2;
-          shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, slow: S.slow, heart: true, ult: true, pierce: !!S.pierce, hitSet: S.pierce ? new Set() : null });
+          shots.push({ a: p, x: p.x, y: p.y, vx: Math.cos(v) * S.speed, vy: Math.sin(v) * S.speed, left: S.range, d: S.dmg, slow: S.slow, heart: true, ult: true, pierce: !!S.pierce, hitSet: S.pierce ? new Set() : null, home: i < (S.homing || 0) ? S : null });
         }
       }
       if (H.t <= 0) p.heartUlt = null;
@@ -489,7 +492,7 @@ function updateSkills(dt) {
         p.y = J.sy;
       }
       for (const b of bots) if (b.hp > 0 && dist(p, b) <= S.radius) {
-        hit(p, b, S.dmg, { ult: true });
+        hit(p, b, dist(p, b) <= (S.inner ?? S.radius) ? S.dmg : S.dmgEdge ?? S.dmg, { ult: true }); // 중심부 / 외곽
         b.stun = Math.max(b.stun || 0, S.stun);
       }
       p.bearGuard = S.guardDur;
@@ -529,13 +532,15 @@ function updateClones(dt) {
   for (const c of clones) {
     c.life -= dt;
     c.atkT -= dt;
-    const tgt = foes.length ? foes[c.slotI % foes.length] : null;
+    // 대상 고정: 살아 있고 멀어지지 않았으면 계속 같은 적 (매 프레임 바꾸면 오가느라 공격을 놓침)
+    if (!c.tgt || c.tgt.hp <= 0 || c.tgt.stealth > 0 || dist(p, c.tgt) > 460) c.tgt = foes.length ? foes[c.slotI % foes.length] : null;
+    const tgt = c.tgt;
     if (!tgt) {
       if (dist(c, p) > 50) steer(c, p.x, p.y, dt);
       else c.moving = false;
       continue;
     }
-    if (dist(c, tgt) > 34) steer(c, tgt.x, tgt.y, dt);
+    if (dist(c, tgt) > 34 + bodyR(tgt)) steer(c, tgt.x, tgt.y, dt);
     else {
       c.moving = false;
       c.dir = (Math.round(Math.atan2(tgt.x - c.x, c.y - tgt.y) / (Math.PI / 4)) + 8) % 8;

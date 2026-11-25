@@ -16,6 +16,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MIME = {'.m4a': 'audio/mp4', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
+OPTIONAL = ('assets/pokemon/',)  # 공개 저장소에 올리지 않는 로컬 테스트용 그림 (포켓몬 공식 일러스트)
 TEMPLATE_RE = re.compile(r'`[^`\n]*assets/[^`\n]*\$\{[^`\n]*`')
 LEFT_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')
 ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')
@@ -24,6 +25,8 @@ ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|
 def inline_assets(text):
     def rep(m):
         path = ROOT / m.group(2)
+        if not path.exists() and m.group(2).startswith(OPTIONAL):  # 선택 그림(로컬 전용): 없으면 빈 경로 → 게임이 아이콘으로 대신
+            return f'{m.group(1)}{m.group(3)}'
         if not path.exists():  # 주석 속 예시 경로 등: 그대로 두고 알림만
             print(f'warning: missing asset (left as is): {m.group(2)}')
             return m.group(0)

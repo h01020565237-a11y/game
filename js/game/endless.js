@@ -21,6 +21,7 @@ function writeEndlessSave() {
 // ----- 스킬 데이터 이번 판만 바꾸기 / 되돌리기 -----
 let endlessSkillBackup = null;
 function restoreEndlessSkills() {
+  restorePokemonDeck(); // 현곤 포켓몬 덱 (js/game/pokemon.js)
   if (!endlessSkillBackup) return;
   SKILL_DATA[endlessSkillBackup.ch] = endlessSkillBackup.data;
   endlessSkillBackup = null;
@@ -37,6 +38,7 @@ function beginEndless(ch) {
 function setupEndless() {
   const R = singleRun;
   snapshotEndlessSkills(character);
+  setupPokemonRun();
   Object.assign(R, {
     m: { zone: false },  // 자기장 끔 (update.js 공통 처리)
     wave: 0, phase: "count", t: ENDLESS.countdown, timer: 0, plan: 0, spawned: 0, spawnT: 0,
@@ -96,7 +98,7 @@ function startEndlessFight() {
 function endlessPaused(dt) {
   const R = singleRun;
   if (R.bannerT > 0) R.bannerT -= dt;
-  if (R.phase === "cards") return true;
+  if (R.phase === "cards" || R.pkOpen) return true; // 카드 선택·포켓몬 편성 중 정지
   if (R.cardQueue.length) {
     openEndlessCards();
     return true;

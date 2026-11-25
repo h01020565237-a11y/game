@@ -36,7 +36,7 @@ function update(dt) {
     flight.t += dt;
     if (flight.t >= 0.42) {
       let { tx: x, ty: y, id } = flight, m = mons[id];
-      pet = { ...actor(x, y), id, hp: m[4], max: m[4], life: PET_RULES.life, skillCD: 0 };
+      pet = { ...actor(x, y), id, hp: petMaxHp(id), max: petMaxHp(id), life: petLife(), skillCD: 0 }; // 무한 생존 카드·강화 반영 (그 밖엔 기본값)
       fx.push({ x, y, t: 0.55, burst: true });
       flight = null;
     }
@@ -51,7 +51,7 @@ function update(dt) {
       b.burnTick -= dt;
       if (b.burnTick <= 0) {
         b.burnTick += 1;
-        hit(b.burnBy || { gear: [] }, b, PET_SKILLS[1].burnDps, { dot: true, ult: !!b.burnBy?.ult });
+        hit(b.burnBy || { gear: [] }, b, b.burnDps || PET_SKILLS[1].burnDps, { dot: true, ult: !!b.burnBy?.ult });
       }
     }
   }
@@ -180,7 +180,7 @@ function update(dt) {
   for (let s of shots) {
     if (s.octo) {
       s.t -= dt;
-      let u = clamp(1 - s.t / 0.55, 0, 1);
+      let u = clamp(1 - s.t / (s.flight || 0.55), 0, 1);
       s.x = s.sx + (s.tx - s.sx) * u;
       s.y = s.sy + (s.ty - s.sy) * u;
       if (s.t <= 0) {
@@ -189,6 +189,10 @@ function update(dt) {
           s.t = s.S.armT;
           s.sx = s.tx;
           s.sy = s.ty;
+        } else if (s.octo === 3) { // 상훈 기본 공격: 착탄 지점 소범위 (은신 여부와 상관없이 맞음)
+          for (const b of [...bots, ...boxes]) if (b.hp > 0 && dist(b, { x: s.tx, y: s.ty }) < s.S.radius && canHit(s.a, b)) hit(s.a, b, s.d, { basic: true });
+          fx.push({ x: s.tx, y: s.ty, t: 0.4, inkBurst: true, small: true });
+          s.dead = true;
         } else if (s.octo === 1) {
           for (let b of [p, ...bots, ...boxes].filter((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < s.S.radius && !(isMine(s.a) && isMine(b2)))) {
             hit(s.a, b, s.d);
@@ -240,13 +244,22 @@ function update(dt) {
           break;
         }
         forEachCandidate((b) => {
-          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22) {
+          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22 + bodyR(b)) {
             s.hitSet.add(b);
             hit(s.a, b, s.d);
           }
         });
       }
       continue;
+    }
+    if (s.home) { // 기섭 하트 1발: 가까운 적 쪽으로 약하게 휨 (초당 homeTurn 라디안까지)
+      const tg = minBy(bots.filter((b) => b.hp > 0 && visible(p, b) && dist(s, b) < s.home.homeRange), (b) => dist(s, b));
+      if (tg) {
+        const cur = Math.atan2(s.vy, s.vx), want = Math.atan2(tg.y - s.y, tg.x - s.x), sp = Math.hypot(s.vx, s.vy);
+        const d = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)), turn = clamp(d, -s.home.homeTurn * dt, s.home.homeTurn * dt);
+        s.vx = Math.cos(cur + turn) * sp;
+        s.vy = Math.sin(cur + turn) * sp;
+      }
     }
     const spd = Math.hypot(s.vx, s.vy) || 650;
     let steps = Math.ceil(dt * spd / 8);
@@ -255,7 +268,7 @@ function update(dt) {
       s.y += s.vy * dt / steps;
       s.left -= spd * dt / steps;
       if (blocked(s.x, s.y, 2) || s.left < 0 || s.x < 0 || s.x > W || s.y < 0 || s.y > H) {
-        if (s.blast) { // 재한 궁극기: 최대 거리(또는 벽)에서 폭발
+        if (s.blast && !s.blasted) { // 재한 궁극기: 안 맞았으면 최대 거리(또는 벽)에서 폭발
           for (const b of bots) if (b.hp > 0 && dist(s, b) <= s.blast.blastRadius) hit(s.a, b, s.blast.blastDmg, { ult: true });
           fx.push({ x: s.x, y: s.y, t: 0.45, explosion: true });
           shake(6);
@@ -265,15 +278,22 @@ function update(dt) {
       }
       if (s.pierce) { // 관통: 대상마다 1번
         forEachCandidate((b) => {
-          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 24) {
+          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 24 + bodyR(b)) {
             s.hitSet.add(b);
-            hit(s.a, b, s.d, { ult: s.ult });
+            const first = s.dFirst && s.hitSet.size === 1;
+            hit(s.a, b, first ? s.dFirst : s.d, { ult: s.ult });
+            if (first && s.blast && !s.blasted) { // 재한: 첫 적중 지점에서 1회 폭발 (넉백 전에), 공은 계속 관통
+              s.blasted = true;
+              for (const o of bots) if (o.hp > 0 && dist(s, o) <= s.blast.blastRadius + bodyR(o)) hit(s.a, o, s.blast.blastDmg, { ult: true });
+              fx.push({ x: s.x, y: s.y, t: 0.45, explosion: true });
+              shake(6);
+            }
             if (s.push) knock(b, s.vx, s.vy, s.push);
           }
         });
         continue;
       }
-      let b = firstTargetNear(s.a, s, s.heart ? 20 : 18);
+      let b = firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
       if (b) {
         hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic });
         if (s.slow && b.max) b.slow = Math.max(b.slow || 0, s.slow);

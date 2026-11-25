@@ -205,12 +205,14 @@ stick("mv", (x, y) => {
 });
 const atkBtn = document.querySelector("#atk");
 function aimTarget() {
-  let list = targets(p).filter((b) => dist(p, b) <= weapons[p.w][3] && (p.w === 6 || clearLine(p, b)));
+  const B = basicOf(p), lob = p.w === 6 || B?.kind === "lob"; // 곡사는 벽 너머도 조준
+  let list = targets(p).filter((b) => dist(p, b) <= attackRange(p) && (lob || clearLine(p, b)));
   return list.filter((b) => b.max).sort((a, b) => dist(p, a) - dist(p, b))[0] || list.sort((a, b) => dist(p, a) - dist(p, b))[0];
 }
 function autoAttack() {
   let b = aimTarget();
-  attack(p, b ? b.x : p.x + Math.sin(p.dir * Math.PI / 4) * weapons[p.w][3], b ? b.y : p.y - Math.cos(p.dir * Math.PI / 4) * weapons[p.w][3]);
+  const r = attackRange(p);
+  attack(p, b ? b.x : p.x + Math.sin(p.dir * Math.PI / 4) * r, b ? b.y : p.y - Math.cos(p.dir * Math.PI / 4) * r);
 }
 // 공격 버튼
 // - 짧게 탭: 가까운 적에게 자동 조준 1발
@@ -236,7 +238,7 @@ atkBtn.onpointermove = (e) => {
   }
 };
 function fireManual() {
-  const r = weapons[p.w][3];
+  const r = attackRange(p) * (basicOf(p)?.kind === "lob" ? manualAim.mag : 1); // 곡사는 끈 거리만큼
   attack(p, p.x + manualAim.x * r, p.y + manualAim.y * r);
 }
 function releaseAttack(fire) {
@@ -299,7 +301,7 @@ function touchHUD() {
     const id = deck[i], btn = petBtns[i], live = pet?.id === id;
     const wait = live ? 0 : summonCD[id] > 0 ? summonCD[id] : flight ? -1 : pet && swapCD > 0 ? swapCD : 0;
     const status = live ? "전투 중" : wait > 0 ? Math.ceil(wait) + "초" : wait < 0 ? "투척 중" : pet ? "교체" : "소환";
-    const html = `<strong>${mons[id][1]}</strong><span class="pn">${mons[id][0]}</span><span class="ps">${status}</span>`;
+    const html = `${petIconHTML(id)}<span class="pn">${mons[id][0]}</span><span class="ps">${status}</span>`;
     if (btn._html !== html) {
       btn._html = html;
       btn.innerHTML = html;

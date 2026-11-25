@@ -131,12 +131,15 @@ function draw() {
     g.restore();
   } else if (manualAim && !manualAim.cancel) {
     // 주무기 직접 조준 미리보기
-    const ang = Math.atan2(manualAim.y, manualAim.x), r = weapons[p.w][3];
-    coneDraw(p.x, p.y, ang, r, Math.max(angles[p.w], 6) * Math.PI / 360, 0.3);
+    const ang = Math.atan2(manualAim.y, manualAim.x), r = attackRange(p), B = basicOf(p);
+    if (B) drawBasicAim(B, ang, B.kind === "lob" ? r * manualAim.mag : r);
+    else coneDraw(p.x, p.y, ang, r, Math.max(angles[p.w], 6) * Math.PI / 360, 0.3);
   } else if (aiming && p.w !== 6) {
     let b = aimTarget();
     let ang = b ? Math.atan2(b.y - p.y, b.x - p.x) : p.dir * Math.PI / 4 - Math.PI / 2;
-    coneDraw(p.x, p.y, ang, weapons[p.w][3], angles[p.w] * Math.PI / 360);
+    const B = basicOf(p);
+    if (B) drawBasicAim(B, ang, B.kind === "lob" && b ? Math.min(dist(p, b), B.range) : B.range);
+    else coneDraw(p.x, p.y, ang, weapons[p.w][3], angles[p.w] * Math.PI / 360);
   }
   for (let f of fx) {
     if (f.debris && f.t < 1.55 && chestArt.debris.naturalWidth) drawChest(chestArt.debris, f.x, f.y, Math.min(1, f.t / 0.6));
@@ -270,6 +273,24 @@ function draw() {
   setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
   if (singleRun) drawMobShots();
   for (let s of shots) {
+    if (s.octo === 3) { // 상훈 기본 공격: 작은 먹물 덩어리 + 떨어질 곳 표시
+      let u = clamp(1 - s.t / s.flight, 0, 1);
+      g.strokeStyle = "#6b3d9a99";
+      g.setLineDash([4, 4]);
+      g.beginPath();
+      g.arc(s.tx, s.ty, s.S.radius, 0, 7);
+      g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = "#38244d66";
+      g.beginPath();
+      g.ellipse(s.x, s.y, 8, 4, 0, 0, 7);
+      g.fill();
+      g.fillStyle = "#3d2357";
+      g.beginPath();
+      g.arc(s.x, s.y - 55 * Math.sin(Math.PI * u), 8, 0, 7);
+      g.fill();
+      continue;
+    }
     if (s.octo) {
       let u = clamp(1 - s.t / 0.55, 0, 1);
       g.fillStyle = "#38244d88";
@@ -313,6 +334,17 @@ function draw() {
     }
     // 총알: 판정은 발밑 좌표, 그림은 총구·몸통 높이(20px 위)에 맞춰 그림
     const by = s.y - 20;
+    if (s.orb) { // 은숙 빛의 구체
+      const gr = g.createRadialGradient(s.x, by, 1, s.x, by, 12);
+      gr.addColorStop(0, "#ffffff");
+      gr.addColorStop(0.45, "#fff3b0");
+      gr.addColorStop(1, "#ffd23f00");
+      g.fillStyle = gr;
+      g.beginPath();
+      g.arc(s.x, by, 12, 0, 7);
+      g.fill();
+      continue;
+    }
     g.strokeStyle = "#fff2a388";
     g.lineWidth = 3;
     g.beginPath();
@@ -371,10 +403,10 @@ function draw() {
     }
     if (f.inkBurst) {
       g.save();
-      g.globalAlpha = f.t / 0.7;
+      g.globalAlpha = f.t / (f.small ? 0.4 : 0.7);
       g.fillStyle = "#40224f";
       g.beginPath();
-      g.arc(f.x, f.y, 85 * (1 - f.t / 0.9), 0, 7);
+      g.arc(f.x, f.y, (f.small ? 42 : 85) * (1 - f.t / (f.small ? 0.5 : 0.9)), 0, 7);
       g.fill();
       g.restore();
       continue;

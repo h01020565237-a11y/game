@@ -18,31 +18,35 @@ const SKILL_DATA = {
     combo: { name: "잽-스트레이트-훅", mults: [1, 1.2, 1.6], reset: 0.9, hookPush: 30 }, // 맨손 기본 공격 3연타 (초기 테스트값)
     q: { name: "순간 돌진", cd: 6, dmg: 280, range: 200, stun: 0.4, aim: "dir", move: true, preview: "line", width: 34, text: "적에게 빠르게 돌진해 바디블로 {dmg} 피해, {stun}초 기절" },
     e: { name: "위빙", cd: 5, dur: 0.5, range: 40, aim: "dir", move: true, preview: "line", pathPreview: true, width: 30, text: "{dur}초간 몸을 빼 적의 공격을 회피 (IMMUNE)" },
-    r: { name: "펀치 러시", dur: 2, tick: 0.15, dmg: 110, radius: 110, arc: 150, moveMul: 0.5, aim: "dir", preview: "cone", text: "{dur}초간 앞쪽 부채꼴로 연속 펀치, {tick}초마다 {dmg} 피해" },
+    r: { name: "펀치 러시", dur: 2, tick: 0.15, dmg: 150, dmgSide: 100, radius: 110, arc: 150, moveMul: 0.5, aim: "dir", preview: "cone", text: "{dur}초간 앞쪽 부채꼴로 연속 펀치, {tick}초마다 주 대상 {dmg}·주변 {dmgSide} 피해" },
     passive: { name: "카운터 펀치", perDodge: 0.34, mult: 2, text: "위빙으로 회피하면 카운터 게이지 충전, 가득 차면 다음 공격 피해 ×{mult}" },
   },
   summoner: { // 현곤
     q: { name: "소환", cd: 15, dur: 10, aim: "none", text: "덱의 포켓몬을 던져 {dur}초간 함께 싸움 (포켓몬 버튼)" },
     e: { name: "교체", cd: 2, aim: "none", text: "소환 중인 포켓몬을 다른 포켓몬으로 교체" },
-    r: { name: "한잔했어!", dur: 8, atkMul: 1.3, aim: "none", text: "고른 포켓몬 3마리를 {dur}초간 동시에 소환, 포켓몬 공격력 ×{atkMul}" },
+    r: { name: "한잔했어!", dur: 8, atkMul: 0.45, aim: "none", text: "고른 포켓몬 3마리를 {dur}초간 동시에 소환, 포켓몬 공격력 ×{atkMul}" },
     passive: { name: "동료", speed: 1.1, take: 0.9, text: "포켓몬 소환 중 이동속도 ×{speed}, 받는 피해 ×{take}" },
   },
   support: { // 은숙
+    // 기본 공격(맨손일 때): 빛의 구체 직선 발사 — 단일 대상, 장애물에 막힘
+    basic: { name: "빛의 구체", kind: "orb", dmg: 110, range: 260, speed: 560, width: 14, reload: 0.55 },
     q: { name: "정신 차려!", cd: 8, dmg: 250, slow: 2.5, range: 350, speed: 650, aim: "dir", preview: "line", width: 16, text: "{dmg} 피해 탄을 쏴 {slow}초 둔화" },
     e: { name: "걱정하지 마", cd: 10, heal: 0.2, guard: 0.3, dur: 3, radius: 200, aim: "none", text: "자신과 주변 아군 최대 HP {heal%} 즉시 회복, {dur}초간 받는 피해 -{guard%}" },
-    r: { name: "다들 내 뒤로!", dur: 6, radius: 130, tick: 0.5, healPerSec: 0.04, dmg: 50, slow: 1, aim: "none", text: "{dur}초간 따라다니는 영역: 아군 초당 {healPerSec%} 회복, 적 {tick}초마다 {dmg} 피해와 둔화" },
+    r: { name: "다들 내 뒤로!", dur: 6, radius: 130, tick: 0.5, healPerSec: 0.04, dmg: 100, slow: 1, aim: "none", text: "{dur}초간 따라다니는 영역: 아군 초당 {healPerSec%} 회복, 적 {tick}초마다 {dmg} 피해와 둔화" },
     passive: { name: "내가 챙겨줄게", idle: 5, perSec: 0.02, radius: 200, text: "{idle}초간 안 맞으면 초당 최대 HP {perSec%} 회복 (자신·주변 아군, 맞으면 중단)" },
   },
   runner: { // 기섭
     q: { name: "나 좀 봐라!", cd: 6, dur: 2, cost: 50, speed: 1.6, aim: "none", text: "자신감 게이지 {cost} 사용, {dur}초간 이동속도 ×{speed}" },
     e: { name: "비켜 내가 간다", cd: 8, dmg: 400, dmgRun: 600, dashT: 0.22, range: 124, aim: "dir", move: true, preview: "line", width: 76, text: "돌진 태클 {dmg} 피해와 넉백 (질주 중 {dmgRun}), 벽에 부딪히면 멈춤" },
-    r: { name: "나란 남자", pose: 0.6, dur: 5, tick: 0.3, hearts: 6, dmg: 45, slow: 1, range: 300, speed: 420, aim: "none", text: "하트 포즈 후 {dur}초간 사방으로 하트 발사, 한 발 {dmg} 피해와 둔화 (이동·공격 가능)" },
+    r: { name: "나란 남자", pose: 0.6, dur: 5, tick: 0.3, hearts: 6, dmg: 90, slow: 1, range: 300, speed: 420, homing: 1, homeTurn: 2.2, homeRange: 320, aim: "none", text: "하트 포즈 후 {dur}초간 사방으로 하트 발사 (매번 {homing}발은 가까운 적을 약하게 추적), 한 발 {dmg} 피해와 둔화 (이동·공격 가능)" },
     passive: { name: "역시 나야", per: 6, max: 100, text: "{per}px 이동할 때마다 자신감 게이지 1 충전 (최대 {max})" },
   },
   octo: { // 상훈
+    // 기본 공격(맨손일 때): 먹물 곡사 투척 — 장애물을 넘어가고 착탄 지점 소범위 피해. reload: 탄창 1발 충전 시간(공격속도)
+    basic: { name: "먹물 던지기", kind: "lob", dmg: 120, range: 230, radius: 42, flight: 0.45, reload: 0.6 },
     q: { name: "몰라 안 해", cd: 5, dmg: 450, radius: 85, range: 360, miss: 0.3, missBoss: 0.15, missDur: 3, aim: "point", preview: "circle", text: "먹물 폭탄 {dmg} 피해, {missDur}초간 공격 {miss%} 확률 MISS" },
     e: { name: "내 맘대로 할 거야", cd: 9, dmg: 250, root: 1.5, radius: 65, range: 300, armT: 3, aim: "point", preview: "circle", text: "촉수 함정({armT}초 유지), 밟으면 {dmg} 피해와 {root}초 이동불가" },
-    r: { name: "다 필요 없어!", dur: 5, tick: 0.5, radius: 140, dmg: 90, push: 40, aim: "none", text: "{dur}초간 주변을 촉수로 연속 공격, {tick}초마다 {dmg} 피해와 넉백 (이동·공격 가능)" },
+    r: { name: "다 필요 없어!", dur: 5, tick: 0.5, radius: 140, dmg: 120, push: 40, aim: "none", text: "{dur}초간 주변을 촉수로 연속 공격, {tick}초마다 {dmg} 피해와 넉백 (이동·공격 가능)" },
     passive: { name: "나 삐졌어", perDmg: 1500, mult: 1.3, text: "맞으면 삐짐 게이지 충전, 가득 차면 다음 스킬 피해 ×{mult} (투척은 벽·강을 넘어감)" },
   },
   stripe: { // 경수
@@ -54,13 +58,13 @@ const SKILL_DATA = {
   soccer: { // 재한
     q: { name: "가볍게 제쳐볼까", cd: 7, dmg: 300, radius: 60, range: 72, aim: "dir", move: true, preview: "line", width: 44, text: "드리블 돌진, 주변에 {dmg} 피해" },
     e: { name: "감각적인 감아차기", cd: 9, dmg: 400, range: 520, bend: 120, speed: 600, aim: "dir", preview: "curve", text: "좌우로 휘는 관통 슈팅 {dmg} 피해, 벽에 맞으면 멈춤 (쏠 때마다 휘는 방향 번갈아)" },
-    r: { name: "내가 마무리할게", dmg: 600, range: 650, speed: 900, push: 80, blastRadius: 110, blastDmg: 400, aim: "dir", preview: "line", width: 36, text: "직선 관통 슈팅 {dmg} 피해와 넉백, 최대 거리에서 폭발 {blastDmg} 피해" },
+    r: { name: "내가 마무리할게", dmgFirst: 1500, dmg: 600, range: 650, speed: 900, push: 80, blastRadius: 110, blastDmg: 500, aim: "dir", preview: "line", width: 36, text: "직선 관통 슈팅: 첫 적중 {dmgFirst} 피해 + 그 자리에서 폭발 {blastDmg} (1회), 이후 관통 {dmg} 피해와 넉백. 안 맞으면 최대 거리에서 폭발" },
     passive: { name: "이 정도쯤이야", every: 4, mult: 1.3, text: "{every}번째 기본 공격마다 피해 ×{mult}" },
   },
   bear: { // 정용
     q: { name: "나 원래 빠른데", cd: 7, dur: 1, speed: 1.7, push: 60, range: 255, aim: "dir", move: true, preview: "line", width: 68, text: "{dur}초간 네발 질주 이동속도 ×{speed}, 부딪힌 적 넉백" },
     e: { name: "나 안 삐졌는데", cd: 12, dur: 2.5, perSec: 0.1, moveMul: 0.7, aim: "none", text: "{dur}초간 꿀을 먹으며 총 최대 HP 25% 회복 (이동속도 ×{moveMul})" },
-    r: { name: "나 진짜 세거든", range: 320, jumpT: 0.6, radius: 120, dmg: 500, stun: 1, guard: 0.3, guardDur: 3, aim: "point", move: true, preview: "circle", text: "지정 위치로 점프, 착지 범위 {dmg} 피해와 {stun}초 기절, 착지 후 {guardDur}초간 받는 피해 -{guard%}" },
+    r: { name: "나 진짜 세거든", range: 320, jumpT: 0.6, radius: 120, inner: 60, dmg: 1400, dmgEdge: 600, stun: 1, guard: 0.3, guardDur: 3, aim: "point", move: true, preview: "circle", text: "지정 위치로 점프, 착지 중심({inner}) {dmg}·외곽 {dmgEdge} 피해와 {stun}초 기절, 착지 후 {guardDur}초간 받는 피해 -{guard%}" },
     passive: { name: "별로 안 아픈데", perFoe: 0.08, maxFoes: 3, radius: 120, text: "주변 적 1명당 받는 피해 -{perFoe%} (최대 {maxFoes}명)" },
   },
 };
@@ -71,7 +75,11 @@ const SKILL_DATA = {
 const ULT_RULES = {
   pve: { base: 5000 },                 // 싱글·무한 생존
   pvp: { base: 5000 },                 // 배틀로얄
-  mult: { suit: 1, summoner: 1, support: 1.4, runner: 1.2, octo: 1, stripe: 1.1, soccer: 1, bear: 1.2 },
+  // 충전 배율 (클수록 빨리 참). PvE·PvP 따로 조정 가능. 스킬 수치도 SKILL_DATA[캐릭터].r.pvp = { dmg: ... } 로 배틀로얄만 따로 덮어쓸 수 있음
+  mult: { // PvE (싱글·무한 생존)
+    pve: { suit: 1, summoner: 0.5, support: 1.4, runner: 1.2, octo: 0.5, stripe: 1.1, soccer: 1, bear: 1.68 },
+    pvp: { suit: 1, summoner: 0.5, support: 1.4, runner: 1.2, octo: 0.5, stripe: 1.1, soccer: 1, bear: 1.68 },
+  },
   overkill: false,                     // 적 남은 체력을 넘는 피해는 충전 제외 (기획서 권장)
   chargeDuringUlt: false,              // 궁극기 발동 중 충전 (테스트 후 결정, 초기값: 안 됨)
   healCoef: 0.5,                       // 은숙: 실제 아군 회복량의 이 비율만큼 충전 (초기 테스트값)

@@ -211,3 +211,36 @@ function drawStealthAlert() {
   g.fillText("!", x, y);
   g.restore();
 }
+
+// 원거리 기본 공격 조준 표시: 곡사(포물선 + 떨어질 범위) / 직선(폭 있는 선, 벽에서 끊김)
+function drawBasicAim(B, ang, len) {
+  const ux = Math.cos(ang), uy = Math.sin(ang);
+  g.save();
+  g.strokeStyle = "rgba(255,255,255,0.75)";
+  g.fillStyle = "rgba(255,255,255,0.14)";
+  g.lineWidth = 2;
+  g.setLineDash([7, 5]);
+  if (B.kind === "lob") {
+    const tx = p.x + ux * len, ty = p.y + uy * len;
+    g.beginPath();
+    g.arc(p.x, p.y, B.range, 0, 7); // 사거리
+    g.stroke();
+    g.beginPath();
+    g.moveTo(p.x, p.y - 20);
+    g.quadraticCurveTo((p.x + tx) / 2, Math.min(p.y, ty) - 60, tx, ty);
+    g.stroke();
+    g.setLineDash([]);
+    g.beginPath();
+    g.arc(tx, ty, B.radius, 0, 7);
+    g.fill();
+    g.stroke();
+  } else {
+    let L = 0; // 벽에 막히는 곳까지
+    for (; L < len; L += 6) if (blocked(p.x + ux * L, p.y + uy * L, 2)) break;
+    g.translate(p.x, p.y);
+    g.rotate(ang);
+    g.fillRect(0, -B.width, L, B.width * 2);
+    g.strokeRect(0, -B.width, L, B.width * 2);
+  }
+  g.restore();
+}

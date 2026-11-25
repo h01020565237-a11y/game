@@ -62,6 +62,7 @@
     <!-- 싱글 웨이브 HUD -->
     <div id="bossHud" hidden><span id="bossName">정글 거목</span><div class="boss-bar"><i id="bossFill"></i></div></div>
     <div id="waveBanner" hidden></div>
+    <button id="pkDeckBtn" class="btn btn-gold" hidden>포켓몬 편성</button>
     <div id="expHud" hidden><b id="expLv">Lv1</b><div class="exp-bar"><i id="expFill"></i></div></div>
     <div id="weaponHud">
       <span id="weaponIcon" aria-hidden="true"></span>
@@ -175,6 +176,15 @@
       <button id="csSkip" class="btn btn-ghost">건너뛰기 ▶▶</button>
     </section>
 
+    <!-- 현곤 무한 생존: 웨이브 사이 포켓몬 편성 (js/game/pokemon.js) -->
+    <section id="pkPanel" class="screen" hidden aria-label="포켓몬 편성">
+      <div class="panel pk-card">
+        <div class="single-head"><h3>포켓몬 편성 <small>칸을 고르고 보유 포켓몬을 누르세요</small></h3><button id="pkDone" class="btn btn-gold">완료</button></div>
+        <div id="pkSlots" class="pk-slots"></div>
+        <div id="pkOwned" class="pk-owned"></div>
+      </div>
+    </section>
+
     <!-- 결과 화면 -->
     <section id="results" class="screen" hidden aria-label="게임 결과">
       <div class="panel res-card">
@@ -209,6 +219,7 @@
   <script src="js/data/pets.js"></script>
   <script src="js/data/characters.js"></script>
   <script src="js/data/skills.js"></script>
+  <script src="js/data/pokemon.js"></script>
   <script src="js/data/cutscenes.js"></script>
   <script src="js/data/waves.js"></script>
   <script src="js/data/endless.js"></script>
@@ -241,6 +252,7 @@
   <script src="js/ui/cutscene.js"></script>
   <script src="js/ui/single.js"></script>
   <script src="js/ui/endless.js"></script>
+  <script src="js/game/pokemon.js"></script>
   <script src="js/ui/title.js"></script>
   <script src="js/main.js"></script>
 </body>

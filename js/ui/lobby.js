@@ -114,7 +114,7 @@ function renderDeckPicker() {
   dk.append(head);
   const grid = document.createElement("div");
   grid.className = "mon-grid";
-  mons.forEach((m, j) => {
+  mons.slice(0, BASE_PET_COUNT).forEach((m, j) => { // 기본 8종만 (진화·전설은 무한 생존 전용)
     const b = document.createElement("button");
     const slot = lobbyDeck.indexOf(j);
     b.className = "mon-tile" + (slot >= 0 ? " sel" : "");
@@ -267,7 +267,7 @@ function updateHUD() {
     box.style.backgroundImage = art ? `url("${weaponIcons[p.w].src}")` : "";
     box.classList.toggle("fist", !art);
   }
-  setText("weaponName", weapons[p.w][0]);
+  setText("weaponName", basicOf(p)?.name || weapons[p.w][0]); // 상훈·은숙 맨손 = 고유 원거리 기본 공격
   setText("ammoPips", "●".repeat(p.ammo) + "○".repeat(Math.max(0, AMMO.max - p.ammo)));
   setText("grenHud", "수류탄 " + (p.grenades || 0) + "/" + GRENADE.max);
   // 액세서리 UI: 기능이 꺼져 있으면 숨김

@@ -144,7 +144,7 @@ function petTipModelById(id, key) {
     key,
     title: `${m[1]} ${m[0]} · ${S.name}`,
     desc: skillText(S),
-    chips: [...skillChips(S), `공격력 ${m[2]}`, `체력 ${m[4]}`, `소환 ${fmtNum(PET_RULES.life)}초`, `쿨타임 ${fmtNum(PET_RULES.summonCD)}초`],
+    chips: [...skillChips({ ...S, dmg: S.dmg && Math.round(S.dmg * petSkillMul(id)) }), `공격력 ${Math.round(m[2] * petMul(id, "atk"))}`, `체력 ${petMaxHp(id)}`, `소환 ${fmtNum(+petLife().toFixed(1))}초`, `쿨타임 ${fmtNum(PET_RULES.summonCD)}초`],
     foot: `기술은 ${fmtNum(PET_RULES.skillCD)}초마다 자동 사용`,
   };
 }

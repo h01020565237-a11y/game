@@ -10,7 +10,7 @@ function reset() {
   zone = 1450;
   flight = null;
   pet = null;
-  summonCD = Array(8).fill(0);
+  summonCD = Array(mons.length).fill(0);
   skillCD = 0;
   swapCD = 0;
   selected = 0;

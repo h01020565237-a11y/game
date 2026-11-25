@@ -175,6 +175,10 @@ function canTarget(a, b) {
   return b !== a && b.hp > 0 && visible(a, b) && !(isMine(a) && isMine(b));
 }
 // 실제로 맞는지(수동 조준 근접·투사체·관통): 은신은 무적이 아니라서 은신 여부는 보지 않음
+// 기본 크기(16)보다 큰 몸(보스 등)의 추가 판정 반경
+function bodyR(b) {
+  return b.r > 16 ? b.r - 16 : 0;
+}
 function canHit(a, b) {
   return b !== a && b.hp > 0 && seenIgnoringStealth(a, b) && !(isMine(a) && isMine(b));
 }
@@ -204,7 +208,7 @@ function targets(a) {
 // 성능: targets(a).find(b => dist(c, b) < r) 와 같은 결과, 배열을 만들지 않음
 function firstTargetNear(a, c, r) {
   let hitB;
-  forEachCandidate((b) => dist(c, b) < r && canHit(a, b) && (hitB = b, true)); // 투사체: 은신해도 맞음
+  forEachCandidate((b) => dist(c, b) < r + bodyR(b) && canHit(a, b) && (hitB = b, true)); // 투사체: 은신해도 맞음, 큰 적(보스)은 몸 크기만큼 넓게
   return hitB;
 }
 // 성능: arr.sort((x, y) => key(x) - key(y))[0] 와 같은 결과 (동점이면 앞쪽 우선)
@@ -225,7 +229,19 @@ function clearLine(a, b) {
   return true;
 }
 // 탄창 1발이 충전되는 시간 = 무기 쿨타임 (손목시계 -10%)
+// 캐릭터 고유 기본 공격 (맨손일 때만, 플레이어): 상훈 먹물 곡사 / 은숙 빛 구체. 무기를 주우면 그 무기로
+function basicOf(a) {
+  if (a !== p || a.w !== 0) return null;
+  const D = SKILL_DATA[character];
+  return D && D.basic || null;
+}
+function attackRange(a) {
+  const B = basicOf(a);
+  return B ? B.range : weapons[a.w][3];
+}
 function reloadTime(a) {
+  const B = basicOf(a);
+  if (B) return B.reload * (hasGear(a, 4) ? 0.9 : 1) * (a.reloadMul || 1);
   return weapons[a.w][2] * (hasGear(a, 4) ? 0.9 : 1) * (a.reloadMul || 1);
 }
 function updateAmmo(a, dt) {
@@ -289,6 +305,17 @@ function attack(a, x, y) {
   d *= hasGear(a, 2) ? 1.15 : 1;
   let ang = Math.atan2(y - a.y, x - a.x);
   a.attackAng = ang;
+  const B = basicOf(a);
+  if (B) { // 캐릭터 고유 원거리 기본 공격
+    const dd = B.dmg * (hasGear(a, 2) ? 1.15 : 1);
+    if (B.kind === "lob") { // 상훈: 곡사 (벽·강을 넘어감), 착탄 지점 소범위
+      const len = Math.min(B.range, Math.max(30, Math.hypot(x - a.x, y - a.y)));
+      shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(a.x + Math.cos(ang) * len, 0, W), ty: clamp(a.y + Math.sin(ang) * len, 0, H), t: B.flight, flight: B.flight, octo: 3, d: dd, S: B, basic: true });
+    } else { // 은숙: 직선 빛 구체 (벽에 막힘, 단일 대상)
+      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(ang) * B.speed, vy: Math.sin(ang) * B.speed, left: B.range, d: dd, range: B.range, basic: true, orb: true, hitR: B.width });
+    }
+    return;
+  }
   if (a === p && a.w !== 6) fx.push({ x: a.x, y: a.y, t: 0.22, cone: true, ang, r, half: angles[a.w] * Math.PI / 360 });
   if (a.w < 3) {
     for (let b of hitTargets(a)) { // 휘두른 범위 안이면 은신해도 맞음

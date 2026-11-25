@@ -1,7 +1,7 @@
 // 소환사: 소환·교체·펫 기술
 
 let flight = null;
-let deck = [0, 3, 5], selected = 0, pet = null, summonCD = Array(8).fill(0), skillCD = 0, swapCD = 0;
+let deck = [0, 3, 5], selected = 0, pet = null, summonCD = Array(mons.length).fill(0), skillCD = 0, swapCD = 0;
 const SUMMON_RANGE = 220; // 캐릭터 기준 최대 투척 거리
 // 목표 지점을 사거리 안으로 당기고, 던질 수 있는 자리인지(지형·벽·상자) 확인
 function summonPoint(tx, ty) {
@@ -53,9 +53,9 @@ function runPet(pt, dt) {
     pt.moving = false;
     pt.dir = (Math.round(Math.atan2(b.x - pt.x, pt.y - b.y) / (Math.PI / 4)) + 8) % 8;
     if (pt.cd <= 0) {
-      pt.cd = 0.8 * (pt.ult && singleRun?.endless && singleRun.mods.petHaste || 1); // 무한 생존 카드: 궁극기 포켓몬 공격 속도
+      pt.cd = 0.8 * (pt.ult && singleRun?.endless && singleRun.mods.petHaste || 1) / petMul(pt.id, "aspd"); // 무한 생존 카드: 공격 속도
       pt.pose = 0.25;
-      hit(pt, b, m[2], { ult: !!pt.ult });
+      hit(pt, b, m[2] * petMul(pt.id, "atk"), { ult: !!pt.ult });
       fx.push({ x: b.x, y: b.y, sx: pt.x, sy: pt.y, t: 0.24, bolt: pt.id === 0, ring: 22 });
     }
   }
@@ -71,15 +71,39 @@ function command(pt = pet) {
   pet.skillCD = PET_RULES.skillCD;
   sfx("pet_skill", pet);
   fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: S.name });
-  for (let b of enemies.slice(0, S.targets || 1)) {
-    if (id === 0) fx.push({ x: b.x, y: b.y, sx: pet.x, sy: pet.y, t: 0.48, bolt: true, strong: true });
+  petSkillEffect(pet, S, enemies);
+  fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
+}
+// 포켓몬 기술 효과 (기본·진화·전설 공통). 뮤: 회복 + 무작위 기본 기술
+function petSkillEffect(pet, S, enemies) {
+  const id = pet.id, mul = petSkillMul(id);
+  if (S.heal) healActor(p, p.max * S.heal);
+  if (S.random) {
+    const pick = PET_SKILLS[Math.floor(Math.random() * BASE_PET_COUNT)];
+    fx.push({ x: pet.x, y: pet.y - 48, t: 0.65, text: pick.name, tcol: "#f7a8d8" });
+    S = { ...pick, dmg: S.dmg };
+  }
+  if (S.line) { // 레쿠쟈: 가장 가까운 적 쪽 직선 관통
+    const b0 = enemies[0], ang = Math.atan2(b0.y - pet.y, b0.x - pet.x), ux = Math.cos(ang), uy = Math.sin(ang);
+    for (const b of bots) {
+      if (b.hp <= 0 || b.stealth > 0) continue;
+      const rx = b.x - pet.x, ry = b.y - pet.y, along = rx * ux + ry * uy, off = Math.abs(rx * uy - ry * ux);
+      if (along > 0 && along < S.line && off < S.width / 2) hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
+    }
+    fx.push({ x: pet.x, y: pet.y, t: 0.35, cone: true, ang, r: S.line, half: 0.08 });
     pet.pose = 0.35;
-    hit(pet, b, S.dmg, { ult: !!pet.ult });
+    return;
+  }
+  for (let b of enemies.slice(0, S.targets || 1)) {
+    if (id === 0 || PET_DEX[id].base === 0) fx.push({ x: b.x, y: b.y, sx: pet.x, sy: pet.y, t: 0.48, bolt: true, strong: true });
+    pet.pose = 0.35;
+    hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
     if (S.stun) b.stun = S.stun;
     if (S.slow) b.slow = S.slow;
     if (S.weak) b.weak = S.weak;
     if (S.burn) {
       b.burn = S.burn;
+      b.burnDps = S.burnDps * mul;
       b.burnBy = pet; // 화상 피해도 포켓몬(=현곤) 피해로 집계·충전
       b.burnTick = 0;
     }
@@ -93,5 +117,9 @@ function command(pt = pet) {
       }
     }
   }
-  fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
+}
+// 기술 피해 배율: 진화·강화(기술 +20%/단계) × 공격력 카드
+function petSkillMul(id) {
+  const K = pkRun();
+  return petMul(id, "special") * (K ? K.mul.atk : 1);
 }
