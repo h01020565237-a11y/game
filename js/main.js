@@ -55,7 +55,6 @@ function installBattlePauseMenu() {
       <div id="pauseHome" style="display:grid;gap:10px">
         <button type="button" class="btn btn-gold" id="pauseResume">▶ 이어하기</button>
         <button type="button" class="btn btn-blue" id="pauseOptions">옵션 · 사운드</button>
-        <button type="button" class="btn btn-ghost" id="pauseRank">🏆 웨이브 랭킹</button>
         <button type="button" class="btn pause-exit" id="pauseExit">나가기</button>
       </div>
       <div id="pauseSound" hidden>
@@ -163,7 +162,6 @@ function installBattlePauseMenu() {
   pc.onclick = mobile.onclick = open;
   el("pauseResume").onclick = () => close();
   el("pauseOptions").onclick = () => showPage("pauseSound");
-  el("pauseRank").onclick = () => { if (typeof JuyeopRankingUI !== "undefined") JuyeopRankingUI.open("pause"); };
   el("pauseSoundBack").onclick = back;
   el("pauseExit").onclick = () => showPage("pauseConfirm");
   el("pauseExitNo").onclick = back;
