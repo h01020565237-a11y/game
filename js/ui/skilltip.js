@@ -127,10 +127,10 @@ function skillTipModel(charId, slot, key) {
   const s = D[slot];
   return {
     key,
-    title: `${DISPLAY_NAMES[charId] || charId} · ${s.name}${slot === "passive" ? " (패시브)" : ""}`,
+    title: `${DISPLAY_NAMES[charId] || charId} · ${s.name}${slot === "passive" ? " (패시브)" : slot === "r" ? " (궁극기)" : ""}`,
     desc: skillText(s),
     chips: skillChips(s),
-    foot: slot === "passive" ? "" : "패시브 · " + D.passive.name + ": " + skillText(D.passive),
+    foot: slot === "passive" ? "" : slot === "r" ? `적에게 준 피해로 충전 (지금 ${Math.floor((charId === character ? p.ult || 0 : 0) * 100)}%)` : "패시브 · " + D.passive.name + ": " + skillText(D.passive),
   };
 }
 // 포켓몬: 덱 칸 번호(0~2) → 포켓몬 번호로
@@ -150,13 +150,6 @@ function petTipModelById(id, key) {
 }
 
 // ----- PC 스킬 칸 (경기장 오른쪽 아래, 마우스를 올리면 설명) -----
-// 캐릭터별 남은 쿨타임 값이 들어 있는 필드 (기본: 스킬1 = p.s1, 스킬2 = p.s2)
-const SKILL_CD_FIELDS = { bear: { q: "runCD", e: "healCD" }, runner: { q: "runCD", e: "tackleCD" } };
-function skillCdLeft(slot) {
-  if (character === "summoner") return slot === "q" ? summonCD[deck[selected]] : swapCD;
-  const f = (SKILL_CD_FIELDS[character] || { q: "s1", e: "s2" })[slot];
-  return p[f] || 0;
-}
 let skillBarFor = null;
 function buildSkillBar() {
   const bar = document.querySelector("#skillBar");
@@ -177,6 +170,7 @@ function buildSkillBar() {
   if (!D) return;
   add("q", `<kbd>Q</kbd><b>${D.q.name}</b>`, () => skillTipModel(character, "q", "Q"));
   add("e", `<kbd>E</kbd><b>${D.e.name}</b>`, () => skillTipModel(character, "e", "E"));
+  add("r", `<kbd>X</kbd><b>${D.r.name}</b>`, () => skillTipModel(character, "r", "X"));
   add("passive", `<b>${D.passive.name}</b><span>패시브</span>`, () => skillTipModel(character, "passive"));
 }
 // updateHUD 에서 매 프레임 호출: 쿨타임 표시 갱신
@@ -195,10 +189,14 @@ function updateSkillBar() {
     } else if (el.classList.contains("q") || el.classList.contains("e")) {
       const slot = el.classList.contains("q") ? "q" : "e";
       left = skillCdLeft(slot);
-      total = D[slot].cd;
+      total = character === "summoner" ? (slot === "q" ? PET_RULES.summonCD : PET_RULES.swapCD) : D[slot].cd;
+    } else if (el.classList.contains("r")) { // 궁극기: 충전이 덜 된 만큼 가림
+      left = 1 - (p.ult || 0);
+      total = 1;
+      el.classList.toggle("live", ultReady());
     }
     const h = left > 0 ? Math.min(100, (left / total) * 100).toFixed(0) + "%" : "0%";
-    const cd = el.querySelector(".cd"), t = el.querySelector(".cdt"), txt = left > 0 ? left.toFixed(left < 10 ? 1 : 0) : "";
+    const cd = el.querySelector(".cd"), t = el.querySelector(".cdt"), txt = el.classList.contains("r") ? (left > 0 ? Math.floor((1 - left) * 100) + "%" : "") : left > 0 ? left.toFixed(left < 10 ? 1 : 0) : "";
     if (cd.style.height !== h) cd.style.height = h;
     if (t.textContent !== txt) t.textContent = txt;
   }

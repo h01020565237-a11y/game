@@ -9,25 +9,62 @@ const sb = document.querySelector("#summonBtn");
 function toLocal(dx, dy) {
   return document.body.classList.contains("rot") ? [dy, -dx] : [dx, dy];
 }
-// 일반 스킬 버튼: 짧게 탭하면 손을 뗄 때 발동. 길게 눌러 설명만 봤으면(SkillTip.used) 발동하지 않음
-function tapButton(btn, fire, tipModel) {
+// ----- 스킬 버튼 공통 조작 (Q·E·궁극기) -----
+// 탭: 가장 가까운 적에게 자동 조준해서 발동
+// 길게 누르기(0.5초): 설명창 + 예상 경로(자동 조준 방향). 그대로 떼면 발동하지 않음
+// 누른 채 끌기: 설명 닫고 경로를 손가락 방향으로 조준, 떼면 그 방향·위치로 발동. 처음 자리로 되돌려 떼면 취소
+let skillAim = null; // 미리보기 { slot, x, y } (렌더러가 그림)
+function skillButton(btn, slot) {
   let press = null;
-  SkillTip.attach(btn, tipModel);
+  SkillTip.attach(btn, () => skillTipModel(character, slot));
+  const S = () => skillOf(slot);
   btn.onpointerdown = (e) => {
     e.preventDefault();
     if (over || press) return;
     btn.setPointerCapture(e.pointerId);
-    press = e.pointerId;
+    press = { id: e.pointerId, x: e.clientX, y: e.clientY, aiming: false, cancel: false };
+    const pr = press;
+    pr.timer = setTimeout(() => {
+      if (press === pr && !pr.aiming && S() && S().aim !== "none" && character !== "summoner") skillAim = { slot, ...clampAim(slot, autoAimPoint(slot)) };
+    }, SKILL_HOLD * 1000);
+  };
+  btn.onpointermove = (e) => {
+    if (press?.id !== e.pointerId) return;
+    const sk = S();
+    if (!sk || sk.aim === "none" || (character === "summoner" && slot !== "r")) return;
+    const [dx, dy] = toLocal(e.clientX - press.x, e.clientY - press.y), m = Math.hypot(dx, dy);
+    if (m > AIM_DEAD) press.aiming = true;
+    if (!press.aiming) return;
+    press.cancel = m <= AIM_DEAD;
+    if (press.cancel) {
+      skillAim = null;
+      return;
+    }
+    const len = sk.aim === "point" ? clamp(m / (btn.offsetWidth * 1.6), 0.15, 1) * sk.range : sk.range || 150;
+    skillAim = { slot, x: p.x + dx / m * len, y: p.y + dy / m * len };
   };
   btn.onpointerup = (e) => {
-    if (press !== e.pointerId) return;
+    if (press?.id !== e.pointerId) return;
+    clearTimeout(press.timer);
+    const pr = press, aimAt = skillAim;
     press = null;
-    if (!SkillTip.used(btn) && !over) fire();
+    skillAim = null;
+    if (over) return;
+    if (pr.aiming) {
+      if (!pr.cancel && aimAt) castSkill(slot, aimAt);
+      return;
+    }
+    if (SkillTip.used(btn)) return; // 설명·경로만 보고 뗌
+    castSkill(slot);
   };
   btn.onpointercancel = btn.onlostpointercapture = (e) => {
-    if (press === e.pointerId) press = null;
+    if (press?.id !== e.pointerId) return;
+    clearTimeout(press.timer);
+    press = null;
+    skillAim = null;
   };
 }
+const SKILL_HOLD = 0.5;
 
 // 현곤(소환사): 소환 버튼 대신 포켓몬 3마리 버튼을 화면에 바로 표시
 // - 탭: 그 포켓몬을 자동 위치로 바로 소환 (다른 포켓몬이 나와 있으면 교체)
@@ -87,7 +124,8 @@ petBtns.forEach((btn, i) => {
   };
   btn.onpointercancel = btn.onlostpointercapture = (e) => petPress?.id === e.pointerId && closeSwipe();
 });
-tapButton(sb, () => character !== "summoner" && characterSkill(1), () => skillTipModel(character, "q"));
+skillButton(sb, "q");
+skillButton(document.querySelector("#ultBtn"), "r");
 function aimSummon() {
   let x = mvX, y = mvY;
   if (!x && !y) {
@@ -268,8 +306,24 @@ function touchHUD() {
     if (btn.className !== cls) btn.className = cls;
   }
   setText("dashBtn", p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시");
-  setText("bearHeal", extraNames[character] ? extraNames[character][1] + (p.s2 > 0 ? " " + p.s2.toFixed(1) : "") : character === "runner" ? p.tackleCD > 0 ? "태클 " + p.tackleCD.toFixed(1) : "태클" : p.healCD > 0 ? "회복 " + p.healCD.toFixed(1) : "회복");
-  setText("summonBtn", extraNames[character] ? extraNames[character][0] + (p.s1 > 0 ? " " + p.s1.toFixed(1) : "") : character === "runner" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주 " + Math.floor(p.energy) + "%" : character === "bear" ? p.runCD > 0 ? "질주 " + p.runCD.toFixed(1) : "질주" : "소환");
+  // 스킬 버튼 글자: 스킬 이름 + 남은 쿨타임 (이름은 SKILL_DATA)
+  const D = SKILL_DATA[character];
+  if (D && character !== "summoner") {
+    const lab = (slot) => D[slot].name + (p.skcd[slot] > 0 ? "\n" + p.skcd[slot].toFixed(1) : character === "runner" && slot === "q" ? "\n" + Math.floor(p.energy) + "%" : "");
+    setText("summonBtn", lab("q"));
+    setText("bearHeal", lab("e"));
+  }
+  // 궁극기 버튼: 충전 링 + 완충 강조
+  const ub = document.querySelector("#ultBtn"), pct = Math.floor((p.ult || 0) * 100), ready = ultReady();
+  if (ub._pct !== pct) {
+    ub._pct = pct;
+    ub.style.setProperty("--ult", pct + "%");
+  }
+  setText("ultLabel", p.ultT > 0 ? "발동 중" : ready ? D.r.name : pct + "%");
+  if (ub._ready !== ready) {
+    ub._ready = ready;
+    ub.classList.toggle("ready", ready);
+  }
   // 교체 버튼: 바꿀 수 있는 아이템 위에 있을 때만 표시
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
   let label = swapL ? "교체\n" + lootName(swapL) : "";
@@ -280,7 +334,7 @@ function touchHUD() {
   }
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
-tapButton(document.querySelector("#bearHeal"), () => characterSkill(2), () => skillTipModel(character, "e"));
+skillButton(document.querySelector("#bearHeal"), "e");
 document.querySelector("#charApply").onclick = () => {
   character = document.querySelector("#character").value;
   ui.style.display = character !== "summoner" ? "none" : "";

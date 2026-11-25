@@ -29,28 +29,12 @@ function update(dt) {
     b.prevY = b.y;
     b._anim = false;
   }
-  for (let k of ["s1", "s2", "focus", "guard", "stealth"]) p[k] = Math.max(0, p[k] - dt * (k[0] === "s" && k.length === 2 ? p.cdRate || 1 : 1));
-  if (character === "support") p.hp = Math.min(p.max, p.hp + p.max * SKILL_DATA.support.passive.perSec * dt);
-  if (character === "runner") {
-    p.run = Math.max(0, p.run - dt);
-    p.runCD = Math.max(0, p.runCD - dt * (p.cdRate || 1));
-    p.tackleCD = Math.max(0, p.tackleCD - dt * (p.cdRate || 1));
-  }
-  if (character === "bear") {
-    p.run = Math.max(0, p.run - dt);
-    p.runCD = Math.max(0, p.runCD - dt * (p.cdRate || 1));
-    p.healCD = Math.max(0, p.healCD - dt * (p.cdRate || 1));
-    if (p.heal > 0) {
-      let t = Math.min(dt, p.heal);
-      p.hp = Math.min(p.max, p.hp + p.max * SKILL_DATA.bear.e.perSec * t);
-      p.heal -= t;
-    }
-  }
+  updateSkills(dt); // 스킬 쿨타임·진행 중인 스킬 효과·패시브 (js/game/skills.js)
   if (flight) {
     flight.t += dt;
     if (flight.t >= 0.42) {
       let { tx: x, ty: y, id } = flight, m = mons[id];
-      pet = { ...actor(x, y), id, hp: m[4], max: m[4], life: PET_RULES.life };
+      pet = { ...actor(x, y), id, hp: m[4], max: m[4], life: PET_RULES.life, skillCD: 0 };
       fx.push({ x, y, t: 0.55, burst: true });
       flight = null;
     }
@@ -58,42 +42,23 @@ function update(dt) {
   nt -= dt;
   summonCD = summonCD.map((v) => Math.max(0, v - dt * (p.cdRate || 1)));
   swapCD = Math.max(0, swapCD - dt);
-  skillCD = Math.max(0, skillCD - dt);
   for (let b of [p, ...bots]) {
-    for (let k of ["stun", "slow", "weak", "ink"]) b[k] = Math.max(0, (b[k] || 0) - dt);
+    for (let k of ["stun", "slow", "weak", "ink", "root", "miss"]) b[k] = Math.max(0, (b[k] || 0) - dt);
     if (b.burn > 0 && b.hp > 0) {
       b.burn -= dt;
       b.burnTick -= dt;
       if (b.burnTick <= 0) {
         b.burnTick += 1;
-        hit({ gear: [] }, b, PET_SKILLS[1].burnDps);
+        hit(b.burnBy || { gear: [] }, b, PET_SKILLS[1].burnDps, { dot: true, ult: !!b.burnBy?.ult });
       }
     }
   }
   if (pet) {
-    pet.life -= dt;
-    pet.pose = Math.max(0, (pet.pose || 0) - dt);
-    pet.cd = Math.max(0, pet.cd - dt);
+    runPet(pet, dt);
     if (pet.life <= 0 || pet.hp <= 0) {
       fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true });
       sfx("pet_return", pet);
       pet = null;
-    } else {
-      command();
-      let b = minBy(bots.filter((b2) => b2.hp > 0), (b2) => dist(pet, b2)), m = mons[pet.id];
-      if (b) {
-        if (dist(pet, b) > m[3] || blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)) steer(pet, b.x, b.y, dt); // AI: 경로 탐색
-        else {
-          pet.moving = false;
-          pet.dir = (Math.round(Math.atan2(b.x - pet.x, pet.y - b.y) / (Math.PI / 4)) + 8) % 8;
-          if (pet.cd <= 0) {
-            pet.cd = 0.8;
-            pet.pose = 0.25;
-            hit(pet, b, m[2]);
-            fx.push({ x: b.x, y: b.y, sx: pet.x, sy: pet.y, t: 0.24, bolt: pet.id === 0, ring: 22 });
-          }
-        }
-      }
     }
   }
   for (let a of [p, ...bots]) {
@@ -113,7 +78,7 @@ function update(dt) {
   }
   p.dashCD = Math.max(0, p.dashCD - dt);
   let ox = p.x, oy = p.y;
-  if (character === "runner" && p.tackle > 0) {
+  if (p.tackle > 0) {
     let step = Math.min(dt, p.tackle);
     let n = Math.hypot(p.tx, p.ty) || 1;
     for (let k = 0; k < 3; k++) {
@@ -219,23 +184,26 @@ function update(dt) {
       if (s.t <= 0) {
         if (s.octo === 2 && !s.armed) {
           s.armed = true;
-          s.t = SKILL_DATA.octo.e.armT;
+          s.t = s.S.armT;
           s.sx = s.tx;
           s.sy = s.ty;
         } else if (s.octo === 1) {
-          for (let b of [p, ...bots, ...boxes].filter((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < SKILL_DATA.octo.q.radius)) {
+          for (let b of [p, ...bots, ...boxes].filter((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < s.S.radius && !(isMine(s.a) && isMine(b2)))) {
             hit(s.a, b, s.d);
-            if (b.max) b.ink = SKILL_DATA.octo.q.ink;
+            if (b.max) { // 먹물: 공격 MISS 확률 (보스는 낮게), 겹치면 갱신
+              b.miss = s.S.missDur;
+              b.missChance = b.mob === "boss" ? s.S.missBoss : s.S.miss;
+            }
           }
           fx.push({ x: s.tx, y: s.ty, t: 0.7, inkBurst: true });
           s.dead = true;
         } else s.dead = true;
       }
       if (s.armed && !s.dead) {
-        let b = [p, ...bots].find((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < SKILL_DATA.octo.e.radius);
+        let b = [p, ...bots].find((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < s.S.radius && !(isMine(s.a) && isMine(b2)));
         if (b) {
           hit(s.a, b, s.d);
-          b.stun = SKILL_DATA.octo.e.stun;
+          b.root = s.S.root; // 이동불가 (공격은 가능)
           s.dead = true;
           fx.push({ x: s.tx, y: s.ty, t: 0.5, inkBurst: true });
         }
@@ -256,28 +224,57 @@ function update(dt) {
       }
       continue;
     }
-    let steps = Math.ceil(dt * 650 / 8);
+    if (s.curve) { // 재한 감아차기: 곡선 관통, 벽에 맞으면 멈춤
+      const steps = Math.max(1, Math.ceil(s.speed * dt / 8));
+      for (let i = 0; i < steps && !s.dead; i++) {
+        s.u += s.speed * dt / steps / s.len;
+        const [x, y] = bezier(s, Math.min(1, s.u));
+        s.vx = (x - s.x) / (dt / steps);
+        s.vy = (y - s.y) / (dt / steps);
+        s.x = x;
+        s.y = y;
+        if (s.u >= 1 || blocked(x, y, 2)) {
+          s.dead = true;
+          break;
+        }
+        forEachCandidate((b) => {
+          if (b.max && canTarget(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22) {
+            s.hitSet.add(b);
+            hit(s.a, b, s.d);
+          }
+        });
+      }
+      continue;
+    }
+    const spd = Math.hypot(s.vx, s.vy) || 650;
+    let steps = Math.ceil(dt * spd / 8);
     for (let i = 0; i < steps && !s.dead; i++) {
       s.x += s.vx * dt / steps;
       s.y += s.vy * dt / steps;
-      s.left -= 650 * dt / steps;
-      if (s.soccer && s.bounces > 0 && (blocked(s.x, s.y, 2) || s.x < 0 || s.x > W || s.y < 0 || s.y > H)) {
-        s.x -= s.vx * dt / steps;
-        s.y -= s.vy * dt / steps;
-        s.vx *= -1;
-        s.vy *= -1;
-        s.bounces--;
-        s.d *= SKILL_DATA.soccer.e.bounceMul;
-        continue;
-      }
+      s.left -= spd * dt / steps;
       if (blocked(s.x, s.y, 2) || s.left < 0 || s.x < 0 || s.x > W || s.y < 0 || s.y > H) {
+        if (s.blast) { // 재한 궁극기: 최대 거리(또는 벽)에서 폭발
+          for (const b of bots) if (b.hp > 0 && dist(s, b) <= s.blast.blastRadius) hit(s.a, b, s.blast.blastDmg, { ult: true });
+          fx.push({ x: s.x, y: s.y, t: 0.45, explosion: true });
+          shake(6);
+        }
         s.dead = true;
         break;
       }
-      let b = firstTargetNear(s.a, s, 18);
+      if (s.pierce) { // 관통: 대상마다 1번
+        forEachCandidate((b) => {
+          if (b.max && canTarget(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 24) {
+            s.hitSet.add(b);
+            hit(s.a, b, s.d, { ult: s.ult });
+            if (s.push) knock(b, s.vx, s.vy, s.push);
+          }
+        });
+        continue;
+      }
+      let b = firstTargetNear(s.a, s, s.heart ? 20 : 18);
       if (b) {
-        hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1));
-        if (s.slow) b.slow = s.slow;
+        hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic });
+        if (s.slow && b.max) b.slow = Math.max(b.slow || 0, s.slow);
         s.dead = true;
       }
     }

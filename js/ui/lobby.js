@@ -181,10 +181,10 @@ el("lobbyStart").onclick = () => {
 // 캐릭터 상세: 전신 그림 + 스킬 설명
 function fillSkills(ul, info) {
   ul.innerHTML = "";
-  info.skills.forEach(([n, d], i) => {
+  [...info.skills, ...(info.ult ? [info.ult] : [])].forEach(([n, d], i) => {
     const li = document.createElement("li");
     const kb = document.createElement("b");
-    kb.textContent = (i ? "E" : "Q") + " " + n;
+    kb.textContent = ["Q", "E", "궁극기"][i] + " " + n;
     const sp = document.createElement("span");
     sp.textContent = d;
     li.append(kb, sp);

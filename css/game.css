@@ -394,3 +394,9 @@ body.mobile #skillBar, body.lobbyOpen #skillBar, body.titleOpen #skillBar { disp
 .sk-slot.live { border-color: #63e99b; }
 .sk-slot.passive { border-style: dashed; opacity: .9; }
 .sk-slot.pet { cursor: pointer; }
+
+/* 궁극기 버튼: 충전 링(--ult) + 완충 강조 */
+#touch #ultBtn { right: 31%; bottom: 33%; width: clamp(58px, 10.5vw, 88px); border: 0; padding: 0; background: radial-gradient(circle at 50% 45%, #3a2a6e 0 58%, transparent 60%), conic-gradient(#ffd23f var(--ult, 0%), #2a2f55 0); color: #fff; font-size: 11px; line-height: 1.15; white-space: pre-line; z-index: 3; }
+#touch #ultBtn.ready { background: radial-gradient(circle at 50% 45%, #7a3fe0 0 58%, transparent 60%), conic-gradient(#ffd23f 100%, #ffd23f 0); box-shadow: 0 0 16px #ffd23f, 0 0 4px #fff; animation: ult-ready 1s ease-in-out infinite; }
+@keyframes ult-ready { 50% { box-shadow: 0 0 26px #ffd23f, 0 0 8px #fff; } }
+#touch #summonBtn, #touch #bearHeal { white-space: pre-line; line-height: 1.15; }

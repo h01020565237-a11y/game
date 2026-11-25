@@ -25,7 +25,7 @@ with sync_playwright() as pw:
         tipText = lambda: pg.evaluate('skillTip.hidden ? "" : skillTip.textContent')
         for ch in ['stripe', 'bear', 'runner', 'suit', 'octo', 'soccer', 'support']:
             pg.evaluate(f'openLobby(); lobbySel="{ch}"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(250)
-            pg.evaluate('god=true; freeze=true; p.s1=p.s2=p.runCD=p.healCD=p.tackleCD=0; p.energy=100')
+            pg.evaluate('god=true; freeze=true; p.skcd.q=p.skcd.e=0; p.energy=100')
             for sel, slot in [('#summonBtn', 'q'), ('#bearHeal', 'e')]:
                 c = ctr(sel)
                 touch('touchStart', *c); pg.wait_for_timeout(400); early = tipText(); pg.wait_for_timeout(250); t = tipText(); touch('touchEnd'); pg.wait_for_timeout(60)
@@ -35,7 +35,7 @@ with sync_playwright() as pw:
                 touch('touchStart', *c); pg.wait_for_timeout(80); touch('touchEnd'); pg.wait_for_timeout(60)
                 ok(f'[{mode}] {ch} {slot}: 짧게 탭하면 발동', pg.evaluate(f'skillCdLeft("{slot}") > 0'))
         # 끌기 시작하면 닫힘
-        pg.evaluate('p.s1=0'); c = ctr('#summonBtn'); touch('touchStart', *c); pg.wait_for_timeout(650); shown = tipText() != ''
+        pg.evaluate('p.skcd.q=0'); c = ctr('#summonBtn'); touch('touchStart', *c); pg.wait_for_timeout(650); shown = tipText() != ''
         touch('touchMove', *L(c, 30, 0)); pg.wait_for_timeout(60); closed = tipText() == ''; touch('touchEnd')
         ok(f'[{mode}] 설명 중 끌기 시작하면 닫힘', shown and closed)
         # 현곤 포켓몬 버튼
@@ -60,7 +60,7 @@ with sync_playwright() as pw:
     for ch in ['stripe', 'summoner']:
         pg.evaluate(f'openLobby(); lobbySel="{ch}"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(300)
         n = pg.evaluate('document.querySelectorAll("#skillBar .sk-slot").length')
-        ok(f'[PC] {ch} 스킬 칸 표시 ({n}칸)', n == (6 if ch == 'summoner' else 3))
+        ok(f'[PC] {ch} 스킬 칸 표시 ({n}칸)', n == (7 if ch == 'summoner' else 4))
         for k in range(n):
             pg.hover(f'#skillBar .sk-slot >> nth={k}'); pg.wait_for_timeout(250)
             t = pg.evaluate('skillTip.hidden ? "" : skillTip.textContent')
@@ -72,7 +72,7 @@ with sync_playwright() as pw:
     pg.evaluate('SKILL_DATA.stripe.e.dmg = 777')
     pg.hover('#skillBar .sk-slot >> nth=1'); pg.wait_for_timeout(250)
     t = pg.evaluate('skillTip.textContent')
-    hpdrop = pg.evaluate('''(() => { god = true; freeze = true; p.s2 = 0; const b = bots[0]; b.x = p.x + 30; b.y = p.y; b.hp = b.max = 5000; p.lastMoveDir = 2; mvX = 1; mvY = 0; characterSkill(2); mvX = mvY = 0; return 5000 - b.hp; })()''')
+    hpdrop = pg.evaluate('''(() => { god = true; freeze = true; p.skcd.e = 0; const b = bots[0]; b.x = p.x + 30; b.y = p.y; b.hp = b.max = 5000; p.lastMoveDir = 2; mvX = 1; mvY = 0; castSkill('e', { x: b.x, y: b.y }); mvX = mvY = 0; return 5000 - b.hp; })()''')
     ok('[연동] 피해 수치 변경이 설명과 실제 피해에 같이 반영', '777' in t and abs(hpdrop - 777) < 1 or abs(hpdrop - 777 * 1.5) < 1, f'tip={("777" in t)} dmg={hpdrop}')
     b.close()
 print('ALL PASS' if not fails else f'{fails} FAIL')

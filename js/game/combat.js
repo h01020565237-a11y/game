@@ -14,45 +14,78 @@ function rollDrop() {
   return table[table.length - 1];
 }
 
-function hit(a, b, d) {
+// 피해 처리 (모든 공격 공통). o: { ult 궁극기 피해(충전 제외), dot 지속 피해 }
+function hit(a, b, d, o = {}) {
   if (b === p && god) return;
-  // 스킬·패시브 수치는 SKILL_DATA (js/data/skills.js)
-  if (b === p && p.guard > 0) {
-    d *= SKILL_DATA.suit.e.take;
-    if (a.max && a !== p) a.hp -= d * SKILL_DATA.suit.e.reflect;
+  if (b.max && isMine(a) && isMine(b)) return; // 같은 편끼리는 피해 없음
+  // 먹물(상훈 Q): 공격자에게 MISS 확률 → 피해 0 (회복·버프에는 영향 없음)
+  if (a.miss > 0 && b.max && !o.dot && Math.random() < (a.missChance || 0)) {
+    fx.push({ x: b.x, y: b.y, t: 0.6, text: "MISS", tcol: "#b8b8c0" });
+    return;
   }
+  // 동기 위빙: 회피 중 적 공격 무효 + 카운터 게이지
+  if (b === p && p.weave > 0 && a !== p && !o.dot) {
+    fx.push({ x: p.x, y: p.y, t: 0.6, text: "IMMUNE", tcol: "#b8b8c0" });
+    const P = SKILL_DATA.suit.passive, was = p.counter || 0;
+    p.counter = Math.min(1, was + P.perDodge);
+    if (was < 1 && p.counter >= 1) fx.push({ x: p.x, y: p.y - 70, t: 0.8, text: "카운터 준비!", tcol: "#ffd23f" });
+    return;
+  }
+  let crit = false;
+  // 스킬·패시브 수치는 SKILL_DATA (js/data/skills.js)
   if (a === p && character === "suit") {
-    if (p.focus > 0) d *= SKILL_DATA.suit.q.mult;
-    else if (Math.random() < SKILL_DATA.suit.passive.chance) d *= SKILL_DATA.suit.passive.mult;
+    if (p.comboMul && o.basic) d *= p.comboMul; // 잽-스트레이트-훅 (기본 공격만)
+    if (p.counterNow && o.basic) { // 카운터 펀치
+      d *= SKILL_DATA.suit.passive.mult;
+      crit = true;
+    }
   }
   if (a === p && character === "stripe" && b.max) {
     let vx = Math.sin(b.dir * Math.PI / 4), vy = -Math.cos(b.dir * Math.PI / 4);
-    if ((p.x - b.x) * vx + (p.y - b.y) * vy < 0) d *= SKILL_DATA.stripe.passive.mult;
+    if ((p.x - b.x) * vx + (p.y - b.y) * vy < 0) {
+      d *= SKILL_DATA.stripe.passive.mult;
+      crit = true;
+    }
   }
-  if (a === p && character === "soccer" && ++p.combo % SKILL_DATA.soccer.passive.every === 0) d *= SKILL_DATA.soccer.passive.mult;
+  if (a === p && character === "soccer" && o.basic && ++p.combo % SKILL_DATA.soccer.passive.every === 0) {
+    d *= SKILL_DATA.soccer.passive.mult;
+    crit = true;
+  }
   d *= a.weak > 0 ? PET_SKILLS[4].weakMul : 1;
-  // 싱글 강화 카드 (이번 미션의 p 에만 있는 값. 배틀로얄에서는 없음 → 1)
-  if (a === p && p.dmgMul) d *= p.dmgMul;
+  if (a.atkMul) d *= a.atkMul; // 현곤 궁극기 포켓몬
+  // 싱글 강화 카드 (이번 판의 p 에만 있는 값. 배틀로얄에서는 없음 → 1)
+  if (isMine(a) && p.dmgMul) d *= p.dmgMul;
   if (b === p && p.takeMul) d *= p.takeMul;
   d *= hasGear(b, 1) ? 0.9 : 1;
-  if (b === p && character === "bear") {
-    const B = SKILL_DATA.bear.passive;
-    d *= 1 - B.perFoe * Math.min(B.maxFoes, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < B.radius).length);
+  if (b === p) {
+    if (character === "bear") {
+      const B = SKILL_DATA.bear.passive;
+      d *= 1 - B.perFoe * Math.min(B.maxFoes, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < B.radius).length);
+      if (p.bearGuard > 0) d *= 1 - SKILL_DATA.bear.r.guard;
+    }
+    if (character === "summoner" && (pet || ultPets.length)) d *= SKILL_DATA.summoner.passive.take;
   }
-  // 집계: 플레이어(와 내 포켓몬)가 적에게 입힌 피해·처치
-  if (b.max && b !== p && b !== pet && (a === p || a === pet) && b.hp > 0) {
-    stats.damage += Math.min(d, b.hp);
+  if (b.guardT > 0) d *= b.guardMul ?? 1; // 은숙 E
+  if (b.max) b.lastHurt = elapsed; // 은숙 패시브: 맞으면 회복 중단
+  if (b === p && character === "octo" && b.max) p.sulk = Math.min(1, (p.sulk || 0) + d / SKILL_DATA.octo.passive.perDmg);
+  const real = b.max ? Math.min(d, Math.max(0, b.hp)) : d; // 과잉 피해 제외한 실제 피해
+  // 집계: 플레이어 편(포켓몬·분신 포함)이 적에게 입힌 피해·처치
+  if (b.max && !isMine(b) && isMine(a) && b.hp > 0) {
+    stats.damage += real;
     if (b.hp - d <= 0) stats.kills++;
+    if (!o.ult) chargeUlt(ULT_RULES.overkill ? d : real); // 궁극기 충전 (상자·궁극기 피해 제외)
   }
   b.hp -= d;
   if (!b.max) b.flash = elapsed + 0.12;
   // 타격감: 피격 깜빡임·밀림 흔들림, 타격 이펙트, 효과음, 내가 맞으면 화면 흔들림
   if (b.max) b.hitT = 0.14;
-  if (a.max || a === pet) fx.push({ x: b.x, y: b.y - (b.max ? 26 : 14), t: 0.22, impact: true, kind: weaponKind(a) });
+  if (a.max || a === pet || a.owner) fx.push({ x: b.x, y: b.y - (b.max ? 26 : 14), t: 0.22, impact: true, kind: weaponKind(a) });
   sfx(b.max ? "hit" : "crate_hit", b);
   if (b === p) shake(d >= 400 ? 7 : 4);
   if (hasGear(a, 5) && b.max) a.hp = Math.min(a.max, a.hp + d * 0.05);
-  fx.push({ x: b.x, y: b.y, t: 0.65, text: Math.round(d) });
+  // 데미지 숫자: 내가 준 피해 초록, 내가(내 편이) 받은 피해 빨강, 그 밖 흰색, 치명타는 크게
+  const tcol = isMine(b) ? "#ff5a5a" : isMine(a) ? "#5ee07a" : "#ffffff";
+  fx.push({ x: b.x, y: b.y, t: 0.65, text: Math.round(d), tcol, big: crit });
   if (!b.max && b.hp <= 0) {
     fx.push({ x: b.x, y: b.y, t: 0.45, crateBurst: true });
     fx.push({ x: b.x, y: b.y, t: 2, debris: true }); // 바닥 잔해 (그림만, 충돌 없음)
@@ -124,14 +157,16 @@ function pickup(a, pred = isUsefulLoot) {
   sfx(l.type === LOOT.heal ? "heal" : "pickup", a);
 }
 function canTarget(a, b) {
-  return b !== a && b.hp > 0 && visible(a, b) && !(a === p && b === pet) && !(a === pet && b === p);
+  return b !== a && b.hp > 0 && visible(a, b) && !(isMine(a) && isMine(b));
 }
 // 대상 후보 순서: 플레이어, 봇, 상자, 펫 (원본과 동일)
 function forEachCandidate(fn) {
   if (fn(p)) return true;
   for (let i = 0; i < bots.length; i++) if (fn(bots[i])) return true;
   for (let i = 0; i < boxes.length; i++) if (fn(boxes[i])) return true;
-  return pet ? fn(pet) : false;
+  if (pet && fn(pet)) return true;
+  for (let i = 0; i < ultPets.length; i++) if (fn(ultPets[i])) return true;
+  return false;
 }
 function targets(a) {
   const out = [];
@@ -204,6 +239,18 @@ function attack(a, x, y) {
   a.reveal = 1.2;
   if (a === p) p.stealth = 0;
   let [name, d, cd, r] = weapons[a.w];
+  // 동기: 맨손 3연타 콤보(잽-스트레이트-훅), 카운터 게이지가 가득이면 이번 공격이 카운터 펀치
+  if (a === p && character === "suit") {
+    const C = SKILL_DATA.suit.combo;
+    p.comboStep = a.w === 0 && elapsed - (p.comboT ?? -9) < C.reset ? ((p.comboStep || 0) + 1) % 3 : 0;
+    p.comboT = elapsed;
+    p.comboMul = a.w === 0 ? C.mults[p.comboStep] : 1;
+    p.counterNow = p.counter >= 1;
+    if (p.counterNow) {
+      p.counter = 0;
+      fx.push({ x: a.x, y: a.y - 70, t: 0.7, text: "카운터!", tcol: "#ffd23f", big: true });
+    }
+  }
   // 타격감: 공격 방향으로 몸·무기 돌리기, 무기별 모션·반동·총구 불꽃·효과음
   const kind = weaponKind(a);
   a.aimT = 0.35;
@@ -220,8 +267,12 @@ function attack(a, x, y) {
   if (a.w < 3) {
     for (let b of targets(a)) {
       let delta = Math.atan2(Math.sin(Math.atan2(b.y - a.y, b.x - a.x) - ang), Math.cos(Math.atan2(b.y - a.y, b.x - a.x) - ang));
-      if (dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b)) hit(a, b, d);
+      if (dist(a, b) <= r && Math.abs(delta) <= angles[a.w] * Math.PI / 360 && clearLine(a, b)) {
+        hit(a, b, d, { basic: true });
+        if (a === p && character === "suit" && p.comboStep === 2 && a.w === 0) knock(b, b.x - a.x, b.y - a.y, SKILL_DATA.suit.combo.hookPush);
+      }
     }
+
     fx.push({ x: a.x + Math.cos(ang) * r * 0.6, y: a.y + Math.sin(ang) * r * 0.6, t: 0.18, ring: r * 0.55 });
   } else if (a.w === 6) {
     let len = Math.min(r, Math.hypot(x - a.x, y - a.y)), q = { x: a.x + Math.cos(ang) * len, y: a.y + Math.sin(ang) * len };
@@ -229,9 +280,10 @@ function attack(a, x, y) {
   } else {
     for (let i = 0; i < (a.w === 4 ? 5 : 1); i++) {
       let v = ang + (a.w === 4 ? (i - 2) * Math.PI / 12 : 0);
-      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d, shotgun: a.w === 4, range: r });
+      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d: d * (a === p && p.counterNow ? SKILL_DATA.suit.passive.mult : 1), shotgun: a.w === 4, range: r, basic: true });
     }
   }
+  if (a === p) p.counterNow = false; // 카운터는 이번 공격 한 번만
 }
 
 // 무기 종류: 근접(맨손·검·망치) / 총 / 투척

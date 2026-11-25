@@ -19,8 +19,10 @@ onkeydown = (e) => {
     }
   }
   if (!over && !e.repeat) {
-    if (e.code === "KeyQ") character !== "summoner" ? characterSkill(1) : summon();
-    if (e.code === "KeyE") character !== "summoner" ? characterSkill(2) : summon(true);
+    // PC: 스킬은 마우스 위치로 조준 (현곤 Q·E 는 소환·교체 그대로)
+    if (e.code === "KeyQ") castSkill("q", { x: mouse.x, y: mouse.y });
+    if (e.code === "KeyE") castSkill("e", { x: mouse.x, y: mouse.y });
+    if (e.code === "KeyX") castSkill("r", { x: mouse.x, y: mouse.y });
     if (/^Digit[123]$/.test(e.code)) selected = +e.code.slice(-1) - 1;
   }
   if (e.code === "KeyG" && !over && !e.repeat) throwGrenade(p, mouse.x, mouse.y);

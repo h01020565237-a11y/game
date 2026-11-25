@@ -94,7 +94,7 @@ async () => {
   ok("최대 3칸까지만 충전", p.ammo === 3, p.ammo);
 
   // 7) 캐릭터 스킬 발동 (Q/E)
-  const skillState = () => JSON.stringify([p.run, p.heal, p.tackle, p.s1, p.s2, p.focus, p.guard, p.stealth, shots.length, p.hp, !!flight]);
+  const skillState = () => JSON.stringify([p.run, p.heal, p.tackle, p.skcd, p.stealth, p.weave, !!p.rush, shots.length, p.hp, !!flight]);
   for (const ch of CHARACTER_ORDER) {
     fresh(ch);
     p.energy = 100;

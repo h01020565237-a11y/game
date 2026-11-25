@@ -110,6 +110,8 @@ function draw() {
     g.drawImage(jungle, camX * sx, camY * sy, VW * sx, VH * sy, camX, camY, VW, VH);
   } else scenery();
   if (summonAim && p.hp > 0) drawSummonAim();
+  drawUltGround();
+  drawSkillPreview();
   if (grenAim && !grenAim.cancel) {
     // 수류탄 조준 미리보기: 던질 지점과 폭발 범위
     const d = weapons[GRENADE.weaponId][3] * grenAim.mag, tx = clamp(p.x + grenAim.x * d, 0, W), ty = clamp(p.y + grenAim.y * d, 0, H);
@@ -241,6 +243,8 @@ function draw() {
     g.fill();
     g.save();
     if (a === p && (p.stealth > 0 || inBush(p))) g.globalAlpha = 0.5;
+    if (a === p && p.weave > 0) g.globalAlpha = 0.6; // 위빙 중
+    if (a === p && p.jumpZ) g.translate(0, -p.jumpZ); // 정용 점프
     drawActorWithFeel(a, a === p ? character : a.visual);
     g.restore();
     if (a === p && character === "runner") {
@@ -258,23 +262,9 @@ function draw() {
     g.textAlign = "center";
     g.fillText(DISPLAY_NAMES[a === p ? character : a.visual] + " · " + weapons[a.w][0], a.x, a.y + 28);
   }
-  if (pet) {
-    if (pet.id === 0) drawPika(pet);
-    else {
-      g.fillStyle = "#285c9c";
-      g.beginPath();
-      g.arc(pet.x, pet.y, 18, 0, 7);
-      g.fill();
-      g.font = "24px sans-serif";
-      g.textAlign = "center";
-      g.fillText(mons[pet.id][1], pet.x, pet.y + 8);
-    }
-    bar(pet.x, pet.y - 61, pet.hp, pet.max);
-    g.fillStyle = "white";
-    g.font = "12px sans-serif";
-    g.fillText(mons[pet.id][0], pet.x, pet.y + 30);
-  }
-  setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${skillCD.toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
+  for (const pt of [...(pet ? [pet] : []), ...ultPets]) drawPetActor(pt);
+  for (const c of clones) drawClone(c);
+  setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
   if (singleRun) drawMobShots();
   for (let s of shots) {
     if (s.octo) {
@@ -314,6 +304,10 @@ function draw() {
       g.restore();
       continue;
     }
+    if (s.heart) { // 기섭 궁극기 하트
+      drawHeart(s.x, s.y - 20, 8);
+      continue;
+    }
     // 총알: 판정은 발밑 좌표, 그림은 총구·몸통 높이(20px 위)에 맞춰 그림
     const by = s.y - 20;
     g.strokeStyle = "#fff2a388";
@@ -324,7 +318,7 @@ function draw() {
     g.stroke();
     g.fillStyle = "#fff2a3";
     g.beginPath();
-    g.arc(s.x, by, s.soccer ? 7 : 4, 0, 7);
+    g.arc(s.x, by, s.big ? 11 : s.soccer ? 7 : 4, 0, 7);
     g.fill();
   }
   if (flight) {
@@ -355,6 +349,21 @@ function draw() {
     if (f.heal) {
       g.fillStyle = "#7dff8a";
       g.fillText(f.text, f.x, f.y - 30 - (0.8 - f.t) * 30);
+      continue;
+    }
+    if (f.tentacle) { // 상훈 궁극기 촉수
+      g.save();
+      g.globalAlpha = f.t / 0.35;
+      g.strokeStyle = "#d25b7c";
+      g.lineWidth = 6;
+      for (let i = 0; i < 6; i++) {
+        const v = i / 6 * Math.PI * 2 + f.x * 0.01, r0 = f.r * (1 - f.t / 0.35);
+        g.beginPath();
+        g.moveTo(f.x + Math.cos(v) * 20, f.y + Math.sin(v) * 10);
+        g.quadraticCurveTo(f.x + Math.cos(v + 0.5) * r0 * 0.7, f.y + Math.sin(v + 0.5) * r0 * 0.4 - 20, f.x + Math.cos(v) * r0, f.y + Math.sin(v) * r0 * 0.5);
+        g.stroke();
+      }
+      g.restore();
       continue;
     }
     if (f.inkBurst) {
@@ -404,7 +413,20 @@ function draw() {
       g.beginPath();
       g.arc(f.x, f.y, f.ring, 0, 7);
       g.stroke();
-    } else if (f.text !== undefined) g.fillText(f.text, f.x, f.y - 30 - (0.65 - f.t) * 25); // 수정: 글자 없는 이펙트(부채꼴 등)에 "undefined" 가 찍히던 문제
+    } else if (f.text !== undefined) { // 데미지·회복·MISS 숫자: 색(f.tcol), 치명타·알림은 크게(f.big), 위로 떠오르며 사라짐
+      if (f.tcol) {
+        g.save();
+        g.globalAlpha = clamp(f.t / 0.35, 0, 1);
+        g.font = f.big ? "bold 19px sans-serif" : "bold 13px sans-serif";
+        g.lineWidth = 3;
+        g.strokeStyle = "#000a";
+        const ty = f.y - 30 - (0.65 - f.t) * 30;
+        g.strokeText(f.text, f.x, ty);
+        g.fillStyle = f.tcol;
+        g.fillText(f.text, f.x, ty);
+        g.restore();
+      } else g.fillText(f.text, f.x, f.y - 30 - (0.65 - f.t) * 25); // 수정: 글자 없는 이펙트(부채꼴 등)에 "undefined" 가 찍히던 문제
+    }
   }
   g.fillStyle = "#a72d4944";
   g.beginPath();
@@ -424,7 +446,8 @@ function draw() {
     g.fillRect(0, 0, VW, VH);
   }
   setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} ${FEATURES.accessories ? "| 장비 " + (p.gear.map((i) => gear[i]).join(", ") || "없음") + " " : ""}| 수류탄 ${p.grenades}/${GRENADE.max} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
-  setText("msg", extraNames[character] ? `${extraNames[character][0]} ${p.s1.toFixed(1)}초 | ${extraNames[character][1]} ${p.s2.toFixed(1)}초` : character === "runner" ? `질주 게이지 ${Math.floor(p.energy)}% | 전력 질주 ${p.runCD.toFixed(1)} | 태클 ${p.tackleCD.toFixed(1)}` : character === "bear" ? `방어 ${8 * Math.min(3, bots.filter((a) => a.hp > 0 && dist(a, p) < 120).length)}% | 질주 ${p.runCD.toFixed(1)} | 회복 ${p.healCD.toFixed(1)}` : nt > 0 ? notice : document.body.classList.contains("mobile") ? "소환 버튼을 좌상 / 위 / 우상으로 드래그 후 놓기" : "Q 소환 · E 교체 · 1~3 선택");
+  const SD = SKILL_DATA[character];
+  setText("msg", nt > 0 ? notice : character === "summoner" ? "Q 소환 · E 교체 · 1~3 선택 · X 궁극기" : `${SD.q.name} ${p.skcd.q.toFixed(1)}초 | ${SD.e.name} ${p.skcd.e.toFixed(1)}초 | 궁극기 ${Math.floor(p.ult * 100)}%${character === "runner" ? " | 자신감 " + Math.floor(p.energy) + "%" : ""}`);
 }
 
 // 소환 조준 미리보기: 사거리 원 + 떨어질 지점 (못 던지는 자리는 빨간색)

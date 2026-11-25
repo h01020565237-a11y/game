@@ -15,20 +15,21 @@ function reset() {
   swapCD = 0;
   selected = 0;
   p = actor(...MAP_JUNGLE.playerSpawn);
+  // 스킬 상태 (판마다 새로): 쿨타임 q·e, 궁극기 충전 ult(0~1)·발동 중 ultT, 캐릭터별 게이지
+  p.skcd = { q: 0, e: 0 }; // 스킬 쿨타임 (p.cd 는 기존 공격 간격)
+  p.ult = 0;
+  p.ultT = 0;
   p.run = 0;
-  p.runCD = 0;
   p.heal = 0;
-  p.healCD = 0;
   p.energy = 0;
   p.tackle = 0;
-  p.tackleCD = 0;
   p.lastMoveDir = 4;
-  p.s1 = 0;
-  p.s2 = 0;
-  p.focus = 0;
-  p.guard = 0;
   p.stealth = 0;
   p.combo = 0;
+  p.counter = 0;
+  p.sulk = 0;
+  ultPets = [];
+  clones = [];
   bots = MAP_JUNGLE.botSpawns.map((a, i) => Object.assign(actor(...a), { visual: BOT_VISUAL_ORDER.filter((k) => k !== character)[i] }));
   boxes = MAP_JUNGLE.crates.map(([x, y]) => ({ x, y, hp: 1e3 }));
   loot = [];
