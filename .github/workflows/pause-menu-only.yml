@@ -1,0 +1,44 @@
+name: Deploy pause-menu-only patch
+on:
+  push:
+    branches: [chatgpt-pause-build]
+    paths: ['.github/workflows/pause-menu-only.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Patch only the existing compiled main.js section
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "7d27db3c581924116a23ce97f5f17a375057c28a"
+          git fetch --no-tags origin 74aa3085dfde5755212f50b1e5da286bf886a292 1e2be2ad52e2154f49a9752c1a63a14f5d0b87cd
+          git show 74aa3085dfde5755212f50b1e5da286bf886a292:js/main.js >/tmp/old-main.js
+          git show 1e2be2ad52e2154f49a9752c1a63a14f5d0b87cd:js/main.js >/tmp/pause-main.js
+          node --check /tmp/pause-main.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          data = p.read_bytes()
+          old = Path('/tmp/old-main.js').read_bytes().strip()
+          new = Path('/tmp/pause-main.js').read_bytes().strip()
+          assert data.count(old) == 1
+          assert b'installBattlePauseMenu' not in data
+          assert b'installBattlePauseMenu' in new
+          assert b'pauseRank' not in new and b'JuyeopRankingUI' not in new
+          patched = data.replace(old, new, 1)
+          assert patched.replace(new, old, 1) == data
+          p.write_bytes(patched)
+          PY
+          test "$(git diff --name-only)" = "index.html"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Deploy in-game pause menu only"
+          git push origin HEAD:main
