@@ -55,6 +55,10 @@ const SkillTip = (() => {
       x += n.offsetLeft;
       y += n.offsetTop;
     }
+    for (let n = el.parentElement; n && n !== box; n = n.parentElement) { // 스크롤된 영역 안의 버튼(로비 등)
+      x -= n.scrollLeft;
+      y -= n.scrollTop;
+    }
     const tw = tip.offsetWidth, th = tip.offsetHeight;
     let top = y - th - 10;
     if (top < 6) top = y + el.offsetHeight + 10;
@@ -129,9 +133,13 @@ function skillTipModel(charId, slot, key) {
     foot: slot === "passive" ? "" : "패시브 · " + D.passive.name + ": " + skillText(D.passive),
   };
 }
-// 포켓몬: 덱 칸 번호(0~2)
+// 포켓몬: 덱 칸 번호(0~2) → 포켓몬 번호로
 function petTipModel(i, key) {
-  const id = deck[i], m = mons[id], S = PET_SKILLS[id];
+  return petTipModelById(deck[i], key);
+}
+// 포켓몬 번호(mons 순서)로 (캐릭터 선택창 포켓몬 칸 등)
+function petTipModelById(id, key) {
+  const m = mons[id], S = PET_SKILLS[id];
   return {
     key,
     title: `${m[1]} ${m[0]} · ${S.name}`,

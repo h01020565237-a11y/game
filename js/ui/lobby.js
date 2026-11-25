@@ -139,7 +139,10 @@ function renderDeckPicker() {
       badge.textContent = String(slot + 1);
       b.append(badge);
     }
+    SkillTip.attach(b, () => petTipModelById(j)); // 길게 누르기(PC는 마우스 올리기)로 효과 설명
     b.onclick = () => {
+      if (SkillTip.used(b)) return; // 설명만 본 경우 선택을 바꾸지 않음
+      SkillTip.hide();
       const at = lobbyDeck.indexOf(j);
       if (at >= 0) lobbyDeck.splice(at, 1); // 다시 누르면 빼기
       else {
