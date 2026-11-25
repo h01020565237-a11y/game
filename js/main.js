@@ -159,7 +159,15 @@ function installBattlePauseMenu() {
     if (page !== "pauseHome") showPage("pauseHome");
     else close();
   }
-  pc.onclick = mobile.onclick = open;
+  pc.onclick = open;
+  // touchstart.preventDefault() prevents synthetic click on mobile controls.
+  mobile.onpointerdown = (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    open();
+  };
+  mobile.onclick = (e) => { if (e.detail === 0) open(); };
   el("pauseResume").onclick = () => close();
   el("pauseOptions").onclick = () => showPage("pauseSound");
   el("pauseSoundBack").onclick = back;
