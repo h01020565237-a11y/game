@@ -4,7 +4,7 @@
 // 버튼은 이미지 위에 투명하게 겹친 실제 버튼. 위치는 이미지 기준 %(가로·세로)
 
 const TITLE_IMAGE = {
-  src: "assets/title_screen/title_final.png",
+  src: "assets/title_screen/title_final.webp", // 2026-11-25: PNG 2.5MB → webp 376KB (같은 그림, 첫 로딩 단축)
   width: 1672,
   height: 941,
   // 그림 속 "TAP TO START" 막대 영역
