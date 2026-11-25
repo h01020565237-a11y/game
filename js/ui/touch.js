@@ -9,6 +9,68 @@ const sb = document.querySelector("#summonBtn");
 function toLocal(dx, dy) {
   return document.body.classList.contains("rot") ? [dy, -dx] : [dx, dy];
 }
+// ----- 길게 누르기 설명창 -----
+// 스킬·포켓몬 버튼을 0.45초 이상 누르고 있으면 효과 설명을 띄움. 설명을 본 뒤 손을 떼면 스킬은 나가지 않음
+const LONG_PRESS = 0.45;
+const tip = document.querySelector("#skillTip");
+function showTip(btn, info) {
+  document.querySelector("#tipName").textContent = info.name;
+  document.querySelector("#tipDesc").textContent = info.desc;
+  document.querySelector("#tipMeta").textContent = info.meta || "";
+  tip.hidden = false;
+  // 레이아웃 좌표(offset*) 기준: 회전 화면에서도 버튼 바로 위(공간이 없으면 아래)에 표시
+  const box = tip.offsetParent || document.body, bw = box.offsetWidth, bh = box.offsetHeight;
+  const tw = tip.offsetWidth, th = tip.offsetHeight, cx = btn.offsetLeft + btn.offsetWidth / 2;
+  let top = btn.offsetTop - th - 10;
+  if (top < 6) top = btn.offsetTop + btn.offsetHeight + 10;
+  tip.style.left = clamp(cx - tw / 2, 6, bw - tw - 6) + "px";
+  tip.style.top = clamp(top, 6, bh - th - 6) + "px";
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+}
+function hideTip() {
+  tip.hidden = true;
+}
+function skillInfo(slot) { // slot 1 = 스킬1(Q), 2 = 스킬2(E)
+  const info = CHARACTER_INFO[character], sk = info && info.skills[slot - 1];
+  if (!sk) return null;
+  const [desc, cd] = sk[1].split(" · ");
+  return { name: `${DISPLAY_NAMES[character]} · ${sk[0]}`, desc, meta: (cd ? "쿨타임 " + cd + " · " : "") + "패시브: " + info.passive };
+}
+function petInfo(i) {
+  const id = deck[i], m = mons[id], P = PET_INFO[id];
+  return { name: `${m[1]} ${m[0]} · ${P.skill}`, desc: P.desc, meta: `공격력 ${m[2]} · 체력 ${m[4]} · 소환 10초 / 쿨타임 15초` };
+}
+// 일반 스킬 버튼: 짧게 탭하면 손을 뗄 때 사용, 길게 누르면 설명만
+function tapOrInfo(btn, fire, info) {
+  let press = null;
+  btn.onpointerdown = (e) => {
+    e.preventDefault();
+    if (over || press) return;
+    btn.setPointerCapture(e.pointerId);
+    press = { id: e.pointerId, info: false, timer: setTimeout(() => {
+      const d = info();
+      if (press && d) {
+        press.info = true;
+        showTip(btn, d);
+      }
+    }, LONG_PRESS * 1000) };
+  };
+  btn.onpointerup = (e) => {
+    if (press?.id !== e.pointerId) return;
+    clearTimeout(press.timer);
+    const shown = press.info;
+    press = null;
+    hideTip();
+    if (!shown && !over) fire();
+  };
+  btn.onpointercancel = btn.onlostpointercapture = (e) => {
+    if (press?.id !== e.pointerId) return;
+    clearTimeout(press.timer);
+    press = null;
+    hideTip();
+  };
+}
+
 // 현곤(소환사): 소환 버튼 대신 포켓몬 3마리 버튼을 화면에 바로 표시
 // - 탭: 그 포켓몬을 자동 위치로 바로 소환 (다른 포켓몬이 나와 있으면 교체)
 // - 끌기: 방향·거리 조준(사거리 원과 조준점 표시), 떼면 그 자리에 투척, 가운데로 되돌려 떼면 취소
@@ -23,6 +85,8 @@ function throwSummon(i, x, y) {
   summon(!!pet);
 }
 function closeSwipe() { // 이름은 예전 호출부 호환용: 진행 중인 소환 조준 취소
+  if (petPress) clearTimeout(petPress.timer);
+  hideTip();
   petPress = null;
   summonAim = null;
 }
@@ -34,12 +98,26 @@ petBtns.forEach((btn, i) => {
     e.preventDefault();
     if (over || petPress || character !== "summoner") return;
     btn.setPointerCapture(e.pointerId);
-    petPress = { id: e.pointerId, i, x: e.clientX, y: e.clientY, moved: false, cancel: false };
+    petPress = { id: e.pointerId, i, x: e.clientX, y: e.clientY, moved: false, cancel: false, info: false };
+    const pp = petPress;
+    pp.timer = setTimeout(() => {
+      if (petPress === pp && !pp.moved) {
+        pp.info = true;
+        showTip(btn, petInfo(i));
+      }
+    }, LONG_PRESS * 1000);
   };
   btn.onpointermove = (e) => {
     if (petPress?.id !== e.pointerId) return;
     const [dx, dy] = toLocal(e.clientX - petPress.x, e.clientY - petPress.y), m = Math.hypot(dx, dy);
-    if (m > AIM_DEAD) petPress.moved = true;
+    if (m > AIM_DEAD && !petPress.moved) {
+      petPress.moved = true;
+      clearTimeout(petPress.timer);
+      if (petPress.info) { // 설명을 보다가 끌기 시작하면 설명 닫고 조준으로
+        petPress.info = false;
+        hideTip();
+      }
+    }
     if (!petPress.moved) return;
     petPress.cancel = m <= AIM_DEAD;
     if (petPress.cancel) {
@@ -53,7 +131,9 @@ petBtns.forEach((btn, i) => {
   btn.onpointerup = (e) => {
     if (petPress?.id !== e.pointerId) return;
     const pr = petPress, aimAt = summonAim;
+    clearTimeout(pr.timer);
     closeSwipe();
+    if (pr.info) return hideTip(); // 설명만 보고 뗌: 소환하지 않음
     if (over) return;
     if (pr.moved) {
       if (!pr.cancel && aimAt) throwSummon(i, aimAt.x, aimAt.y);
@@ -65,10 +145,7 @@ petBtns.forEach((btn, i) => {
   };
   btn.onpointercancel = btn.onlostpointercapture = (e) => petPress?.id === e.pointerId && closeSwipe();
 });
-sb.onpointerdown = (e) => {
-  e.preventDefault();
-  if (!over && character !== "summoner") characterSkill(1);
-};
+tapOrInfo(sb, () => character !== "summoner" && characterSkill(1), () => skillInfo(1));
 function aimSummon() {
   let x = mvX, y = mvY;
   if (!x && !y) {
@@ -261,10 +338,7 @@ function touchHUD() {
   }
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
-document.querySelector("#bearHeal").onpointerdown = (e) => {
-  e.preventDefault();
-  characterSkill(2);
-};
+tapOrInfo(document.querySelector("#bearHeal"), () => characterSkill(2), () => skillInfo(2));
 document.querySelector("#charApply").onclick = () => {
   character = document.querySelector("#character").value;
   ui.style.display = character !== "summoner" ? "none" : "";

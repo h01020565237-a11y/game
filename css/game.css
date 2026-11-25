@@ -371,3 +371,9 @@ body.summoner #touch .petBtn {
 #touch .petBtn[data-i="0"] { right: 3%; bottom: 43%; }
 #touch .petBtn[data-i="1"] { right: 15%; bottom: 36%; }
 #touch .petBtn[data-i="2"] { right: 5%; bottom: 66%; }
+
+/* 길게 누르기 설명창 */
+#skillTip { position: absolute; z-index: 9; max-width: min(62%, 300px); display: flex; flex-direction: column; gap: 3px; padding: 8px 12px; border: 2px solid #ffdf56; border-radius: 10px; background: #0f1838f2; color: #fff; font-size: 12px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 12px #0009; }
+#skillTip[hidden] { display: none; }
+#skillTip b { color: #ffdf56; font-size: 13px; font-weight: normal; }
+#skillTip small { color: #9fc4ff; font-size: 11px; }
