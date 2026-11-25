@@ -63,6 +63,10 @@ function drawLoading() {
 
 fitCanvas();
 reset();
+let frameErrs = 0;
+function frameError(e) { // 같은 에러가 매 프레임 쌓이지 않게 몇 번만 기록
+  if (frameErrs++ < 5) console.error("[frame]", e);
+}
 function loop(t) {
   trackFrame(t);
   beginFrame();
@@ -89,11 +93,22 @@ function loop(t) {
   }
   if (n === MAX_STEPS) acc = 0;
   const lerped = applyInterp(Math.min(1, acc / STEP)); // 계산은 1/60초 고정, 그림은 그 사이를 이어서 (120Hz·프레임 흔들림에서 끊김 방지)
-  draw();
-  drawMinimap(); // 보간된 위치로 같이
+  // 그리기·HUD 에서 에러가 나도 다음 프레임은 계속 (예전: 에러 한 번에 루프가 끊겨 캐릭터 없는 화면으로 멈춤)
+  try {
+    draw();
+    drawMinimap(); // 보간된 위치로 같이
+  } catch (e) {
+    frameError(e);
+    for (let i = 0; i < 40; i++) g.restore(); // 중간에 끊긴 save() 정리 (빈 스택에서 restore 는 아무 일 없음)
+    g.globalAlpha = 1;
+  }
   restoreInterp(lerped);
-  touchHUD();
-  uiFrame();
+  try {
+    touchHUD();
+    uiFrame();
+  } catch (e) {
+    frameError(e);
+  }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

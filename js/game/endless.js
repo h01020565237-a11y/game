@@ -697,7 +697,7 @@ function fireBossPat(a) {
       break;
     case "shock": // 정용 보스: 착지 충격 + 퍼지는 대형 충격파 (틈 있음)
       for (const b of [p, ...(pet ? [pet] : []), ...ultPets]) if (dist(a, b) <= P.radius + 10) hit(a, b, P.dmg * m);
-      fx.push({ x: a.x, y: a.y, t: 0.5, explosion: true });
+      fx.push({ x: a.x, y: a.y, t: 0.45, explosion: true });
       shake(10);
       sfx("hammer", a);
       for (let w = 0; w < (P.waves || 1); w++) {

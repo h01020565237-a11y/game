@@ -151,7 +151,7 @@ function draw() {
     if (f.cone) coneDraw(f.x, f.y, f.ang, f.r, f.half, f.t);
     if (f.explosion) {
       g.save();
-      let u = 1 - f.t / 0.45;
+      let u = Math.max(0, Math.min(1, 1 - f.t / 0.45)); // 수명이 0.45초보다 길게 들어와도 반지름이 음수가 되지 않게
       g.fillStyle = `rgba(255,160,40,${1 - u})`;
       g.beginPath();
       g.arc(f.x, f.y, 90 * Math.min(1, u * 4), 0, 7);
