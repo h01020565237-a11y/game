@@ -48,8 +48,10 @@ const inBush = (a) => {
 };
 // 보임(자동 조준·자동 타겟·화면 표시): 은신 중이면 가까워도 안 보임 (풀숲은 예전처럼 75 이내·노출 시 보임)
 // PvE 적(웨이브·무한 생존 몬스터)은 풀숲에 숨지 않음: 화면에 그려지므로 조준·피격도 되어야 함 (예전엔 풀숲 속 보스가 투사체에 안 맞음)
-const seenIgnoringStealth = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && (b.mob || (!inBush(b) || inBush(a)) || dist(a, b) < 75 || b.reveal > 0);
-const visible = (a, b) => !b.max || !(b.stealth > 0) && seenIgnoringStealth(a, b);
+// 풀숲 규칙(같은 풀숲·가까움·노출)은 js/game/vision.js concealed(). PvE 적(b.mob)은 풀숲에 있어도 투사체·수동 공격은 맞음 (canHit)
+const seenIgnoringStealth = (a, b) => !b.max || !(a.ink > 0 && dist(a, b) > 110) && (b.mob || !concealed(a, b));
+// 보임(자동 조준·자동 공격·AI 대상): 은신 아님 + 풀숲에 숨지 않음 + 시야 안 (싱글·웨이브 시야, js/game/vision.js)
+const visible = (a, b) => !b.max || !(b.stealth > 0) && !(a.ink > 0 && dist(a, b) > 110) && !concealed(a, b) && inSight(a, b);
 // 성능: 임시 배열 없이 같은 순서로 5점 검사
 const terrain = (x, y, r = 16) => wet(x, y) || wet(x + r, y) || wet(x - r, y) || wet(x, y + r) || wet(x, y - r);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), clamp = (v, a, b) => Math.max(a, Math.min(b, v));

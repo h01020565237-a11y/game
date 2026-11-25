@@ -1,0 +1,21 @@
+# CREDITS — 주엽공고 Battle Lab
+
+친구들끼리 즐기는 비상업적 게임입니다. 외부 리소스의 출처와 배포 상태를 여기에 적습니다.
+
+## 포켓몬 리소스 (현곤 소환 포켓몬·보스 포켓몬)
+
+| 리소스 | 출처 | 제작자 표기 (credits.txt) | 라이선스/조건 | 공개 배포 |
+|---|---|---|---|---|
+| 피카츄(0025) 인게임 스프라이트 — Idle·Walk·Attack·Hurt | [PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab) | CHUNSOFT (원작 게임 『포켓몬 불가사의 던전』 리소스) | 커뮤니티 제작분만 CC BY-NC 4.0. 이 스프라이트는 원작 게임 리소스라 배포 권리 확인 안 됨 | **제외** (로컬 테스트 전용) |
+| 파이리(0004) 인게임 스프라이트 | 위와 같음 | CHUNSOFT | 위와 같음 | **제외** |
+| 꼬부기(0007) 인게임 스프라이트 | 위와 같음 | CHUNSOFT | 위와 같음 | **제외** |
+| 포켓몬 공식 일러스트 24종 (버튼·카드·보스 포켓몬) | PokéAPI official-artwork | The Pokémon Company / Nintendo / Game Freak / Creatures | 권리자 저작물, 배포 허락 없음 | **제외** (로컬 테스트 전용) |
+
+- 포켓몬 캐릭터 자체(이름·외형)의 권리는 The Pokémon Company 등 권리자에게 있습니다. 위 리소스는 어느 것도 공개 배포 권한이 확인되지 않아 공개 저장소(`assets/pokemon/` 은 `.gitignore`)와 GitHub Pages 배포에 넣지 않았습니다.
+- 공개 배포판에서는 그림 파일이 없으므로 포켓몬이 아이콘(이모지)·기본 도형으로 표시됩니다. 게임 규칙·판정은 같습니다.
+- 커뮤니티 제작자가 직접 그린(CC BY-NC 4.0) 스프라이트로 바꾸거나 권리가 확인되면, 같은 폴더 구조(`assets/pokemon/summons/<도감번호>/`)에 넣고 `tools/import_pmd_sprites.py` 를 다시 돌리면 바로 연결되고, 이 표에 제작자 이름을 적습니다.
+
+## 그 밖의 리소스
+
+- 캐릭터·맵·UI 그림, 컷신: 프로젝트 자체 제작(ChatGPT·사용자 시안)
+- 효과음·음성: 프로젝트용 테스트 음원, 은숙 음성 일부는 사용자 제공 WAV

@@ -1,31 +1,103 @@
 // ===== 스킬 그림: 조준 경로 미리보기, 궁극기 효과, 포켓몬·분신 =====
 
 // 포켓몬 (일반·현곤 궁극기 공통). 궁극기 포켓몬은 금색 테두리
+// 그림 순서: 인게임 스프라이트(대기·이동·공격·피격, 8방향, PMD AnimData) → 없으면 공식 일러스트 1장(통통·기울기 연출) → 없으면 아이콘
+const pkSheetImgs = {};
+function pkSheet(src) {
+  let im = pkSheetImgs[src];
+  if (!im) {
+    im = pkSheetImgs[src] = new Image();
+    im.src = src;
+  }
+  return im.naturalWidth ? im : null;
+}
+// 게임 방향(0=위, 시계방향) → PMD 행(0=아래, 반시계: 아래·오른아래·오른·오른위·위·왼위·왼·왼아래)
+const pmdRow = (dir) => (12 - (dir || 0)) % 8;
+function petAnimState(pt) {
+  const S = petSprite(pt.id);
+  if (!S) return null;
+  const A = S.anims, atkLen = A.attack.dur.reduce((x, y) => x + y, 0) / 60;
+  if (pt.atkAt !== undefined && elapsed - pt.atkAt < atkLen) return { A: A.attack, t: elapsed - pt.atkAt, once: true };
+  if (pt.hitT > 0 && A.hurt) return { A: A.hurt, t: 0.14 - pt.hitT, once: true };
+  return pt.moving ? { A: A.walk, t: elapsed } : { A: A.idle, t: elapsed + (pt.id || 0) * 0.37 };
+}
+function drawPetSprite(pt) {
+  const st = petAnimState(pt);
+  if (!st) return false;
+  const { A } = st, im = pkSheet(A.src);
+  if (!im) return false;
+  const total = A.dur.reduce((x, y) => x + y, 0);
+  let tick = Math.floor(st.t * 60);
+  tick = st.once ? Math.min(total - 1, Math.max(0, tick)) : ((tick % total) + total) % total;
+  let f = 0;
+  for (let acc = 0; f < A.dur.length - 1 && tick >= acc + A.dur[f]; f++) acc += A.dur[f];
+  const row = Math.min(A.dirs - 1, pmdRow(pt.dir)), k = PET_DRAW.spriteScale, ft = A.feet[row]?.[f] || [A.fw / 2, A.fh * 0.75];
+  g.save();
+  g.imageSmoothingEnabled = false;
+  if (pt.fadeIn > 0) g.globalAlpha = 1 - pt.fadeIn;
+  g.drawImage(im, f * A.fw, row * A.fh, A.fw, A.fh, pt.x - ft[0] * k, pt.y + 6 - ft[1] * k, A.fw * k, A.fh * k);
+  if (pt.hitT > 0) { // 피격: 잠깐 하얗게
+    g.globalCompositeOperation = "lighter";
+    g.globalAlpha = 0.5;
+    g.drawImage(im, f * A.fw, row * A.fh, A.fw, A.fh, pt.x - ft[0] * k, pt.y + 6 - ft[1] * k, A.fw * k, A.fh * k);
+  }
+  g.restore();
+  return true;
+}
+// 스프라이트가 없을 때: 공식 일러스트 1장 + 상태 연출 (대기 숨쉬기 / 이동 통통 / 공격 앞으로 / 피격 번쩍)
+function drawPetArt(pt) {
+  const im = petArt[pt.id];
+  if (!im) return false;
+  const sz = PET_DRAW.artSize, atk = pt.atkAt !== undefined && elapsed - pt.atkAt < 0.25 ? 1 - (elapsed - pt.atkAt) / 0.25 : 0;
+  const bob = pt.moving ? Math.abs(Math.sin(elapsed * 12)) * 4 : Math.sin(elapsed * 3 + pt.id) * 1.2;
+  const v = (pt.dir || 0) * Math.PI / 4, lx = Math.sin(v) * 6 * atk, ly = -Math.cos(v) * 6 * atk;
+  const flip = (pt.dir || 0) >= 5 ? -1 : 1;
+  g.save();
+  g.translate(pt.x + lx, pt.y - sz * 0.45 - bob + ly);
+  g.scale(flip * (1 + atk * 0.08), 1 + atk * 0.08);
+  if (pt.moving) g.rotate(Math.sin(elapsed * 12) * 0.06);
+  g.drawImage(im, -sz / 2, -sz / 2, sz, sz);
+  if (pt.hitT > 0) {
+    g.globalCompositeOperation = "lighter";
+    g.globalAlpha = 0.5;
+    g.drawImage(im, -sz / 2, -sz / 2, sz, sz);
+  }
+  g.restore();
+  return true;
+}
 function drawPetActor(pt) {
-  if (pt.ult) {
-    g.save();
-    g.strokeStyle = "#ffd23f";
-    g.lineWidth = 3;
-    g.beginPath();
-    g.ellipse(pt.x, pt.y + 8, 22, 10, 0, 0, 7);
-    g.stroke();
-    g.restore();
+  const col = PET_LOOK[pt.id]?.color || "#ffd23f";
+  g.save();
+  g.fillStyle = "#0004"; // 그림자
+  g.beginPath();
+  g.ellipse(pt.x, pt.y + 6, 15, 6, 0, 0, 7);
+  g.fill();
+  g.strokeStyle = pt.ult ? "#ffd23f" : col + "aa"; // 동료 표시: 발밑 고리 (궁극기 포켓몬은 금색)
+  g.lineWidth = pt.ult ? 3 : 2;
+  g.beginPath();
+  g.ellipse(pt.x, pt.y + 6, 20, 9, 0, 0, 7);
+  g.stroke();
+  g.restore();
+  if (visionOn() && inBush(pt) && !(pt.reveal > 0)) g.globalAlpha = 0.55; // 풀숲 은폐 중 (내 화면에선 반투명)
+  const drawn = drawPetSprite(pt) || drawPetArt(pt);
+  if (!drawn) {
+    if (pt.id === 0) drawPika(pt);
+    else {
+      g.fillStyle = col;
+      g.beginPath();
+      g.arc(pt.x, pt.y - 12, 16, 0, 7);
+      g.fill();
+      g.font = "20px sans-serif";
+      g.textAlign = "center";
+      g.fillText(mons[pt.id][1], pt.x, pt.y - 5);
+    }
   }
-  if (pt.id === 0) drawPika(pt);
-  else {
-    g.fillStyle = "#285c9c";
-    g.beginPath();
-    g.arc(pt.x, pt.y, 18, 0, 7);
-    g.fill();
-    g.font = "24px sans-serif";
-    g.textAlign = "center";
-    g.fillText(mons[pt.id][1], pt.x, pt.y + 8);
-  }
-  bar(pt.x, pt.y - 61, pt.hp, pt.max);
+  g.globalAlpha = 1;
+  bar(pt.x, pt.y - 58, pt.hp, pt.max);
   g.fillStyle = "white";
   g.font = "12px sans-serif";
   g.textAlign = "center";
-  g.fillText(mons[pt.id][0], pt.x, pt.y + 30);
+  g.fillText(mons[pt.id][0], pt.x, pt.y + 26);
 }
 // 경수 분신: 경수 스프라이트를 반투명 파란빛으로
 function drawClone(c) {

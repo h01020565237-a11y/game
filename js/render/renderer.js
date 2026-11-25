@@ -238,13 +238,11 @@ function draw() {
   }
   // 쓰러진 캐릭터: 사라지기 전 잠깐 바래는 효과
   for (const a of [p, ...bots]) if (a.hp <= 0 && !a.mob) drawDeath(a, a === p ? character : a.visual);
-  if (singleRun?.endless) drawHazards();
+  const vis = visionOn(); // 시야(싱글·웨이브): 위험 표시는 어둠 위에 다시 그림 (시야 밖에서 오는 공격도 보이게)
+  if (!vis) drawDangerLayer(false);
   if (singleRun?.ward) drawStoryWard();
-  if (singleRun) for (const a of bots) {
-    if (a.mob === "boss") a.bossId ? drawEndlessTele(a) : drawBossTele(a);
-    if (a.mob && a.hp <= 0) drawMob(a); // 쓰러지는 중
-  }
-  for (let a of [p, ...bots].filter((a2) => a2.hp > 0 && (a2 === p || a2.mob || visible(p, a2))).sort((a2, b) => a2.y - b.y)) {
+  if (singleRun) for (const a of bots) if (a.mob && a.hp <= 0 && mobShown(a)) drawMob(a); // 쓰러지는 중
+  for (let a of [p, ...bots].filter((a2) => a2.hp > 0 && (a2 === p || (a2.mob ? mobShown(a2) : visible(p, a2)))).sort((a2, b) => a2.y - b.y)) {
     if (a.mob) {
       drawMob(a);
       continue;
@@ -279,7 +277,7 @@ function draw() {
   drawBlades();
   for (const c of clones) drawClone(c);
   setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
-  if (singleRun) drawMobShots();
+  if (singleRun && !vis) drawMobShots();
   for (let s of shots) {
     if (s.octo === 3) { // 상훈 기본 공격: 작은 먹물 덩어리 + 떨어질 곳 표시
       let u = clamp(1 - s.t / s.flight, 0, 1);
@@ -464,10 +462,69 @@ function draw() {
       g.restore();
       continue;
     }
+    if (f.evolve) { // 진화: 하얀 빛이 커졌다가 색 반짝임이 돎
+      const u = 1 - f.t / 1.2;
+      g.save();
+      g.globalAlpha = Math.min(1, f.t / 0.4);
+      g.fillStyle = "#ffffff";
+      g.beginPath();
+      g.arc(f.x, f.y - 20, 14 + 40 * Math.sin(Math.min(1, u * 1.6) * Math.PI / 2), 0, 7);
+      g.fill();
+      g.fillStyle = f.col;
+      for (let i = 0; i < 8; i++) {
+        const v = i / 8 * Math.PI * 2 + u * 8, r = 30 + 30 * u;
+        g.beginPath();
+        g.arc(f.x + Math.cos(v) * r, f.y - 20 + Math.sin(v) * r * 0.7, 4, 0, 7);
+        g.fill();
+      }
+      g.restore();
+      continue;
+    }
+    if (f.elem) { // 포켓몬 공격: 불꽃(부채꼴 불씨) / 물줄기(굵은 선 + 물방울) / 그 밖은 색 광선
+      const u = 1 - f.t / f.dur, a0 = Math.atan2(f.y - f.sy, f.x - f.sx), L = Math.hypot(f.x - f.sx, f.y - f.sy);
+      g.save();
+      g.globalAlpha = Math.min(1, f.t / f.dur * 2);
+      if (f.elem === "flame") {
+        for (let i = 0; i < (f.strong ? 14 : 8); i++) {
+          const k = (i / (f.strong ? 14 : 8) + u * 0.6) % 1, spread = (Math.sin(i * 7.3) * 0.35) * k;
+          g.fillStyle = i % 3 ? "#ff8a2a" : "#ffd23f";
+          g.beginPath();
+          g.arc(f.sx + Math.cos(a0 + spread) * L * k, f.sy + Math.sin(a0 + spread) * L * k, 3 + 7 * k * (f.strong ? 1.4 : 1), 0, 7);
+          g.fill();
+        }
+      } else if (f.elem === "water") {
+        g.strokeStyle = "#4aa8ffcc";
+        g.lineWidth = f.strong ? 12 : 7;
+        g.lineCap = "round";
+        g.beginPath();
+        g.moveTo(f.sx, f.sy);
+        g.lineTo(f.sx + Math.cos(a0) * L * Math.min(1, u * 2), f.sy + Math.sin(a0) * L * Math.min(1, u * 2));
+        g.stroke();
+        g.strokeStyle = "#d8f0ff";
+        g.lineWidth = 2;
+        g.stroke();
+        g.fillStyle = "#8fd0ff";
+        for (let i = 0; i < 5; i++) {
+          const v = i * 1.3 + u * 3;
+          g.beginPath();
+          g.arc(f.x + Math.cos(v) * 14 * u, f.y - 10 + Math.sin(v) * 10 * u, 3, 0, 7);
+          g.fill();
+        }
+      } else {
+        g.strokeStyle = f.col || "#fff";
+        g.lineWidth = f.strong ? 8 : 4;
+        g.beginPath();
+        g.moveTo(f.sx, f.sy);
+        g.lineTo(f.x, f.y - 10);
+        g.stroke();
+      }
+      g.restore();
+      continue;
+    }
     if (f.burst || f.recall) {
       g.save();
       g.globalAlpha = f.t / 0.55;
-      g.fillStyle = "#fff6a0";
+      g.fillStyle = f.red ? "#ff4a4a" : "#fff6a0";
       g.beginPath();
       g.arc(f.x, f.y - 15, 10 + 35 * (1 - f.t / 0.55), 0, 7);
       g.fill();
@@ -495,6 +552,10 @@ function draw() {
         g.restore();
       } else g.fillText(f.text, f.x, f.y - 30 - (0.65 - f.t) * 25); // 수정: 글자 없는 이펙트(부채꼴 등)에 "undefined" 가 찍히던 문제
     }
+  }
+  if (vis) { // 시야 밖 어둡게 → 그 위에 위험(예고 범위·적 투사체·보스 예고)
+    drawVisionDark();
+    drawDangerLayer(true);
   }
   g.fillStyle = "#a72d4944";
   g.beginPath();
@@ -560,4 +621,18 @@ function drawSummonAim() {
   g.strokeText(label, t.x, t.y - 32);
   g.fillText(label, t.x, t.y - 32);
   g.restore();
+}
+
+// 위험 표시: 범위 공격 예고·보스 패턴 예고·적 투사체 (시야 켜짐이면 어둠 위에, 시야 밖이어도 보임)
+function drawDangerLayer(withShots) {
+  if (!singleRun) return;
+  if (singleRun.endless) drawHazards();
+  for (const a of bots) if (a.mob === "boss" && a.hp > 0) a.bossId ? drawEndlessTele(a) : drawBossTele(a);
+  if (withShots) drawMobShots();
+}
+// 적 표시: 시야 안 + 풀숲에 숨지 않음 (현곤·포켓몬 시야 공유). 시야 끔이면 항상
+function mobShown(a) {
+  if (!visionOn()) return true;
+  if (!inPlayerVision(a)) return false;
+  return [p, pet, ...ultPets].some((o) => o && o.hp > 0 && !concealed(o, a));
 }

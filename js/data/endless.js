@@ -121,6 +121,7 @@ const ENDLESS_CARDS = [
   { id: "maxhp", name: "최대 체력", icon: "❤️", cat: "방어", tiers: { common: 0.1, rare: 0.2, legend: 0.35 }, cap: 6, text: "최대 HP +{v%} (늘어난 만큼 회복)" },
   { id: "armor", name: "단단함", icon: "🛡️", cat: "방어", tiers: { common: 0.05, rare: 0.1, legend: 0.18 }, cap: 5, text: "받는 피해 -{v%}" },
   { id: "speed", name: "이동 속도", icon: "👟", cat: "방어", tiers: { common: 0.05, rare: 0.1 }, cap: 4, text: "이동속도 +{v%}" },
+  { id: "sight", name: "넓은 시야", icon: "👁️", cat: "방어", tiers: { common: 0.1, rare: 0.15, legend: 0.25 }, cap: 4, text: "시야 반경 +{v%} (포켓몬 시야 포함)" }, // 시야 시스템 (js/data/vision.js) — 초기 제안
   // 공통: 회복
   { id: "regen", name: "자연 회복", icon: "🌿", cat: "회복", tiers: { common: 0.005, rare: 0.01, legend: 0.02 }, cap: 4, text: "초당 최대 HP {v%} 회복" },
   { id: "steal", name: "흡혈", icon: "🩸", cat: "회복", tiers: { rare: 0.03, legend: 0.06 }, cap: 3, text: "준 피해의 {v%} 회복" },

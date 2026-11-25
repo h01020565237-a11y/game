@@ -157,6 +157,7 @@ function mobAI(a, dt) {
   const T = MOB_TYPES[a.mob], d = dist(a, p);
   a.atkT -= dt;
   if (p.hp <= 0) return;
+  if (a.mob !== "boss" && !visible(a, p)) return chase(a, dt); // 못 보면 찾으러 감 (공격 안 함)
   if (a.mob === "ranged") {
     const see = d < T.range + 20 && clearLine(a, p);
     if (d > T.keep[1] || !see) chase(a, dt);
@@ -187,10 +188,11 @@ function mobAI(a, dt) {
 }
 // 쫓아가기: 막히면 옆으로 비켜 가고, 3초 동안 실제로 거의 못 다가가면(벽에 끼어 제자리 떨림 포함) 다른 곳에서 다시 등장
 function chase(a, dt) {
-  const moved = steer(a, p.x, p.y, dt);
-  if (!moved) {
+  const goal = a.mob ? mobGoal(a) : p; // 시야: 보이면 플레이어, 놓치면 마지막 본 자리·수색 (js/game/vision.js)
+  const moved = steer(a, goal.x, goal.y, dt);
+  if (!moved && dist(a, goal) > 20) {
     const x = a.x, y = a.y, sign = a.avoid || (a.avoid = Math.random() < 0.5 ? 1 : -1);
-    move(a, (p.y - a.y) * sign, -(p.x - a.x) * sign, dt);
+    move(a, (goal.y - a.y) * sign, -(goal.x - a.x) * sign, dt);
     if (dist(a, { x, y }) < 0.1) a.avoid = -sign;
   }
   // 1.5초마다 실제 이동량 확인

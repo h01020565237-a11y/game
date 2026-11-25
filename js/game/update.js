@@ -13,6 +13,11 @@ function update(dt) {
   if (singleRun?.endless) updateGameTimers(dt);
   elapsed += dt;
   zone = singleRun?.m && !singleRun.m.zone ? 1e9 : Math.max(115, 1450 - Math.max(0, elapsed - 25) * 8);
+  for (const pt of [pet, ...ultPets]) if (pt) {
+    pt.reveal = Math.max(0, (pt.reveal || 0) - dt);
+    pt.hitT = Math.max(0, (pt.hitT || 0) - dt);
+  }
+  updateVision(); // 시야: 플레이어가 마지막으로 드러난 자리 (js/game/vision.js)
   for (let a of [p, ...bots]) {
     a.reveal = Math.max(0, (a.reveal || 0) - dt);
     if (a.hp > 0 && Math.hypot(a.x - W / 2, a.y - H / 2) > zone && !(a === p && god)) a.hp -= dt * (80 + elapsed * 0.7);
@@ -37,7 +42,7 @@ function update(dt) {
     if (flight.t >= 0.42) {
       let { tx: x, ty: y, id } = flight, m = mons[id];
       pet = { ...actor(x, y), id, hp: petMaxHp(id), max: petMaxHp(id), life: petLife(), skillCD: 0 }; // 무한 생존 카드·강화 반영 (그 밖엔 기본값)
-      fx.push({ x, y, t: 0.55, burst: true });
+      fx.push({ x, y, t: 0.6, pkball: true, col: PET_LOOK[id]?.color }); // 몬스터볼이 열리며 빛과 함께 등장
       flight = null;
     }
   }
@@ -58,7 +63,7 @@ function update(dt) {
   if (pet) {
     runPet(pet, dt);
     if (pet.life <= 0 || pet.hp <= 0) {
-      fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true });
+      fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true, red: true });
       sfx("pet_return", pet);
       pet = null;
     }
@@ -116,6 +121,15 @@ function update(dt) {
     if (aiming) {
       autoAttack();
     } else if (mouse.down) attack(p, mouse.x, mouse.y);
+  }
+  // 안전장치: 어떤 이유로든 플레이어가 벽·물 안이나 맵 밖에 있으면 가장 가까운 빈자리로 (점프 중 제외)
+  if (!p.jump && p.hp > 0 && (blocked(p.x, p.y, 10) || terrain(p.x, p.y, 8) || p.x < 0 || p.y < 0 || p.x > W || p.y > H)) {
+    const q = freeSpot(clamp(p.x, 20, W - 20), clamp(p.y, 20, H - 20), 16);
+    if (q) {
+      p.x = q.x;
+      p.y = q.y;
+      p.stuckFix = (p.stuckFix || 0) + 1; // QA 기록
+    }
   }
   // 자동 획득: 지나가기만 하면 손해 없는 아이템은 바로 먹음 (교체는 버튼/F 키)
   updateLootAndChests(dt);

@@ -276,6 +276,10 @@ function enemyAI(a, dt) {
     else a.moving = false;
     return see;
   };
+  if (!visible(a, p)) { // 시야 밖·풀숲에 숨은 플레이어: 공격 없이 찾으러 감 (js/game/vision.js mobGoal)
+    a.moving = true;
+    return chase(a, dt);
+  }
   switch (a.mob) {
     case "pk_pika": case "pk_char": case "pk_squirt": { // 현곤 보스의 포켓몬: 피카츄 번개탄 / 파이리 화염(예고 원) / 꼬부기 물대포(밀침)
       if (keepAway() && d <= T.range && a.atkT <= 0) {
@@ -801,6 +805,7 @@ function openEndlessCards() {
   R.cards = drawEndlessCards(mode);
   R.cardRarity = mode;
   if (!R.cards.length) return; // 받을 카드가 없으면 넘어감
+  if (typeof releaseSticks === "function") releaseSticks(); // 카드 화면 동안 조이스틱이 눌린 채 남지 않게
   R.phaseAfterCards = R.phase; // 카드 고른 뒤 원래 단계로 (웨이브를 일찍 끝내도 남은 시간 때문에 전투로 넘어가지 않게)
   R.phase = "cards";
 }
@@ -827,6 +832,7 @@ function applyEndlessCard(c, v) {
     case "maxhp": { const add = p.max * v; p.max += add; p.hp += add; break; }
     case "armor": p.takeMul = (p.takeMul || 1) * (1 - v); break;
     case "speed": p.spd = (p.spd || 1) * (1 + v); break;
+    case "sight": p.sightMul = (p.sightMul || 1) * (1 + v); break;
     case "regen": p.regen = (p.regen || 0) + v; break;
     case "steal": p.steal = (p.steal || 0) + v; break;
     case "cdr": p.cdRate = (p.cdRate || 1) / (1 - v); break;

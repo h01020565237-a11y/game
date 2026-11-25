@@ -14,10 +14,10 @@
 const STORY_MISSIONS = {
   eunsuk: {
     reward: "support", players: ["summoner"], title: "새벽별교회를 지켜라", sub: "보호 방어전 + 보스", target: "4~6분", scaleW: 3,
-    ward: { name: "은숙", look: "support", hp: 4200, hunters: 0.4 }, // hunters: 근접·기동 적 중 은숙을 노리는 비율
+    ward: { name: "은숙", look: "support", hp: 4200, hunters: 0.4 }, // hunters: 근접·기동 적 중 은숙을 노리는 비율. 2026-11-25 요청: 적 수 1단계 24→36, 2단계 30→44
     stages: [
-      { label: "1단계", time: 70, count: 24, kinds: ["melee", "mobile"], tips: [[0.5, "은숙을 지켜라! 은숙 체력이 0이 되면 실패"], [5, "포켓몬 버튼을 눌러 던지기 → 10초간 함께 싸움"], [16, "E 교체: 소환 중인 포켓몬을 다른 포켓몬으로"]] },
-      { label: "2단계", time: 80, count: 30, kinds: ["melee", "mobile", "ranged", "thrower"], tips: [[0.5, "원거리·투척 적 등장 — 붉은 예고 범위를 피하세요"], [10, "R 궁극기 「한잔했어!」: 게이지 100%면 포켓몬 3마리 동시 소환"]] },
+      { label: "1단계", time: 70, count: 36, kinds: ["melee", "mobile"], tips: [[0.5, "은숙을 지켜라! 은숙 체력이 0이 되면 실패"], [5, "포켓몬 버튼을 눌러 던지기 → 10초간 함께 싸움"], [16, "E 교체: 소환 중인 포켓몬을 다른 포켓몬으로"]] },
+      { label: "2단계", time: 80, count: 44, kinds: ["melee", "mobile", "ranged", "thrower"], tips: [[0.5, "원거리·투척 적 등장 — 붉은 예고 범위를 피하세요"], [10, "R 궁극기 「한잔했어!」: 게이지 100%면 포켓몬 3마리 동시 소환"]] },
       { label: "보스", boss: "support", hp: 21000, tips: [[0.5, "타락한 수호자: 회복을 시작하면 때려서 끊으세요"], [12, "은숙 근처로 끌어오지 않게 조심"]] },
     ],
   },

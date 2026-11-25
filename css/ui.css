@@ -725,3 +725,6 @@ body.mobile .prep-pick span { font-size: clamp(11px, 3cqh, 13px); }
 .prep-pick.sel { border-color: var(--bl-gold); box-shadow: 0 0 0 2px var(--bl-gold); }
 .prep-pick.locked { filter: grayscale(.8) brightness(.6); cursor: not-allowed; }
 #prepGo:disabled { filter: grayscale(.85) brightness(.75); animation: none; }
+/* 미션 안내·웨이브 배너: 글자보다 배경이 작아 보이던 문제 → 줄 높이·여백을 글자 크기에 맞추고, 길면 두 줄로 (2026-11-25) */
+#waveBanner { line-height: 1.35; padding: .45em 1.2em; box-sizing: border-box; width: max-content; max-width: 88%; white-space: normal; text-align: center; border-radius: 18px; font-size: clamp(15px, 1.6vw + 8px, 26px); box-shadow: 0 4px 14px #0008; }
+body.mobile #waveBanner { font-size: clamp(14px, 1.2vw + 8px, 22px); top: 26%; }

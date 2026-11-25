@@ -21,7 +21,8 @@ function openLobby() {
   el("results").hidden = true;
   el("recruitResult").hidden = true;
   el("missionPrep").hidden = true;
-  mvX = mvY = 0;
+  if (typeof releaseSticks === "function") releaseSticks();
+  else mvX = mvY = 0;
   releaseAttack(false);
   releaseGrenade(false);
   renderLobbyInfo();

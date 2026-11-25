@@ -177,6 +177,13 @@ function autoSummonSpot() {
     }
   return summonPoint(p.x + Math.cos(ang) * d, p.y + Math.sin(ang) * d);
 }
+// 조이스틱: 손가락 하나(pointerId)를 따라감
+// 고착 방지 (2026-11-25 버그: 가끔 혼자 한쪽으로 고정되고 다시 눌러도 조작 불가)
+//  - 새로 누르면 이전 손가락 상태가 남아 있어도 새 손가락으로 넘김 (예전엔 pid 가 남으면 영원히 무시)
+//  - 손 뗌·취소 이벤트를 문서 전체에서도 받음 (버튼이 숨겨지거나 캡처를 잃어도)
+//  - 화면의 모든 손가락이 떨어졌는데 조이스틱이 눌린 상태면 바로 놓음 (touchend 의 touches 확인)
+//  - 앱 전환·화면 꺼짐·일시정지(메뉴·카드·결과) 때 놓음
+const sticks = [];
 function stick(id, fn) {
   let el = document.getElementById(id), pid = null;
   function set(e) {
@@ -186,11 +193,23 @@ function stick(id, fn) {
     el.querySelector("i").style.transform = `translate(${x * r.width * 0.3}px,${y * r.height * 0.3}px)`;
     fn(x, y, true);
   }
+  function release() {
+    if (pid !== null) {
+      try {
+        el.releasePointerCapture(pid);
+      } catch (err) {}
+    }
+    pid = null;
+    el.querySelector("i").style.transform = "";
+    fn(0, 0, false);
+  }
   el.onpointerdown = (e) => {
-    if (pid !== null) return;
     e.preventDefault();
+    if (pid !== null && pid !== e.pointerId) release(); // 남아 있던 손가락은 버리고 새 손가락으로
     pid = e.pointerId;
-    el.setPointerCapture(pid);
+    try {
+      el.setPointerCapture(pid);
+    } catch (err) {}
     set(e);
   };
   el.onpointermove = (e) => {
@@ -198,14 +217,30 @@ function stick(id, fn) {
   };
   function end(e) {
     if (e.pointerId !== pid) return;
-    pid = null;
-    el.querySelector("i").style.transform = "";
-    fn(0, 0, false);
+    release();
   }
   el.onpointerup = end;
   el.onpointercancel = end;
   el.onlostpointercapture = end;
+  document.addEventListener("pointerup", end, true);
+  document.addEventListener("pointercancel", end, true);
+  // 남은 손가락 중 조이스틱 위(조금 넓게)에 있는 게 없으면 놓음
+  const touchCheck = (e) => {
+    if (pid === null) return;
+    const r = el.getBoundingClientRect(), pad = Math.max(r.width, 60);
+    for (const t of e.touches) if (t.clientX > r.left - pad && t.clientX < r.right + pad && t.clientY > r.top - pad && t.clientY < r.bottom + pad) return;
+    release();
+  };
+  document.addEventListener("touchend", touchCheck, true);
+  document.addEventListener("touchcancel", touchCheck, true);
+  sticks.push({ el, release, held: () => pid !== null });
 }
+function releaseSticks() {
+  for (const s of sticks) s.release();
+  mvX = mvY = 0;
+}
+document.addEventListener("visibilitychange", () => document.hidden && releaseSticks());
+addEventListener("pagehide", releaseSticks);
 stick("mv", (x, y) => {
   mvX = x;
   mvY = y;
@@ -282,12 +317,12 @@ document.querySelector("#mobileToggle").onclick = () => {
 document.querySelector("#menuBtn").onpointerdown = (e) => {
   e.preventDefault();
   document.body.classList.toggle("menuOpen");
-  mvX = mvY = 0;
+  releaseSticks();
   aiming = false;
   closeSwipe();
 };
 window.addEventListener("blur", () => {
-  mvX = mvY = 0;
+  releaseSticks();
   releaseAttack(false);
   aiming = false;
   closeSwipe();

@@ -143,14 +143,14 @@ const SKILL_IMPL = {
   summoner: {
     r(S) { // 한잔했어!: 덱 3마리 동시 소환
       if (pet) {
-        fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true });
+        fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true, red: true });
         pet = null;
       }
       flight = null;
       ultPets = deck.map((id, i) => {
         const ang = -Math.PI / 2 + (i - 1) * 1.1, x = clamp(p.x + Math.cos(ang) * 70, 30, W - 30), y = clamp(p.y + Math.sin(ang) * 70, 30, H - 30);
         const m = mons[id];
-        fx.push({ x, y, t: 0.55, burst: true });
+        fx.push({ x, y, t: 0.6, pkball: true, col: PET_LOOK[id]?.color }); // 3마리 동시 등장
         return { ...actor(terrain(x, y) || blocked(x, y) ? p.x : x, terrain(x, y) || blocked(x, y) ? p.y : y), id, hp: petMaxHp(id), max: petMaxHp(id), life: S.dur, owner: p, atkMul: S.atkMul, ult: true, skillCD: 0 };
       });
       return true;
@@ -299,7 +299,7 @@ function bezier(s, u) {
 // 상훈 투척 (플레이어·봇 공통). slot "q" 먹물 폭탄 / "e" 촉수 함정
 function throwInk(a, S, t, slot, mul = 1) {
   shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: t.x, ty: t.y, t: 0.55, octo: slot === "q" ? 1 : 2, d: S.dmg * mul, S });
-  a.reveal = 1.2;
+  a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
 }
 // 봇 호환: 예전 throwOcto(a, i)
 function throwOcto(a, i) {
@@ -505,7 +505,7 @@ function updateSkills(dt) {
   for (const pt of ultPets) runPet(pt, dt);
   ultPets = ultPets.filter((pt) => {
     if (pt.life > 0 && pt.hp > 0) return true;
-    fx.push({ x: pt.x, y: pt.y, t: 0.55, recall: true });
+    fx.push({ x: pt.x, y: pt.y, t: 0.55, recall: true, red: true });
     return false;
   });
   // 경수 분신

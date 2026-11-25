@@ -19,6 +19,11 @@ function hit(a, b, d, o = {}) {
   if (b.broken) return; // 이미 부서진 상자 (같은 프레임 중복 타격 → 드롭 중복 방지)
   if (b === p && god) return;
   if (b.max && isMine(a) && isMine(b)) return; // 같은 편끼리는 피해 없음
+  // 풀숲 위치 노출: 공격한 쪽 BUSH_RULES.attackReveal 초, 맞은 쪽 hitReveal 초 (지속 피해 제외)
+  if (!o.dot && b.max) {
+    if (a.max) a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
+    b.reveal = Math.max(b.reveal || 0, BUSH_RULES.hitReveal);
+  }
   // 먹물(상훈 Q): 공격자에게 MISS 확률 → 피해 0 (회복·버프에는 영향 없음)
   if (a.miss > 0 && b.max && !o.dot && Math.random() < (a.missChance || 0)) {
     fx.push({ x: b.x, y: b.y, t: 0.6, text: "MISS", tcol: "#b8b8c0" });
@@ -276,7 +281,7 @@ function throwGrenade(a, x, y) {
   const ang = Math.atan2(y - a.y, x - a.x), len = Math.min(r, Math.hypot(x - a.x, y - a.y));
   a.grenades--;
   a.grenCD = GRENADE.gap;
-  a.reveal = 1.2;
+  a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
   if (a === p) p.stealth = 0;
   a.attackAng = ang;
   a.aimT = 0.35;
@@ -289,7 +294,7 @@ function attack(a, x, y) {
   if (a.stun > 0) return;
   if (a.cd > 0) return;
   if (a.ammo !== undefined && a.ammo < 1) return; // 탄창이 비었으면 충전될 때까지 대기
-  a.reveal = 1.2;
+  a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
   if (a === p) p.stealth = 0;
   let [name, d, cd, r] = weapons[a.w];
   // 동기: 맨손 3연타 콤보(잽-스트레이트-훅), 카운터 게이지가 가득이면 이번 공격이 카운터 펀치

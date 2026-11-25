@@ -75,8 +75,11 @@ function pkEvolve(id) {
     pet.id = to;
     pet.max = petMaxHp(to);
     pet.hp = pet.max * f;
-    fx.push({ x: pet.x, y: pet.y, t: 0.7, burst: true });
   }
+  // 진화 이펙트: 싸우는 중이면 그 포켓몬 위, 아니면 현곤 위에 (빛 + 이름)
+  const at = pet?.id === to ? pet : p;
+  fx.push({ x: at.x, y: at.y, t: 1.2, evolve: true, col: PET_LOOK[to]?.color || "#fff" });
+  fx.push({ x: at.x, y: at.y - 40, t: 1.2, text: `${mons[id][0]} → ${mons[to][0]}`, tcol: "#ffe07a", big: true });
   return to;
 }
 function pkRecruit(id) {
