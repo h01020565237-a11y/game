@@ -41,13 +41,14 @@
       <!-- 플로팅 조이스틱: 왼쪽 영역 어디든 누른 자리에 조이스틱이 생김 (버튼 위에서 시작한 터치는 제외) -->
       <div id="mvZone" aria-hidden="true"></div>
       <div class="stick" id="mv"><i></i><span>이동</span></div>
-      <button id="atk" aria-label="공격"><i class="w-ico" aria-hidden="true"></i><span id="atkAmmo" class="ammo"></span></button>
-      <button id="dashBtn">대시</button>
-      <button id="summonBtn">소환</button>
-      <button id="bearHeal" style="display:none;right:20%;bottom:36%">회복</button>
-      <button id="ultBtn" aria-label="궁극기"><span id="ultLabel">0%</span></button>
-      <button id="pickBtn" aria-label="무기 교체" aria-hidden="true"><i class="w-ico" aria-hidden="true"></i><b class="swap-arrow" aria-hidden="true">⇄</b><span id="pickName" class="nm"></span></button>
-      <button id="grenBtn" aria-label="수류탄"><i class="w-ico" aria-hidden="true"></i><span id="grenCount" class="cnt">0</span></button>
+      <button id="atk" aria-label="공격"><i class="w-ico" aria-hidden="true"></i><span id="atkCd" class="cdt"></span><span id="atkAmmo" class="ammo"></span><kbd>클릭</kbd></button>
+      <button id="dashBtn" class="skb small" aria-label="대시"><i class="sk-ico" aria-hidden="true"></i><span class="cdt"></span><kbd>Space</kbd></button>
+      <button id="summonBtn" class="skb" aria-label="스킬 1"><i class="sk-ico" aria-hidden="true"></i><span class="cdt"></span><kbd>Q</kbd></button>
+      <button id="bearHeal" class="skb" style="display:none" aria-label="스킬 2"><i class="sk-ico" aria-hidden="true"></i><span class="cdt"></span><kbd>E</kbd></button>
+      <button id="ultBtn" class="skb ult" aria-label="궁극기"><i class="sk-ico" aria-hidden="true"></i><span id="ultLabel" class="cdt">0%</span><kbd>X</kbd></button>
+      <button id="pickBtn" aria-label="무기 교체" aria-hidden="true"><i class="w-ico" aria-hidden="true"></i><b class="swap-arrow" aria-hidden="true">⇄</b><span id="pickName" class="nm"></span><kbd>F</kbd></button>
+      <button id="grenBtn" aria-label="수류탄"><i class="w-ico" aria-hidden="true"></i><span id="grenCd" class="cdt"></span><span id="grenCount" class="cnt">0</span><kbd>G</kbd></button>
+      <div id="passiveChip" class="passive-chip" aria-label="패시브"><i class="sk-ico" aria-hidden="true"></i><span class="pv-txt"><b id="passiveName"></b><small id="passiveState">패시브</small></span></div>
       <button class="petBtn" data-i="0" aria-label="포켓몬 1"></button>
       <button class="petBtn" data-i="1" aria-label="포켓몬 2"></button>
       <button class="petBtn" data-i="2" aria-label="포켓몬 3"></button>
@@ -374,6 +375,7 @@
   <script src="js/data/endless.js"></script>
   <script src="js/data/wave_maps.js"></script>
   <script src="js/data/vision.js"></script>
+  <script src="js/data/skill_icons.js"></script>
   <script src="js/data/ranking.js"></script>
   <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>

@@ -402,6 +402,68 @@ window.addEventListener("blur", () => {
   aiming = false;
   closeSwipe();
 });
+// ----- 원형 HUD 도우미 -----
+const DASH_CD_MAX = () => (typeof DASH !== "undefined" && DASH.cd) || (SKILL_DATA.dash?.cd) || 3;
+// btn: 원형 버튼, left: 남은 쿨타임(초), total: 전체(초), extra: 쿨타임이 없을 때 보여줄 글자
+function ringBtn(btn, left, total, extra = "", textId) {
+  const r = left > 0.01 && total > 0 ? Math.min(1, left / total) : 0;
+  const v = r.toFixed(3);
+  if (btn._cd !== v) {
+    btn._cd = v;
+    btn.style.setProperty("--cd", v);
+    btn.classList.toggle("cooling", r > 0);
+  }
+  const t = r > 0 ? (left < 10 ? left.toFixed(1) : String(Math.ceil(left))) : extra;
+  const out = textId ? el(textId) : btn.querySelector(".cdt");
+  if (out && out._t !== t) {
+    out._t = t;
+    out.textContent = t;
+  }
+}
+// 스킬 아이콘 미리 불러오기 (절대 주소로 써야 CSS 변수 안에서도 경로가 맞음)
+const skillIconImg = {};
+const iconUrl = (src) => {
+  if (!src) return "";
+  if (!skillIconImg[src]) (skillIconImg[src] = new Image()).src = src;
+  return skillIconImg[src].src;
+};
+for (const k in SKILL_ICON_SRC) for (const v of typeof SKILL_ICON_SRC[k] === "string" ? [SKILL_ICON_SRC[k]] : Object.values(SKILL_ICON_SRC[k])) iconUrl(v);
+let iconFor = null;
+function syncSkillIcons() {
+  if (iconFor === character) return;
+  iconFor = character;
+  const I = SKILL_ICON_SRC[character] || {}, D = SKILL_DATA[character] || {};
+  const set = (b, src, name) => {
+    b.style.setProperty("--sicon", src ? `url("${iconUrl(src)}")` : "none");
+    if (name) b.setAttribute("aria-label", name);
+  };
+  set(el("dashBtn"), SKILL_ICON_SRC.dash, "대시");
+  set(sb, I.q, D.q?.name);
+  set(el("bearHeal"), I.e, D.e?.name);
+  set(el("ultBtn"), I.r, D.r?.name);
+  set(el("passiveChip"), I.passive);
+  el("passiveName").textContent = D.passive?.name || "";
+}
+// 패시브 상태: 게이지·발동 여부가 있는 캐릭터는 함께 표시
+function syncPassiveChip(D) {
+  const chip = el("passiveChip");
+  if (!D?.passive) {
+    chip.hidden = true;
+    return;
+  }
+  chip.hidden = false;
+  let st = "패시브", on = false;
+  if (character === "suit") {
+    on = (p.counter || 0) >= 1;
+    st = on ? "준비 완료" : "게이지 " + Math.floor((p.counter || 0) * 100) + "%";
+  } else if (character === "octo") {
+    on = (p.sulk || 0) >= 1;
+    st = on ? "삐짐 가득" : "삐짐 " + Math.floor((p.sulk || 0) * 100) + "%";
+  } else if (character === "runner") st = "자신감 " + Math.floor(p.energy || 0) + "%";
+  else if (character === "stripe" && p.stealth > 0) (st = "은신 중"), (on = true);
+  setText("passiveState", st);
+  chip.classList.toggle("on", on);
+}
 const ammoText = (a) => "●".repeat(a.ammo) + "○".repeat(Math.max(0, AMMO.max - a.ammo));
 function touchHUD() {
   checkHoldAttack();
@@ -435,25 +497,34 @@ function touchHUD() {
     const cls = "petBtn" + (live ? " live" : "") + (wait !== 0 ? " lock" : "") + (petPress?.i === i ? " press" : "");
     if (btn.className !== cls) btn.className = cls;
   }
-  setText("dashBtn", p.dashCD > 0 ? "대시 " + p.dashCD.toFixed(1) : "대시");
-  // 스킬 버튼 글자: 스킬 이름 + 남은 쿨타임 (이름은 SKILL_DATA)
+  // ----- 원형 스킬 버튼: 캐릭터 아이콘 + 원형 쿨타임 게이지(--cd 0~1) + 남은 시간 -----
+  syncSkillIcons();
   const D = SKILL_DATA[character];
+  ringBtn(el("dashBtn"), p.dashCD || 0, DASH_CD_MAX());
   if (D && character !== "summoner") {
-    const lab = (slot) => D[slot].name + (p.skcd[slot] > 0 ? "\n" + p.skcd[slot].toFixed(1) : character === "runner" && slot === "q" ? "\n" + Math.floor(p.energy) + "%" : "");
-    setText("summonBtn", lab("q"));
-    setText("bearHeal", lab("e"));
+    ringBtn(sb, p.skcd?.q || 0, D.q.cd, character === "runner" ? Math.floor(p.energy) + "%" : "");
+    ringBtn(el("bearHeal"), p.skcd?.e || 0, D.e.cd);
   }
-  // 궁극기 버튼: 충전 링 + 완충 강조
-  const ub = document.querySelector("#ultBtn"), pct = Math.floor((p.ult || 0) * 100), ready = ultReady();
+  // 궁극기: 충전율 링(금색) + 완충 시 빛나는 테두리, 발동 중 표시
+  const ub = el("ultBtn"), pct = Math.floor((p.ult || 0) * 100), ready = ultReady();
   if (ub._pct !== pct) {
     ub._pct = pct;
     ub.style.setProperty("--ult", pct + "%");
   }
-  setText("ultLabel", p.ultT > 0 ? "발동 중" : ready ? D.r.name : pct + "%");
+  setText("ultLabel", p.ultT > 0 ? "발동 중" : ready ? "" : pct + "%");
   if (ub._ready !== ready) {
     ub._ready = ready;
     ub.classList.toggle("ready", ready);
   }
+  ub.classList.toggle("active", p.ultT > 0);
+  // 공격 버튼: 공격 간격 남은 시간(무기별 gap) 링
+  const gap = Math.max(AMMO.fireGap, WEAPON_RULES[p.w]?.gap || 0);
+  const rt = reloadTime(p), empty = p.ammo !== undefined && p.ammo < 1;
+  ringBtn(atkBtn, empty ? Math.max(0, rt - (p.reload || 0)) : p.cd > 0.05 ? p.cd : 0, empty ? rt : gap, "", "atkCd");
+  // 수류탄: 별도 쿨타임 링 + 수량, 0개면 비활성
+  ringBtn(grenBtn, gOn ? p.grenCD || 0 : 0, GRENADE.gap, "", "grenCd");
+  // 패시브: 조작 버튼이 아닌 상태 표시
+  syncPassiveChip(D);
   // 무기 교체 버튼: 바꿀 수 있는 무기 위에 있을 때만 (금빛 팝 등장 / 페이드 사라짐). 자리는 고정이라 다른 버튼이 안 흔들림
   let swapL = nearLoot(p, isSwapLoot), pick = el("pickBtn");
   const sKey = swapL ? swapL.type + ":" + swapL.id : "";
@@ -470,6 +541,7 @@ function touchHUD() {
 }
 // #bearHeal: 이름과 달리 비소환사 캐릭터 공통 스킬2 버튼
 skillButton(document.querySelector("#bearHeal"), "e");
+SkillTip.attach(el("passiveChip"), () => skillTipModel(character, "passive"));
 document.querySelector("#charApply").onclick = () => {
   character = document.querySelector("#character").value;
   ui.style.display = character !== "summoner" ? "none" : "";

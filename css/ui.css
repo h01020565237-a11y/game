@@ -792,15 +792,10 @@ body.lobbyOpen #menuBtn, body.titleOpen #menuBtn, body.modeOpen #menuBtn, body.c
 
 /* ===== 인게임 조작 UI (2026-11-25 통합 요청 5장) ===== */
 /* 오른쪽 아래: [공격(큰 버튼, 장착 무기 아이콘)] 왼쪽으로 [대시][무기 교체] 같은 작은 크기 나란히, 그 옆 [수류탄] */
-body.mobile #touch #atk { right: 3%; bottom: 7%; width: clamp(72px, 12vw, 108px); padding: 0; display: grid; place-items: center; white-space: normal; }
 #touch #atk .w-ico { width: 54%; aspect-ratio: 1; background: var(--wicon) center / contain no-repeat; filter: drop-shadow(0 2px 0 #6d0f0a); pointer-events: none; }
 #touch #atk.fist .w-ico { background: none; }
 #touch #atk.fist .w-ico::before { content: "✊"; display: block; font-size: clamp(26px, 5vw, 42px); line-height: 1; text-align: center; }
 #touch #atk .ammo { position: absolute; bottom: 9%; left: 0; right: 0; text-align: center; font-size: clamp(9px, 1.6vw, 13px); letter-spacing: 1px; color: #ffe07a; pointer-events: none; }
-body.mobile #touch #dashBtn, body.mobile #touch #pickBtn, body.mobile #touch #grenBtn { width: clamp(42px, 6.8vw, 58px); bottom: 6%; padding: 0; }
-body.mobile #touch #dashBtn { right: 17%; }
-body.mobile #touch #pickBtn { right: 24.6%; left: auto; }
-body.mobile #touch #grenBtn { right: 32.2%; }
 /* 무기 교체: 교체할 무기가 있을 때만 금빛 팝, 없으면 페이드 (자리 고정) */
 #touch #pickBtn { visibility: visible; opacity: 0; transform: scale(.6); pointer-events: none; transition: opacity .18s, transform .18s; display: grid; place-items: center; overflow: visible; white-space: normal; }
 #touch #pickBtn.show { opacity: 1; transform: scale(1); pointer-events: auto; animation: swap-pop .35s ease-out, swap-glow 1.2s ease-in-out .35s infinite; }
@@ -814,9 +809,6 @@ body.mobile #touch #grenBtn { right: 32.2%; }
 #touch #grenBtn .cnt { position: absolute; right: -3px; bottom: -3px; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; background: #0b1436; color: #fff; font-size: 11px; text-align: center; pointer-events: none; }
 #touch #grenBtn.empty { opacity: .4; filter: grayscale(.8); }
 /* 현곤 포켓몬 버튼: 공격 버튼 둘레 부채꼴 (위 → 왼쪽 위 → 왼쪽) */
-body.mobile.summoner #touch .petBtn[data-i="0"] { right: 5%; bottom: 46%; }
-body.mobile.summoner #touch .petBtn[data-i="1"] { right: 14.2%; bottom: 39.7%; }
-body.mobile.summoner #touch .petBtn[data-i="2"] { right: 20%; bottom: 23.2%; }
 /* 모바일: 무기 정보는 공격·수류탄 버튼에 있으니 아래 가운데 무기 칸 대신 미니맵 */
 body.mobile #weaponHud { display: none; }
 body:not(.mobile) #weaponHud { left: 12px; transform: none; }
@@ -871,3 +863,63 @@ body.mobile.rot #nickPopup.kb { align-items: flex-start; justify-content: center
 .res-online .btn { font-size: 13px; padding: 4px 12px; }
 .gold-burst { animation: rank-gold-text 1.6s ease-out 2; color: #ffd23f !important; }
 @keyframes rank-gold-text { 0%, 100% { text-shadow: 0 3px 0 #6b3d00; transform: scale(1); } 30% { text-shadow: 0 0 18px #ffd23f, 0 0 36px #ffb000, 0 3px 0 #6b3d00; transform: scale(1.08); } }
+
+/* ===== 전투 HUD V2 (2026-11-25 추가 수정 요청): 브롤스타즈식 원형 버튼, 공격 버튼 중심 배치 =====
+   A = 공격 버튼 지름. 다른 버튼 위치는 공격 버튼 중심에서 (왼쪽 dx·위쪽 dy) × A 만큼 떨어진 곳 → 화면 크기가 달라도 배치 비율 유지
+   pos(dx, dy, S): right = 3% + A/2 + dx·A − S/2, bottom = 7% + A/2 + dy·A − S/2
+   PC 도 같은 원형 HUD (조이스틱만 없음, 키는 작은 배지로 표시) */
+#touch { --A: clamp(72px, 12vw, 108px); --S: calc(var(--A) * .6); --s: calc(var(--A) * .5); --U: calc(var(--A) * .7); --P: calc(var(--A) * .62); }
+body:not(.mobile) #touch { display: block; }
+body:not(.mobile) #touch #mv, body:not(.mobile) #touch #mvZone { display: none; }
+body:not(.mobile) #skillBar, body:not(.mobile) #weaponHud { display: none !important; }
+#touch #atk { right: 3%; bottom: 7%; width: var(--A); padding: 0; display: grid; place-items: center; white-space: normal; overflow: visible; }
+#touch .skb, #touch #ultBtn { position: absolute; width: var(--S); height: auto; aspect-ratio: 1; padding: 0; border: 3px solid #cfe2ff; border-radius: 50%; overflow: visible; color: #fff; font-size: 0; line-height: 1;
+  background: #1d2b66; box-shadow: 0 4px 0 #0b1436, 0 6px 10px #0006; transition: transform .07s; }
+#touch .skb:active { transform: translateY(2px) scale(.96); }
+#touch #summonBtn { right: calc(3% + var(--A) * .5 + var(--A) * .05 - var(--S) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * 1.12 - var(--S) / 2); }
+#touch #bearHeal { right: calc(3% + var(--A) * .5 + var(--A) * .8 - var(--S) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * .8 - var(--S) / 2); }
+#touch #ultBtn { width: var(--U); right: calc(3% + var(--A) * .5 + var(--A) * 1.25 - var(--U) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * .22 - var(--U) / 2); z-index: 3;
+  border: 0; background: conic-gradient(#ffd23f var(--ult, 0%), #2a2f55 0); padding: 0; animation: none; }
+/* 작은 원형 버튼: 대시·무기 교체·수류탄 (크기 동일, 자리 고정 → 교체 버튼이 나타나도 다른 버튼 안 움직임) */
+#touch #dashBtn, #touch #pickBtn, #touch #grenBtn { width: var(--s); height: auto; aspect-ratio: 1; padding: 0; bottom: calc(7% + var(--A) * .5 - var(--A) * .4 - var(--s) / 2); }
+#touch #dashBtn { right: calc(3% + var(--A) * .5 + var(--A) * 1.02 - var(--s) / 2); }
+#touch #pickBtn { right: calc(3% + var(--A) * .5 + var(--A) * 1.6 - var(--s) / 2); left: auto; }
+#touch #grenBtn { right: calc(3% + var(--A) * .5 + var(--A) * 2.18 - var(--s) / 2); }
+/* 아이콘 (원 안에 꽉 차게) */
+#touch .skb .sk-ico { position: absolute; inset: 0; border-radius: 50%; background: var(--sicon) center / 122% no-repeat; pointer-events: none; }
+#touch #ultBtn .sk-ico { inset: 4px; filter: grayscale(.55) brightness(.75); transition: filter .2s; }
+#touch #ultBtn.ready .sk-ico, #touch #ultBtn.active .sk-ico { filter: none; }
+#touch #ultBtn.ready { box-shadow: 0 0 16px #ffd23f, 0 0 4px #fff, 0 4px 0 #0b1436; animation: ult-ready 1s ease-in-out infinite; }
+#touch #ultBtn.active { box-shadow: 0 0 18px #b06bff, 0 4px 0 #0b1436; }
+/* 원형 쿨타임 게이지: 남은 비율만큼 시계 방향으로 어둡게 + 가운데 남은 초 */
+#touch .skb::after, #touch #atk::after, #touch #grenBtn::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(#050a1ccc calc(var(--cd, 0) * 360deg), transparent 0); }
+#touch #ultBtn::after { display: none; }
+#touch .cdt { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; pointer-events: none; color: #fff; font-family: inherit; font-weight: 700; font-size: clamp(12px, calc(var(--A) * .2), 20px); line-height: 1; text-shadow: 0 2px 0 #000, 0 0 4px #000; }
+#touch #dashBtn .cdt, #touch #grenBtn .cdt { font-size: clamp(10px, calc(var(--A) * .16), 15px); }
+#touch #ultBtn .cdt { font-size: clamp(10px, calc(var(--A) * .15), 14px); color: #ffe07a; }
+#touch #atk .cdt { font-size: clamp(14px, calc(var(--A) * .24), 24px); }
+#touch .skb.cooling, #touch #grenBtn.cooling { border-color: #7d8bb3; }
+/* 수류탄: 수량 0 이면 비활성 */
+#touch #grenBtn.empty { opacity: .4; filter: grayscale(.9); pointer-events: none; }
+/* 키 안내 (PC 만) */
+#touch kbd { display: none; }
+body:not(.mobile) #touch kbd { display: block; position: absolute; left: -2px; top: -4px; z-index: 2; min-width: 16px; padding: 1px 4px; border-radius: 6px; background: #0b1436; border: 1px solid #8fb4ff; color: #ffe07a; font-family: inherit; font-weight: 700; font-size: 10px; line-height: 1.3; text-align: center; pointer-events: none; }
+body:not(.mobile) #touch #atk kbd { left: 50%; top: auto; bottom: -8px; transform: translateX(-50%); }
+/* 현곤 포켓몬 3마리: 공격 버튼 둘레 부채꼴 (스킬 자리 2곳 + 바깥 1곳), 궁극기·작은 버튼과 겹치지 않음 */
+body.summoner #touch .petBtn { width: var(--P); height: auto; aspect-ratio: 1; padding: 0; }
+body.summoner #touch .petBtn[data-i="0"] { right: calc(3% + var(--A) * .5 + var(--A) * .05 - var(--P) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * 1.12 - var(--P) / 2); }
+body.summoner #touch .petBtn[data-i="1"] { right: calc(3% + var(--A) * .5 + var(--A) * .8 - var(--P) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * .8 - var(--P) / 2); }
+body.summoner #touch .petBtn[data-i="2"] { right: calc(3% + var(--A) * .5 + var(--A) * 1.56 - var(--P) / 2); bottom: calc(7% + var(--A) * .5 + var(--A) * 1.0 - var(--P) / 2); }
+/* 패시브: 조작 버튼이 아닌 상태 표시 (왼쪽 위, 메뉴 아래) */
+#touch .passive-chip { position: absolute; left: 10px; top: calc(8px + 44px); display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 20px; background: #0b1436cc; border: 1px solid #3d5db8; color: #dbe9ff; pointer-events: auto; z-index: 2; max-width: 40%; }
+#touch .passive-chip[hidden] { display: none; }
+#touch .passive-chip .sk-ico { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--sicon) center / 122% no-repeat; border: 2px solid #8fb4ff; }
+#touch .passive-chip .pv-txt { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+#touch .passive-chip b { font-weight: 700; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#touch .passive-chip small { font-size: 10px; color: #a9c4ff; white-space: nowrap; }
+#touch .passive-chip.on { border-color: #ffd23f; box-shadow: 0 0 8px #ffd23f88; }
+#touch .passive-chip.on small { color: #ffd23f; }
+/* 플로팅 조이스틱: 누르는 동안만 보임 (누른 자리에 생기고 떼면 사라짐) */
+body.mobile #touch .stick#mv { opacity: 0; transition: opacity .1s; } /* 안 보여도 터치는 받음 (다른 손가락 넘겨받기) */
+body.mobile #touch .stick#mv.on { opacity: 1; }

@@ -173,18 +173,6 @@ body.mobile #msg {
   font-size: 16px;
   font-weight: bold;
 }
-#touch #dashBtn {
-  right: 17%;
-  bottom: 8%;
-}
-#touch #summonBtn {
-  right: 4%;
-  bottom: 45%;
-}
-#touch #bearHeal {
-  right: 19% !important;
-  bottom: 40% !important;
-}
 body.mobile {
   overflow: hidden;
   touch-action: none;
@@ -368,9 +356,6 @@ body.summoner #touch .petBtn {
 #touch .petBtn.live .ps { color: #63e99b; }
 #touch .petBtn.lock { opacity: .6; }
 #touch .petBtn.press { border-color: #ffdf56; background: #456c9b; }
-#touch .petBtn[data-i="0"] { right: 3%; bottom: 43%; }
-#touch .petBtn[data-i="1"] { right: 15%; bottom: 36%; }
-#touch .petBtn[data-i="2"] { right: 5%; bottom: 66%; }
 
 /* 공통 스킬 설명창 */
 #skillTip { position: absolute; z-index: 40; max-width: min(64%, 320px); display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 2px solid #ffdf56; border-radius: 10px; background: #0f1838f2; color: #fff; font-size: 12px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 12px #0009; text-align: left; }
@@ -396,10 +381,7 @@ body.mobile #skillBar, body.lobbyOpen #skillBar, body.titleOpen #skillBar { disp
 .sk-slot.pet { cursor: pointer; }
 
 /* 궁극기 버튼: 충전 링(--ult) + 완충 강조 */
-#touch #ultBtn { right: 31%; bottom: 33%; width: clamp(58px, 10.5vw, 88px); border: 0; padding: 0; background: radial-gradient(circle at 50% 45%, #3a2a6e 0 58%, transparent 60%), conic-gradient(#ffd23f var(--ult, 0%), #2a2f55 0); color: #fff; font-size: 11px; line-height: 1.15; white-space: pre-line; z-index: 3; }
-#touch #ultBtn.ready { background: radial-gradient(circle at 50% 45%, #7a3fe0 0 58%, transparent 60%), conic-gradient(#ffd23f 100%, #ffd23f 0); box-shadow: 0 0 16px #ffd23f, 0 0 4px #fff; animation: ult-ready 1s ease-in-out infinite; }
 @keyframes ult-ready { 50% { box-shadow: 0 0 26px #ffd23f, 0 0 8px #fff; } }
-#touch #summonBtn, #touch #bearHeal { white-space: pre-line; line-height: 1.15; }
 
 /* ===== 게임 조작 영역: 브라우저 기본 동작 막기 (iOS Safari · Android Chrome) =====
    - 두 번 탭 확대·핀치 확대: touch-action (조작부 none, 나머지 manipulation) + iOS gesture* 이벤트 (js/ui/touch.js)

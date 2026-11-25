@@ -65,18 +65,20 @@ with sync_playwright() as pw:
     pg.goto(url); pg.wait_for_timeout(1500); pg.evaluate('closeTitle(); setQaUnlock(true); el("modePanel").hidden = true; document.body.classList.remove("modeOpen")')
     for ch in ['stripe', 'summoner']:
         pg.evaluate(f'openLobby(); lobbySel="{ch}"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(300)
-        n = pg.evaluate('document.querySelectorAll("#skillBar .sk-slot").length')
-        ok(f'[PC] {ch} 스킬 칸 표시 ({n}칸)', n == (7 if ch == 'summoner' else 4))
-        for k in range(n):
-            pg.hover(f'#skillBar .sk-slot >> nth={k}'); pg.wait_for_timeout(250)
+        # PC 도 원형 HUD (2026-11-25): 스킬·궁극기·패시브(상태 표시), 현곤은 포켓몬 3 + 궁극기 + 패시브
+        sels = (['.petBtn[data-i="0"]', '.petBtn[data-i="1"]', '.petBtn[data-i="2"]'] if ch == 'summoner' else ['#summonBtn', '#bearHeal']) + ['#ultBtn', '#passiveChip']
+        n = len(sels)
+        ok(f'[PC] {ch} 원형 스킬 버튼 표시 ({n}개)', all(pg.evaluate(f"(() => {{ const e = document.querySelector('{q}'); return !!e && e.getBoundingClientRect().width > 0; }})()") for q in sels))
+        for k, q in enumerate(sels):
+            pg.hover(q); pg.wait_for_timeout(250)
             t = pg.evaluate('skillTip.hidden ? "" : skillTip.textContent')
-            ok(f'[PC] {ch} 칸 {k + 1}: 마우스 올리면 설명', len(t) > 5, t[:40])
+            ok(f'[PC] {ch} {q}: 마우스 올리면 설명', len(t) > 5, t[:40])
         pg.mouse.move(5, 5); pg.wait_for_timeout(150)
         ok(f'[PC] {ch}: 마우스가 벗어나면 닫힘', pg.evaluate('skillTip.hidden'))
     # 데이터 연동: 수치를 바꾸면 설명과 실제 피해가 같이 바뀜
     pg.evaluate('openLobby(); lobbySel="stripe"; document.querySelector("#lobbyStart").click()'); pg.wait_for_timeout(300)
     pg.evaluate('SKILL_DATA.stripe.e.dmg = 777')
-    pg.hover('#skillBar .sk-slot >> nth=1'); pg.wait_for_timeout(250)
+    pg.hover('#bearHeal'); pg.wait_for_timeout(250)
     t = pg.evaluate('skillTip.textContent')
     hpdrop = pg.evaluate('''(() => { god = true; freeze = true; p.skcd.e = 0; const b = bots[0]; b.x = p.x + 30; b.y = p.y; b.hp = b.max = 5000; p.lastMoveDir = 2; mvX = 1; mvY = 0; castSkill('e', { x: b.x, y: b.y }); mvX = mvY = 0; return 5000 - b.hp; })()''')
     ok('[연동] 피해 수치 변경이 설명과 실제 피해에 같이 반영', '777' in t and abs(hpdrop - 777) < 1 or abs(hpdrop - 777 * 1.5) < 1, f'tip={("777" in t)} dmg={hpdrop}')

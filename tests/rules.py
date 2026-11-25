@@ -21,9 +21,10 @@ async () => {
   const fresh = (ch) => { document.querySelector('#character').value = ch; document.querySelector('#charApply').click(); freeze = true; god = false; window.__seed(99); };
   window.__t = window.__t || 0;
 
-  // 1) 무기 수치 (2026-11-25 확정: 검 250·0.8 / 망치 700·2.0 / 권총 450·1.2, 나머지 V1.4 원본)
-  const orig = [["맨손",100,0.5,80],["검",250,0.8,120],["망치",700,2,100],["권총",450,1.2,240],["샷건",140,1.4,160],["저격총",800,2,380],["수류탄",500,2,260]];
-  ok("무기 수치 = 확정값(검·망치·권총) + 나머지 원본", JSON.stringify(weapons) === JSON.stringify(orig));
+  // 1) 무기 수치 (2026-11-25 확정: 검 250·0.8 / 망치 700·2.0 / 권총 450·1.2 / 저격총 1,200(간격 3.5초는 WEAPON_RULES), 나머지 V1.4 원본)
+  const orig = [["맨손",100,0.5,80],["검",250,0.8,120],["망치",700,2,100],["권총",450,1.2,240],["샷건",140,1.4,160],["저격총",1200,2,380],["수류탄",500,2,260]];
+  ok("무기 수치 = 확정값(검·망치·권총·저격총) + 나머지 원본", JSON.stringify(weapons) === JSON.stringify(orig));
+  ok("공격 간격 확정값: 샷건 4.0·5명 / 저격 3.5 / 수류탄 2.0", WEAPON_RULES[4].gap === 4 && WEAPON_RULES[4].maxTargets === 5 && WEAPON_RULES[5].gap === 3.5 && GRENADE.gap === 2);
   ok("근접 부채꼴 각도 원본과 동일", JSON.stringify(angles) === JSON.stringify([90,120,160,30,75,12,60]));
 
   // 2) 액세서리 비활성
@@ -76,9 +77,9 @@ async () => {
   ok("체력이 가득하면 회복약 안 주움", loot.length === 1);
   loot = [];
 
-  // 6) 탄창: 3칸, 순차 충전 (샷건 1.4초 = 84프레임에 1칸. 권총은 확정값으로 공격 간격 1.2초라 연사 시험은 샷건으로)
+  // 6) 탄창: 3칸, 순차 충전 (샷건 1.4초 = 84프레임에 1칸). 공격 간격(샷건 4초)은 따로 시험하므로 여기선 간격만 비움
   p.w = 4; p.ammo = 3; p.cd = 0; p.reload = 0;
-  attack(p, p.x + 100, p.y); step(16); attack(p, p.x + 100, p.y); step(16); attack(p, p.x + 100, p.y);
+  attack(p, p.x + 100, p.y); step(16); p.cd = 0; attack(p, p.x + 100, p.y); step(16); p.cd = 0; attack(p, p.x + 100, p.y);
   ok("3번 연속 공격 후 탄창 0", p.ammo === 0, p.ammo);
   p.ammo = 0; p.reload = 0; p.cd = 0;
   const nShots = shots.length;

@@ -350,9 +350,11 @@ function attack(a, x, y) {
     let len = Math.min(r, Math.hypot(x - a.x, y - a.y)), q = { x: a.x + Math.cos(ang) * len, y: a.y + Math.sin(ang) * len };
     shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(q.x, 0, W), ty: clamp(q.y, 0, H), t: 0.8, d, gren: true });
   } else {
+    // 샷건: 탄환 5발(탄환별 피해·거리 감쇠 그대로). 한 번 쏠 때 맞는 적은 최대 maxTargets 명 (먼저 맞는 = 가까운 적부터)
+    const vol = a.w === 4 ? { hit: new Set(), max: WEAPON_RULES[4]?.maxTargets || 5 } : null;
     for (let i = 0; i < (a.w === 4 ? 5 : 1); i++) {
       let v = ang + (a.w === 4 ? (i - 2) * Math.PI / 12 : 0);
-      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d: d * (a === p && p.counterNow ? SKILL_DATA.suit.passive.mult : 1), shotgun: a.w === 4, range: r, basic: true });
+      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d: d * (a === p && p.counterNow ? SKILL_DATA.suit.passive.mult : 1), shotgun: a.w === 4, vol, range: r, basic: true });
     }
   }
   if (a === p) p.counterNow = false; // 카운터는 이번 공격 한 번만

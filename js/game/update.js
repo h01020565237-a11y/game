@@ -310,7 +310,9 @@ function update(dt) {
         continue;
       }
       let b = firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
+      if (b && s.vol && !s.vol.hit.has(b) && s.vol.hit.size >= s.vol.max) b = null; // 샷건 한 발 묶음: 최대 인원 넘으면 새 대상은 안 맞음
       if (b) {
+        if (s.vol) s.vol.hit.add(b);
         hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic });
         if (s.slow && b.max) b.slow = Math.max(b.slow || 0, s.slow);
         s.dead = true;
