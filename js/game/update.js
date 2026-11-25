@@ -116,8 +116,9 @@ function update(dt) {
     p.dash = Math.max(0, p.dash - step);
   } else {
     let [ix, iy] = p.moveLock ? [p.moveLock.x, p.moveLock.y] : tackleInput(); // 이동형 스킬 중엔 발동 방향 고정
-    if (Math.hypot(ix, iy) > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
-    move(p, ix, iy, dt);
+    const mag = Math.hypot(ix, iy);
+    if (mag > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
+    move(p, ix, iy, dt * (mag < 1 && !p.moveLock ? clamp(mag * 1.25, 0.4, 1) : 1)); // 조이스틱 세기 반영 (살짝 밀면 천천히)
     if (aiming) {
       autoAttack();
     } else if (mouse.down) attack(p, mouse.x, mouse.y);

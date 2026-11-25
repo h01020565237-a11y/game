@@ -27,6 +27,7 @@ with sync_playwright() as pw:
     ok('조이스틱 누르면 이동 입력', pg.evaluate('mvX') > 0.5, pg.evaluate('[mvX, mvY]'))
     # 손 뗌 이벤트 없이 상태만 남은 경우 흉내: 다른 손가락으로 새로 누름
     T('touchStart', [{'x': cx + w * 0.45, 'y': cy, 'id': 1}, {'x': cx, 'y': cy - w * 0.4, 'id': 2}])
+    T('touchMove', [{'x': cx + w * 0.45, 'y': cy, 'id': 1}, {'x': cx, 'y': cy - w * 0.9, 'id': 2}])
     ok('새로 누르면 새 손가락으로 넘어감 (예전: 무시돼서 조작 불가)', pg.evaluate('mvY') < -0.5, pg.evaluate('[mvX, mvY]'))
     T('touchEnd', [])
     pg.wait_for_timeout(50)
@@ -41,6 +42,33 @@ with sync_playwright() as pw:
     ok('카드 화면 열리면 놓임', pg.evaluate('mvX === 0 && mvY === 0'))
     T('touchEnd', [])
     pg.evaluate("if (singleRun.phase === 'cards') pickEndlessCard(0)")
+    # 플로팅: 이동 영역 아무 데서나 시작 → 그 자리가 중심
+    pg.evaluate("document.body.classList.add('menuOpen'); singleRun.cardQueue = []; singleRun.cards = []; singleRun.phase = 'fight'; el('cardsTitle').closest('section, .screen, div[id]').hidden = true"); pg.wait_for_timeout(100)
+    z = pg.evaluate("(() => { const r = el('mvZone').getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; })()")
+    sx, sy = z[0] + z[2] * 0.6, z[1] + z[3] * 0.35
+    T('touchStart', [{'x': sx, 'y': sy, 'id': 7}])
+    pos = pg.evaluate("(() => { const r = el('mv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")
+    ok('플로팅 조이스틱: 누른 자리로 이동', abs(pos[0] - sx) < 3 and abs(pos[1] - sy) < 3, (pos, sx, sy))
+    T('touchMove', [{'x': sx + 6, 'y': sy, 'id': 7}])
+    ok('조금만 밀면(데드존) 정지', pg.evaluate('mvX === 0 && mvY === 0'))
+    T('touchMove', [{'x': sx - w * 0.2, 'y': sy + w * 0.05, 'id': 7}])
+    mv = pg.evaluate('[mvX, mvY]')
+    ok('360도·세기 반영 (절반쯤 밀면 세기 < 1)', mv[0] < -0.2 and 0.2 < (mv[0] ** 2 + mv[1] ** 2) ** 0.5 < 0.95, mv)
+    for k in range(1, 9): T('touchMove', [{'x': sx + w * 0.5 * k, 'y': sy - w * 0.06 * k, 'id': 7}])
+    ok('영역 밖으로 끌어도 계속 추적', pg.evaluate('mvX') > 0.8)
+    # 다른 손가락(공격 버튼) 누르고 떼도 이동 유지
+    a = pg.evaluate("(() => { const r = el('atk').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")
+    T('touchStart', [{'x': sx + w * 4, 'y': sy - w * 0.48, 'id': 7}, {'x': a[0], 'y': a[1], 'id': 8}])
+    T('touchMove', [{'x': sx + w * 4, 'y': sy - w * 0.48, 'id': 7}])  # CDP: 빠진 손가락(8)만 뗀 것으로 처리
+    pg.wait_for_timeout(50)
+    ok('공격 손가락을 떼도 이동 손가락 유지 (멀티터치)', pg.evaluate('mvX') > 0.8, pg.evaluate('[mvX, mvY]'))
+    T('touchEnd', [])
+    pg.wait_for_timeout(50)
+    ok('떼면 정지·원래 자리', pg.evaluate("mvX === 0 && mvY === 0 && !el('mv').classList.contains('on')"))
+    # 버튼에서 시작한 터치는 조이스틱이 아님
+    T('touchStart', [{'x': a[0], 'y': a[1], 'id': 9}]); T('touchMove', [{'x': a[0] - 60, 'y': a[1], 'id': 9}])
+    ok('공격 버튼에서 시작한 터치는 이동 안 함', pg.evaluate('mvX === 0 && mvY === 0'))
+    T('touchEnd', [])
     # 안전장치
     r = pg.evaluate('''(() => { document.body.classList.add("menuOpen"); singleRun.cardQueue = []; singleRun.phase = "fight"; singleRun.timer = 999; const w0 = walls.find((q) => q[2] > 60 && q[3] > 60 && q[0] > 100); p.x = w0[0] + w0[2] / 2; p.y = w0[1] + w0[3] / 2; update(1 / 60); const a = !blocked(p.x, p.y, 10);
       p.x = -50; p.y = 300; update(1 / 60); const b2 = p.x > 0; return [a, b2, p.stuckFix, over, singleRun.phase, singleRun.cardQueue.length, !!singleRun.mapSwap]; })()''')

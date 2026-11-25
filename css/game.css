@@ -420,3 +420,8 @@ html, body { touch-action: manipulation; overscroll-behavior: none; -webkit-text
 #touch .petBtn .pet-art { flex: 0 1 auto; min-height: 0; display: block; max-width: 75%; max-height: 75%; width: auto; height: auto; object-fit: contain; margin: auto; pointer-events: none; }
 .pk-slot .pet-art, .pk-mon .pet-art { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
 .card-art { width: 64px; height: 64px; object-fit: contain; pointer-events: none; }
+/* 플로팅 조이스틱 (2026-11-25): 왼쪽 아래 넓은 영역이 이동 판정, 조이스틱은 누른 자리로 이동 */
+#mvZone { position: absolute; left: 0; bottom: 0; width: 46%; height: 76%; pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body.mobile #touch .stick#mv { z-index: 1; opacity: .55; transition: opacity .12s; }
+body.mobile #touch .stick#mv.on { opacity: 1; }
+#touch button { z-index: 2; }

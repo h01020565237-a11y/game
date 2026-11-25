@@ -241,7 +241,89 @@ function releaseSticks() {
 }
 document.addEventListener("visibilitychange", () => document.hidden && releaseSticks());
 addEventListener("pagehide", releaseSticks);
-stick("mv", (x, y) => {
+// ----- 이동: 플로팅 조이스틱 (2026-11-25) -----
+// 왼쪽 이동 영역(#mvZone) 어디서든 누르면 그 자리가 조이스틱 중심. 360도, 끈 방향·거리(세기) 반영
+// 손가락이 영역 밖으로 나가도 그 손가락(pointerId) 계속 추적. 떼거나 취소되면 정지·원래 자리로
+// 멀티터치: 손가락마다 따로. 다른 손가락(공격·대시 등)을 떼도 이동 손가락은 유지 (touch identifier 로 확인)
+const MV_STICK = { dead: 0.12, radius: 0.5 }; // dead: 이 안쪽은 정지, radius: 최대 세기가 되는 거리(조이스틱 지름 비율)
+function floatStick(zone, st, fn) {
+  const knob = st.querySelector("i"), arena = document.getElementById("arena");
+  let pid = null, tid = null, cx = 0, cy = 0;
+  const rot = () => document.body.classList.contains("rot");
+  function local(clx, cly) { // 화면 좌표 → #touch 안 좌표 (세로 폰 회전 포함)
+    const r = arena.getBoundingClientRect(), s = (rot() ? r.height : r.width) / (arena.offsetWidth || 1) || 1;
+    return rot() ? [(cly - r.top) / s, (r.right - clx) / s] : [(clx - r.left) / s, (cly - r.top) / s];
+  }
+  function place(lx, ly) {
+    st.style.left = `${lx - st.offsetWidth / 2}px`;
+    st.style.top = `${ly - st.offsetHeight / 2}px`;
+    st.style.bottom = "auto";
+    st.classList.add("on");
+  }
+  function home() {
+    st.style.left = st.style.top = st.style.bottom = "";
+    st.classList.remove("on");
+    knob.style.transform = "";
+  }
+  function set(e) {
+    const size = (rot() ? st.getBoundingClientRect().height : st.getBoundingClientRect().width) || 80;
+    let [dx, dy] = toLocal(e.clientX - cx, e.clientY - cy);
+    let x = dx / (size * MV_STICK.radius), y = dy / (size * MV_STICK.radius);
+    const n = Math.hypot(x, y);
+    if (n > 1) {
+      x /= n;
+      y /= n;
+    }
+    knob.style.transform = `translate(${x * st.offsetWidth * 0.3}px,${y * st.offsetHeight * 0.3}px)`;
+    if (n < MV_STICK.dead) fn(0, 0, true);
+    else fn(x, y, true);
+  }
+  function release() {
+    if (pid !== null) {
+      try {
+        zone.releasePointerCapture(pid);
+      } catch (err) {}
+    }
+    pid = tid = null;
+    home();
+    fn(0, 0, false);
+  }
+  function down(e) {
+    if (e.button > 0) return;
+    e.preventDefault();
+    if (pid !== null && pid !== e.pointerId) release(); // 남아 있던 손가락 상태는 버리고 새 손가락으로
+    pid = e.pointerId;
+    cx = e.clientX;
+    cy = e.clientY;
+    const [lx, ly] = local(cx, cy);
+    place(lx, ly);
+    try {
+      zone.setPointerCapture(pid);
+    } catch (err) {}
+    fn(0, 0, true);
+  }
+  zone.addEventListener("pointerdown", down);
+  st.addEventListener("pointerdown", down);
+  const mv = (e) => e.pointerId === pid && set(e);
+  zone.addEventListener("pointermove", mv);
+  st.addEventListener("pointermove", mv);
+  const end = (e) => e.pointerId === pid && release();
+  for (const t of [zone, st]) for (const ev of ["pointerup", "pointercancel"]) t.addEventListener(ev, end);
+  document.addEventListener("pointerup", end, true);
+  document.addEventListener("pointercancel", end, true);
+  const tstart = (e) => (tid = e.changedTouches[0]?.identifier ?? tid);
+  zone.addEventListener("touchstart", tstart, { passive: true });
+  st.addEventListener("touchstart", tstart, { passive: true });
+  const tcheck = (e) => { // 이동 손가락(identifier)이 더 이상 화면에 없으면 놓음 (다른 손가락을 뗀 건 상관없음)
+    if (pid === null || tid === null) return;
+    for (const t of e.touches) if (t.identifier === tid) return;
+    release();
+  };
+  document.addEventListener("touchend", tcheck, true);
+  document.addEventListener("touchcancel", tcheck, true);
+  sticks.push({ el: st, release, held: () => pid !== null });
+}
+floatStick(document.getElementById("mvZone"), document.getElementById("mv"), (x, y) => {
   mvX = x;
   mvY = y;
 });
