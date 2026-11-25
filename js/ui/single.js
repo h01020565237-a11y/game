@@ -75,7 +75,10 @@ function updateSingleHUD() {
   const boss = bots.find((b) => b.mob === "boss" && b.hp > 0);
   const bh = el("bossHud");
   if (bh.hidden !== !boss) bh.hidden = !boss;
-  if (boss) el("bossFill").style.width = (100 * boss.hp / boss.max).toFixed(1) + "%";
+  if (boss) {
+    el("bossFill").style.width = (100 * boss.hp / boss.max).toFixed(1) + "%";
+    setText("bossName", "타락한 " + (DISPLAY_NAMES[boss.visual] || MOB_TYPES.boss.name));
+  }
   const bn = el("waveBanner"), show = R.bannerT > 0 || R.phase === "intro";
   const txt = R.phase === "intro" ? "몰려오는 적을 모두 물리쳐라!" : R.banner;
   if (bn.hidden !== !show) bn.hidden = !show;

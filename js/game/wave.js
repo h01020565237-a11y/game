@@ -85,7 +85,8 @@ function spawnPoint(minDist) {
 function makeMob(type, at) {
   const T = MOB_TYPES[type], q = at || spawnPoint(singleRun.m.spawnMinDist);
   const a = actor(q.x, q.y);
-  Object.assign(a, { mob: type, hp: T.hp, max: T.hp, spd: T.spd, atkT: 0.6 + Math.random() * 0.6, spawnT: 0.6, deadT: 0, visual: null });
+  const look = CORRUPT_LOOK[type], vis = look.visuals[Math.floor(Math.random() * look.visuals.length)];
+  Object.assign(a, { mob: type, hp: T.hp, max: T.hp, spd: T.spd, atkT: 0.6 + Math.random() * 0.6, spawnT: 0.6, deadT: 0, visual: vis, seed: Math.random() * 100 });
   if (type === "boss") Object.assign(a, { pat: 0, patT: 2.5, tele: null, summoned: 0 });
   fx.push({ x: a.x, y: a.y, t: 0.6, ring: T.r + 14 });
   bots.push(a);
@@ -228,7 +229,7 @@ function bossAI(a, dt) {
       const ang = Math.random() * Math.PI * 2, q = { x: clamp(a.x + Math.cos(ang) * 90, 40, W - 40), y: clamp(a.y + Math.sin(ang) * 90, 40, H - 40) };
       if (!terrain(q.x, q.y) && !blocked(q.x, q.y)) makeMob("melee", q);
     }
-    singleRun.banner = "거목이 덩굴을 불러냈다!";
+    singleRun.banner = `타락한 ${DISPLAY_NAMES[a.visual] || "보스"}이(가) 졸개를 불러냈다!`;
     singleRun.bannerT = 1.6;
   }
   if (a.charge) { // 돌진 중
@@ -290,7 +291,7 @@ function fireBossPattern(a) {
   } else if (P.kind === "ring") {
     for (let i = 0; i < P.count; i++) {
       const v = ang + i * Math.PI * 2 / P.count;
-      mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * P.speed, vy: Math.sin(v) * P.speed, left: 520, d: P.dmg, a, r: 9, color: "#c6f56a" });
+      mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * P.speed, vy: Math.sin(v) * P.speed, left: 520, d: P.dmg, a, r: 9, color: "#d39bff" });
     }
     sfx("shotgun", a);
   } else if (P.kind === "charge") {

@@ -1,13 +1,20 @@
 // ===== 싱글모드: 웨이브 생존전 데이터 (docs/SINGLE_WAVE_PROTOTYPE.md) =====
 // 수치는 모두 여기서 조정. 배틀로얄 모드 데이터(weapons, DROP_TABLE 등)와 분리.
-// 적 그림은 전용 에셋이 오기 전까지 캔버스 도형으로 임시 표시 (js/render/mobs.js)
+// 적 그림: 아군 8명의 이동 스프라이트를 어둡게·보라 톤으로 바꾼 "타락한 캐릭터" (js/render/mobs.js, 원본 시트는 그대로)
+//   visuals: 이 종류로 나올 수 있는 캐릭터(무작위 1명), scale 크기 배율, aura 오라 세기(0~1)
+const CORRUPT_LOOK = {
+  melee: { visuals: ["bear", "runner", "stripe", "soccer"], scale: 1, aura: 0.6 },
+  ranged: { visuals: ["octo", "support"], scale: 1, aura: 0.6 },
+  boss: { visuals: ["summoner"], scale: 1.6, aura: 1 },
+  tint: { multiply: "#6b5a86", overlay: "rgba(70, 20, 110, 0.28)" }, // 어두운 색감 + 보라 (일반·보스 공통)
+};
 
 // 적 종류
 //   hp 체력, spd 이동 속도 배율(기본 이동 150 기준), r 몸 크기, dmg 공격 피해, range 공격 거리, cd 공격 간격(초)
 //   keep: 원거리 적이 유지하려는 거리 [최소, 최대], shot: 투사체 속도
 const MOB_TYPES = {
   melee: { name: "가시 덩굴", hp: 420, spd: 0.58, r: 17, dmg: 85, range: 34, cd: 1.2, color: "#3f9a4a", accent: "#bfe86b" },
-  ranged: { name: "포자 버섯", hp: 320, spd: 0.5, r: 16, dmg: 70, range: 260, cd: 2.2, keep: [170, 250], shot: 235, color: "#8a4fb8", accent: "#f2c6ff" },
+  ranged: { name: "포자 버섯", hp: 320, spd: 0.5, r: 16, dmg: 70, range: 260, cd: 2.2, keep: [170, 250], shot: 235, color: "#8a4fb8", accent: "#c77dff" },
   boss: {
     name: "정글 거목", hp: 5500, spd: 0.48, r: 34, dmg: 130, range: 48, cd: 1.3, color: "#6b4a2c", accent: "#9be15d",
     // 패턴: 순서대로 돌아가며 사용. tele 예고 시간(초), 체력이 enrageAt 이하면 예고·대기 시간 enrageMul 배
