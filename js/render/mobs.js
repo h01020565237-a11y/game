@@ -165,7 +165,16 @@ function drawPkMob(a, alpha, appear) {
   g.fill();
   g.shadowColor = "#b35cff";
   g.shadowBlur = 10;
-  if (im) {
+  const sg = summonGfx(a.pk), F = SUMMON_FRAME;
+  const sim = sg && summonImg(sg.G.anims[a.atkAnim > 0 ? "attack" : a.moving ? "move" : "idle"]);
+  if (sim) { // 소환수 그래픽 팩: 8방향 시트 (공격·이동·대기), 등장할 때 커지며 나타남
+    const key = a.atkAnim > 0 ? "attack" : a.moving ? "move" : "idle", dur = F.dur[key], total = dur.reduce((x, y) => x + y, 0);
+    let tick = Math.floor((elapsed + (a.x % 7) * 0.13) * 60) % total, f = 0;
+    for (let acc = 0; f < dur.length - 1 && tick >= acc + dur[f]; f++) acc += dur[f];
+    const k = F.scale * (0.6 + 0.4 * appear), row = ((a.dir || 0) % 8 + 8) % 8;
+    g.imageSmoothingEnabled = true;
+    g.drawImage(sim, f * F.fw, row * F.fh, F.fw, F.fh, a.x - F.anchor[0] * k, a.y + 6 - F.anchor[1] * k, F.fw * k, F.fh * k);
+  } else if (im) {
     const flip = (a.dir || 0) >= 5 && (a.dir || 0) <= 7 ? -1 : 1; // 왼쪽 보면 좌우 반전
     g.translate(a.x, a.y - size * 0.45 - bob);
     g.scale(flip, 1);

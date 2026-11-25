@@ -123,12 +123,20 @@ with sync_playwright() as pw:
     pg.wait_for_timeout(500)
     r = pg.evaluate('''(() => { const out = {}; out.sprites = [0, 1, 2].map((id) => !!petSprite(id)); out.evoSprite = !!petSprite(PET_DEX[0].next); out.evoArt = petArt[PET_DEX[0].next] !== undefined;
       out.delay = +petHitDelay(0).toFixed(3);
-      const pt = { ...actor(p.x + 40, p.y), id: 0, hp: 800, max: 800, life: 10, dir: 2 }; [pkSheet(petSprite(0).anims.idle.src), pkSheet(petSprite(0).anims.attack.src), pkSheet(petSprite(0).anims.walk.src)];
+      const pt = { ...actor(p.x + 40, p.y), id: 0, hp: 800, max: 800, life: 10, dir: 2 }; [pkSheet(petSprite(0).anims.idle.src), pkSheet(petSprite(0).anims.attack.src), pkSheet(petSprite(0).anims.walk.src), pkSheet(petSprite(0).anims.hurt.src)];
       return out; })()''')
     pg.wait_for_timeout(400)
-    r2 = pg.evaluate('''(() => { const pt = { ...actor(p.x + 40, p.y), id: 0, hp: 800, max: 800, life: 10, dir: 2, moving: false }; const a = !!drawPetSprite(pt); pt.moving = true; const b2 = petAnimState(pt).A === petSprite(0).anims.walk; pt.atkAt = elapsed; const c = petAnimState(pt).A === petSprite(0).anims.attack; pt.atkAt = undefined; pt.hitT = 0.1; const d = petAnimState(pt).A === petSprite(0).anims.hurt; return [a, b2, c, d]; })()''')
-    ok('피카츄·파이리·꼬부기 인게임 스프라이트 연결', all(r['sprites']), r)
-    ok('대기·이동·공격·피격 애니메이션 상태 전환', all(r2), r2)
+    r2 = pg.evaluate('''(() => { const pt = { ...actor(p.x + 40, p.y), id: 0, hp: 800, max: 800, life: 10, dir: 2, moving: false };
+      const src = () => petAnimState(pt).im.src.split('/').slice(-2).join('/');
+      // 소환수 그래픽 팩(2026-11-25)이 있으면 그것 우선: 대기 / 이동 / 공격 + 피격은 하얗게 번쩍(두 번 그림)
+      const a = !!drawPetSprite(pt) && src() === 'lightri/idle.webp'; pt.moving = true; const b2 = src() === 'lightri/move.webp'; pt.atkAt = elapsed; const c = src() === 'lightri/attack.webp'; pt.atkAt = undefined;
+      pt.hitT = 0.1; let n = 0; const o = g.drawImage.bind(g); g.drawImage = (...x) => (n++, o(...x)); drawPetSprite(pt); g.drawImage = o; const d = n === 2;
+      // 그래픽 팩이 없으면 기존 PMD 스프라이트로 (대기·이동·공격·피격)
+      const keep = SUMMON_BY_PET[0]; delete SUMMON_BY_PET[0]; pt.hitT = 0; pt.moving = false;
+      const pm = (A) => petAnimState(pt).im.src.endsWith(A.src);
+      const e1 = pm(petSprite(0).anims.idle); pt.moving = true; const e2 = pm(petSprite(0).anims.walk); pt.atkAt = elapsed; const e3 = pm(petSprite(0).anims.attack); pt.atkAt = undefined; pt.hitT = 0.1; const e4 = pm(petSprite(0).anims.hurt);
+      SUMMON_BY_PET[0] = keep; return [a, b2, c, d, e1, e2, e3, e4]; })()''')
+    ok('대기·이동·공격·피격 애니메이션 상태 전환 (새 그래픽 / 없으면 기존 스프라이트)', all(r2), r2)
     ok('진화형(스프라이트 없음)은 일러스트로 대체 가능', not r['evoSprite'], r)
     ok('공격 맞는 프레임에 피해 (AnimData HitFrame, 피카츄 약 0.12초)', 0.05 < r['delay'] < 0.3, r['delay'])
     # 보스: 체력 HUD 는 시야와 상관없이, 위험 표시는 어둠 위

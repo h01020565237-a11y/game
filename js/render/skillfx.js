@@ -13,33 +13,51 @@ function pkSheet(src) {
 }
 // 게임 방향(0=위, 시계방향) → PMD 행(0=아래, 반시계: 아래·오른아래·오른·오른위·위·왼위·왼·왼아래)
 const pmdRow = (dir) => (12 - (dir || 0)) % 8;
+// 소환수 그래픽 팩 시트 (64칸 · 4프레임 · 8방향 북부터 시계방향 = 게임 방향 그대로)
+//   상태: 공격(1번 재생 후 복귀) > 이동 > 대기. 방향은 이동·공격 방향(pt.dir)
+function summonAnimState(pt, sg) {
+  const F = SUMMON_FRAME, atkLen = F.dur.attack.reduce((x, y) => x + y, 0) / 60;
+  let key = "idle", t = elapsed + (pt.id || 0) * 0.37, once = false;
+  if (pt.atkAt !== undefined && elapsed - pt.atkAt < atkLen) (key = "attack"), (t = elapsed - pt.atkAt), (once = true);
+  else if (pt.moving) key = "move";
+  const im = summonImg(sg.G.anims[key]);
+  if (!im) return null;
+  return { im, dur: F.dur[key], t, once, row: ((pt.dir || 0) % 8 + 8) % 8, fw: F.fw, fh: F.fh, ft: F.anchor, k: F.scale * sg.grow, smooth: true };
+}
 function petAnimState(pt) {
+  const sg = summonGfx(pt.id), ss = sg && summonAnimState(pt, sg);
+  if (ss) return ss;
   const S = petSprite(pt.id);
   if (!S) return null;
   const A = S.anims, atkLen = A.attack.dur.reduce((x, y) => x + y, 0) / 60;
-  if (pt.atkAt !== undefined && elapsed - pt.atkAt < atkLen) return { A: A.attack, t: elapsed - pt.atkAt, once: true };
-  if (pt.hitT > 0 && A.hurt) return { A: A.hurt, t: 0.14 - pt.hitT, once: true };
-  return pt.moving ? { A: A.walk, t: elapsed } : { A: A.idle, t: elapsed + (pt.id || 0) * 0.37 };
+  let st;
+  if (pt.atkAt !== undefined && elapsed - pt.atkAt < atkLen) st = { A: A.attack, t: elapsed - pt.atkAt, once: true };
+  else if (pt.hitT > 0 && A.hurt) st = { A: A.hurt, t: 0.14 - pt.hitT, once: true };
+  else st = pt.moving ? { A: A.walk, t: elapsed } : { A: A.idle, t: elapsed + (pt.id || 0) * 0.37 };
+  const im = pkSheet(st.A.src);
+  if (!im) return null;
+  const row = Math.min(st.A.dirs - 1, pmdRow(pt.dir));
+  return { im, dur: st.A.dur, t: st.t, once: st.once, row, fw: st.A.fw, fh: st.A.fh, feet: st.A.feet[row], k: PET_DRAW.spriteScale, smooth: false };
 }
 function drawPetSprite(pt) {
   const st = petAnimState(pt);
   if (!st) return false;
-  const { A } = st, im = pkSheet(A.src);
-  if (!im) return false;
-  const total = A.dur.reduce((x, y) => x + y, 0);
+  const { im, dur, fw, fh, row, k } = st;
+  const total = dur.reduce((x, y) => x + y, 0);
   let tick = Math.floor(st.t * 60);
   tick = st.once ? Math.min(total - 1, Math.max(0, tick)) : ((tick % total) + total) % total;
   let f = 0;
-  for (let acc = 0; f < A.dur.length - 1 && tick >= acc + A.dur[f]; f++) acc += A.dur[f];
-  const row = Math.min(A.dirs - 1, pmdRow(pt.dir)), k = PET_DRAW.spriteScale, ft = A.feet[row]?.[f] || [A.fw / 2, A.fh * 0.75];
+  for (let acc = 0; f < dur.length - 1 && tick >= acc + dur[f]; f++) acc += dur[f];
+  const ft = st.ft || st.feet?.[f] || [fw / 2, fh * 0.75];
+  const x = pt.x - ft[0] * k, y = pt.y + 6 - ft[1] * k, w = fw * k, h = fh * k;
   g.save();
-  g.imageSmoothingEnabled = false;
+  g.imageSmoothingEnabled = st.smooth; // 도트(PMD)는 또렷하게, 그래픽 팩은 부드럽게
   if (pt.fadeIn > 0) g.globalAlpha = 1 - pt.fadeIn;
-  g.drawImage(im, f * A.fw, row * A.fh, A.fw, A.fh, pt.x - ft[0] * k, pt.y + 6 - ft[1] * k, A.fw * k, A.fh * k);
+  g.drawImage(im, f * fw, row * fh, fw, fh, x, y, w, h);
   if (pt.hitT > 0) { // 피격: 잠깐 하얗게
     g.globalCompositeOperation = "lighter";
     g.globalAlpha = 0.5;
-    g.drawImage(im, f * A.fw, row * A.fh, A.fw, A.fh, pt.x - ft[0] * k, pt.y + 6 - ft[1] * k, A.fw * k, A.fh * k);
+    g.drawImage(im, f * fw, row * fh, fw, fh, x, y, w, h);
   }
   g.restore();
   return true;

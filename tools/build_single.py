@@ -16,7 +16,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MIME = {'.m4a': 'audio/mp4', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
-OPTIONAL = ('assets/pokemon/',)  # 공개 저장소에 올리지 않는 로컬 테스트용 그림 (포켓몬 공식 일러스트)
+OPTIONAL = ('assets/pokemon/', 'assets/summons/')  # 공개 저장소에 올리지 않는 로컬 테스트용 그림 (포켓몬 공식 일러스트)
 TEMPLATE_RE = re.compile(r'`[^`\n]*assets/[^`\n]*\$\{[^`\n]*`')
 LEFT_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')
 ASSET_RE = re.compile(r'(["\'(])(assets/[A-Za-z0-9_./-]+\.(?:webp|png|jpe?g|gif|svg|wav|mp3|ogg|m4a))(["\')])')

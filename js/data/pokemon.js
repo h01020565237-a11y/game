@@ -83,8 +83,32 @@ for (const d of PET_DEX) {
   im.onload = () => (petArt[d.id] = im);
   im.src = src;
 }
-// 버튼·카드용: 그림이 있으면 <img>, 없으면 아이콘 글자
+// ----- 소환수 그래픽 팩 (js/data/summon_sprites.js): 그래픽만 교체 -----
+// 소환수 번호 → 그래픽 (진화형은 기본형 그래픽, stage 만큼 조금 크게). 없으면 null → 기존 그림
+const SUMMON_BY_PET = {};
+for (const k in SUMMON_GFX) if (SUMMON_GFX[k].pet !== undefined) SUMMON_BY_PET[SUMMON_GFX[k].pet] = k;
+const summonImgs = {};
+function summonImg(src) { // 불러온 그림만 돌려줌 (공개 빌드처럼 파일이 없으면 null)
+  if (!src) return null;
+  let im = summonImgs[src];
+  if (!im) {
+    im = summonImgs[src] = new Image();
+    im.src = src;
+  }
+  return im.complete && im.naturalWidth ? im : null;
+}
+for (const k in SUMMON_GFX) for (const src of [SUMMON_GFX[k].icon, ...Object.values(SUMMON_GFX[k].anims)]) summonImg(src); // 미리 불러오기
+function summonGfx(id) {
+  const d = PET_DEX[id];
+  if (!d) return null;
+  const key = SUMMON_BY_PET[d.kind === "evo" ? d.base : id];
+  if (!key) return null;
+  return { key, G: SUMMON_GFX[key], grow: 1 + (d.kind === "evo" ? (d.stage || 1) * SUMMON_FRAME.evoGrow : 0) };
+}
+// 버튼·카드용: 소환수 아이콘 → (없으면) 기존 그림 → 아이콘 글자
 function petIconHTML(id, cls = "pet-art") {
+  const sg = summonGfx(id), ic = sg && summonImg(sg.G.icon);
+  if (ic) return `<img class="${cls} summon-icon" src="${ic.src}" alt="" draggable="false">`;
   const im = petArt[id];
   return im ? `<img class="${cls}" src="${im.src}" alt="" draggable="false">` : `<strong>${mons[id][1]}</strong>`;
 }
