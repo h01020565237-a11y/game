@@ -16,10 +16,11 @@ function characterSkillInner(i) {
     return;
   }
   if (character === "runner") {
-    if (i === 1 && p.runCD <= 0 && p.energy >= 50) {
-      p.energy -= 50;
-      p.run = 2;
-      p.runCD = 6;
+    const S = SKILL_DATA.runner;
+    if (i === 1 && p.runCD <= 0 && p.energy >= S.q.cost) {
+      p.energy -= S.q.cost;
+      p.run = S.q.dur;
+      p.runCD = S.q.cd;
     }
     if (i === 2 && p.tackleCD <= 0 && p.dash <= 0) {
       let [x, y] = tackleInput();
@@ -30,34 +31,36 @@ function characterSkillInner(i) {
       p.lastMoveDir = (Math.round(Math.atan2(x, -y) / (Math.PI / 4)) + 8) % 8;
       p.tx = x;
       p.ty = y;
-      p.tackle = 0.22;
-      p.tackleCD = 8;
-      p.tackleDamage = p.run > 0 ? 600 : 400;
+      p.tackle = S.e.dashT;
+      p.tackleCD = S.e.cd;
+      p.tackleDamage = p.run > 0 ? S.e.dmgRun : S.e.dmg;
       p.tackleHits = new Set();
     }
     return;
   }
+  const S = SKILL_DATA.bear;
   if (i === 1 && p.runCD <= 0) {
-    p.run = 1;
-    p.runCD = 7;
+    p.run = S.q.dur;
+    p.runCD = S.q.cd;
   }
   if (i === 2 && p.healCD <= 0) {
-    p.heal = 2.5;
-    p.healCD = 12;
+    p.heal = S.e.dur;
+    p.healCD = S.e.cd;
   }
 }
 function throwOcto(a, i) {
-  let range = (i === 1 ? 300 : 250) * 1.2;
+  const S = SKILL_DATA.octo[i === 1 ? "q" : "e"], range = S.range;
   let b = targets(a).filter((b2) => dist(a, b2) <= range).sort((b2, c2) => (b2.max ? 0 : 1e3) + dist(a, b2) - (c2.max ? 0 : 1e3) - dist(a, c2))[0];
   let dx = Math.sin(a.dir * Math.PI / 4), dy = -Math.cos(a.dir * Math.PI / 4);
   let tx = b ? b.x : clamp(a.x + dx * range, 20, W - 20), ty = b ? b.y : clamp(a.y + dy * range, 20, H - 20);
-  shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx, ty, t: 0.55, octo: i, d: i === 1 ? 450 : 250 });
+  shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx, ty, t: 0.55, octo: i, d: S.dmg });
   a.reveal = 1.2;
 }
 function extraSkill(i) {
   let k = i === 1 ? "s1" : "s2";
   if (p[k] > 0) return;
-  p[k] = i === 1 ? 7 : 9;
+  const D = SKILL_DATA[character], S = D[i === 1 ? "q" : "e"];
+  p[k] = S.cd;
   let [x, y] = tackleInput();
   if (Math.hypot(x, y) < 0.15) {
     x = Math.sin(p.lastMoveDir * Math.PI / 4);
@@ -71,31 +74,28 @@ function extraSkill(i) {
   let b = front[0];
   fx.push({ x: p.x, y: p.y, t: 0.65, text: extraNames[character][i - 1] });
   if (character === "suit") {
-    if (i === 1) p.focus = 3;
-    else p.guard = 2;
+    if (i === 1) p.focus = S.dur;
+    else p.guard = S.dur;
   }
-  if (character === "octo") {
-    p[k] = i === 1 ? 5 : 9;
-    throwOcto(p, i);
-  }
+  if (character === "octo") throwOcto(p, i);
   if (character === "stripe") {
-    if (i === 1) p.stealth = 3;
+    if (i === 1) p.stealth = S.dur;
     else {
       for (let j = 0; j < 8; j++) move(p, x, y, 0.07);
-      for (let a of bots.filter((a2) => a2.hp > 0 && dist(p, a2) < 65)) hit(p, a, 450);
+      for (let a of bots.filter((a2) => a2.hp > 0 && dist(p, a2) < S.radius)) hit(p, a, S.dmg);
       p.stealth = 0;
     }
   }
   if (character === "soccer") {
     if (i === 1) {
       for (let j = 0; j < 8; j++) move(p, x, y, 0.06);
-      for (let a of bots.filter((a2) => a2.hp > 0 && dist(p, a2) < 60)) hit(p, a, 300);
-    } else shots.push({ a: p, x: p.x, y: p.y, vx: x * 650, vy: y * 650, left: 500, d: 500, soccer: true, bounces: 3 });
+      for (let a of bots.filter((a2) => a2.hp > 0 && dist(p, a2) < S.radius)) hit(p, a, S.dmg);
+    } else shots.push({ a: p, x: p.x, y: p.y, vx: x * S.speed, vy: y * S.speed, left: S.range, d: S.dmg, soccer: true, bounces: S.bounces });
   }
   if (character === "support") {
     if (i === 1) {
-      p.hp = Math.min(p.max, p.hp + p.max * 0.2);
+      p.hp = Math.min(p.max, p.hp + p.max * S.heal);
       fx.push({ x: p.x, y: p.y, t: 0.5, ring: 100 });
-    } else shots.push({ a: p, x: p.x, y: p.y, vx: x * 650, vy: y * 650, left: 350, d: 250, slow: true });
+    } else shots.push({ a: p, x: p.x, y: p.y, vx: x * S.speed, vy: y * S.speed, left: S.range, d: S.dmg, slow: S.slow });
   }
 }

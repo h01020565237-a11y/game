@@ -242,6 +242,7 @@ const fmtTime = (s) => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).pad
 let hudWeapon = -1;
 function updateHUD() {
   setText("timeHud", fmtTime(elapsed));
+  updateSkillBar();
   const sm = el("aliveHud").querySelector("small");
   if (sm.hidden !== !!singleRun) sm.hidden = !!singleRun;
   if (singleRun?.m) updateSingleHUD();

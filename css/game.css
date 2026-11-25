@@ -372,8 +372,25 @@ body.summoner #touch .petBtn {
 #touch .petBtn[data-i="1"] { right: 15%; bottom: 36%; }
 #touch .petBtn[data-i="2"] { right: 5%; bottom: 66%; }
 
-/* 길게 누르기 설명창 */
-#skillTip { position: absolute; z-index: 9; max-width: min(62%, 300px); display: flex; flex-direction: column; gap: 3px; padding: 8px 12px; border: 2px solid #ffdf56; border-radius: 10px; background: #0f1838f2; color: #fff; font-size: 12px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 12px #0009; }
+/* 공통 스킬 설명창 */
+#skillTip { position: absolute; z-index: 40; max-width: min(64%, 320px); display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 2px solid #ffdf56; border-radius: 10px; background: #0f1838f2; color: #fff; font-size: 12px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 12px #0009; text-align: left; }
 #skillTip[hidden] { display: none; }
-#skillTip b { color: #ffdf56; font-size: 13px; font-weight: normal; }
+#skillTip .tip-head { display: flex; align-items: center; gap: 6px; }
+#skillTip .tip-head b { color: #ffdf56; font-size: 13px; font-weight: normal; }
+#skillTip kbd { font: inherit; font-size: 11px; color: #0f1838; background: #ffdf56; border-radius: 4px; padding: 0 5px; }
+#skillTip .tip-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+#skillTip .tip-chips i { font-style: normal; font-size: 11px; color: #cfe1ff; background: #22346e; border-radius: 6px; padding: 1px 6px; }
 #skillTip small { color: #9fc4ff; font-size: 11px; }
+/* PC 스킬 칸: 경기장 오른쪽 아래 (모바일은 터치 버튼을 씀) */
+#skillBar { position: absolute; right: 1.2%; bottom: 2%; z-index: 7; display: flex; gap: 6px; }
+body.mobile #skillBar, body.lobbyOpen #skillBar, body.titleOpen #skillBar { display: none; }
+.sk-slot { position: relative; width: 52px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #a9c5e8; border-radius: 10px; background: #20334eee; color: #fff; font-size: 10px; line-height: 1.1; cursor: default; overflow: hidden; user-select: none; }
+.sk-slot b { font-size: 11px; font-weight: normal; white-space: nowrap; max-width: 48px; overflow: hidden; text-overflow: ellipsis; }
+.sk-slot strong { font-size: 18px; line-height: 1; }
+.sk-slot kbd { position: absolute; left: 3px; top: 2px; font: inherit; font-size: 9px; color: #ffdf56; }
+.sk-slot .cd { position: absolute; left: 0; right: 0; bottom: 0; background: #000a; pointer-events: none; }
+.sk-slot .cdt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
+.sk-slot.sel { border-color: #ffdf56; }
+.sk-slot.live { border-color: #63e99b; }
+.sk-slot.passive { border-style: dashed; opacity: .9; }
+.sk-slot.pet { cursor: pointer; }

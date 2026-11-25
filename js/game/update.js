@@ -30,7 +30,7 @@ function update(dt) {
     b._anim = false;
   }
   for (let k of ["s1", "s2", "focus", "guard", "stealth"]) p[k] = Math.max(0, p[k] - dt * (k[0] === "s" && k.length === 2 ? p.cdRate || 1 : 1));
-  if (character === "support") p.hp = Math.min(p.max, p.hp + p.max * 3e-3 * dt);
+  if (character === "support") p.hp = Math.min(p.max, p.hp + p.max * SKILL_DATA.support.passive.perSec * dt);
   if (character === "runner") {
     p.run = Math.max(0, p.run - dt);
     p.runCD = Math.max(0, p.runCD - dt * (p.cdRate || 1));
@@ -42,7 +42,7 @@ function update(dt) {
     p.healCD = Math.max(0, p.healCD - dt * (p.cdRate || 1));
     if (p.heal > 0) {
       let t = Math.min(dt, p.heal);
-      p.hp = Math.min(p.max, p.hp + p.max * 0.1 * t);
+      p.hp = Math.min(p.max, p.hp + p.max * SKILL_DATA.bear.e.perSec * t);
       p.heal -= t;
     }
   }
@@ -50,7 +50,7 @@ function update(dt) {
     flight.t += dt;
     if (flight.t >= 0.42) {
       let { tx: x, ty: y, id } = flight, m = mons[id];
-      pet = { ...actor(x, y), id, hp: m[4], max: m[4], life: 10 };
+      pet = { ...actor(x, y), id, hp: m[4], max: m[4], life: PET_RULES.life };
       fx.push({ x, y, t: 0.55, burst: true });
       flight = null;
     }
@@ -66,7 +66,7 @@ function update(dt) {
       b.burnTick -= dt;
       if (b.burnTick <= 0) {
         b.burnTick += 1;
-        hit({ gear: [] }, b, 55);
+        hit({ gear: [] }, b, PET_SKILLS[1].burnDps);
       }
     }
   }
@@ -152,7 +152,7 @@ function update(dt) {
   }
   // 자동 획득: 지나가기만 하면 손해 없는 아이템은 바로 먹음 (교체는 버튼/F 키)
   if (p.hp > 0) pickup(p, isFreeLoot);
-  if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(100, p.energy + Math.hypot(p.x - ox, p.y - oy) / 6);
+  if (character === "runner" && p.tackle <= 0 && p.dash <= 0 && p.run <= 0) p.energy = Math.min(SKILL_DATA.runner.passive.max, p.energy + Math.hypot(p.x - ox, p.y - oy) / SKILL_DATA.runner.passive.per);
   if (singleRun?.m) updateWave(dt); // 싱글: 웨이브 적은 전용 AI
   if (!freeze) for (let a of bots.filter((a2) => a2.hp > 0 && !(a2.stun > 0) && !a2.mob)) {
     let l = a.w ? undefined : minBy(loot.filter((l2) => l2.type === 0), (x) => dist(a, x));
@@ -219,23 +219,23 @@ function update(dt) {
       if (s.t <= 0) {
         if (s.octo === 2 && !s.armed) {
           s.armed = true;
-          s.t = 3;
+          s.t = SKILL_DATA.octo.e.armT;
           s.sx = s.tx;
           s.sy = s.ty;
         } else if (s.octo === 1) {
-          for (let b of [p, ...bots, ...boxes].filter((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < 85)) {
+          for (let b of [p, ...bots, ...boxes].filter((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < SKILL_DATA.octo.q.radius)) {
             hit(s.a, b, s.d);
-            if (b.max) b.ink = 2;
+            if (b.max) b.ink = SKILL_DATA.octo.q.ink;
           }
           fx.push({ x: s.tx, y: s.ty, t: 0.7, inkBurst: true });
           s.dead = true;
         } else s.dead = true;
       }
       if (s.armed && !s.dead) {
-        let b = [p, ...bots].find((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < 65);
+        let b = [p, ...bots].find((b2) => b2 !== s.a && b2.hp > 0 && dist(b2, { x: s.tx, y: s.ty }) < SKILL_DATA.octo.e.radius);
         if (b) {
           hit(s.a, b, s.d);
-          b.stun = 1.5;
+          b.stun = SKILL_DATA.octo.e.stun;
           s.dead = true;
           fx.push({ x: s.tx, y: s.ty, t: 0.5, inkBurst: true });
         }
@@ -267,7 +267,7 @@ function update(dt) {
         s.vx *= -1;
         s.vy *= -1;
         s.bounces--;
-        s.d *= 1.15;
+        s.d *= SKILL_DATA.soccer.e.bounceMul;
         continue;
       }
       if (blocked(s.x, s.y, 2) || s.left < 0 || s.x < 0 || s.x > W || s.y < 0 || s.y > H) {
@@ -277,7 +277,7 @@ function update(dt) {
       let b = firstTargetNear(s.a, s, 18);
       if (b) {
         hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1));
-        if (s.slow) b.slow = 2.5;
+        if (s.slow) b.slow = s.slow;
         s.dead = true;
       }
     }

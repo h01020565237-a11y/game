@@ -44,7 +44,6 @@
       <button id="pickBtn">교체</button>
       <button id="grenBtn">수류탄</button>
       <button id="menuBtn" aria-label="메뉴">메뉴</button>
-      <div id="skillTip" role="tooltip" hidden><b id="tipName"></b><span id="tipDesc"></span><small id="tipMeta"></small></div>
       <button class="petBtn" data-i="0" aria-label="포켓몬 1"></button>
       <button class="petBtn" data-i="1" aria-label="포켓몬 2"></button>
       <button class="petBtn" data-i="2" aria-label="포켓몬 3"></button>
@@ -55,6 +54,10 @@
       <div class="pill timer" id="timeHud">0:00</div>
       <div class="pill zone" id="zoneHud">자기장 25초 후</div>
     </div>
+    <!-- PC 스킬 칸 (마우스를 올리면 설명) -->
+    <div id="skillBar" aria-label="스킬"></div>
+    <!-- 공통 스킬 설명창 -->
+    <div id="skillTip" role="tooltip" hidden></div>
     <!-- 싱글 웨이브 HUD -->
     <div id="bossHud" hidden><span id="bossName">정글 거목</span><div class="boss-bar"><i id="bossFill"></i></div></div>
     <div id="waveBanner" hidden></div>
@@ -183,6 +186,7 @@
   <script src="js/data/combat.js"></script>
   <script src="js/data/pets.js"></script>
   <script src="js/data/characters.js"></script>
+  <script src="js/data/skills.js"></script>
   <script src="js/data/waves.js"></script>
   <script src="js/data/title.js"></script>
   <script src="js/data/sounds.js"></script>
@@ -204,6 +208,7 @@
   <script src="js/render/background.js"></script>
   <script src="js/render/mobs.js"></script>
   <script src="js/render/renderer.js"></script>
+  <script src="js/ui/skilltip.js"></script>
   <script src="js/ui/touch.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/single.js"></script>

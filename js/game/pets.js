@@ -26,36 +26,37 @@ function summon(swap = false) {
   if (swap) {
     fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true });
     pet = null;
-    swapCD = 2;
+    swapCD = PET_RULES.swapCD;
   }
   flight = { x: p.x, y: p.y, tx: x, ty: y, id, t: 0 };
   sfx(swap ? "pet_switch" : "pet_summon", p);
-  summonCD[id] = 15;
+  summonCD[id] = PET_RULES.summonCD;
   skillCD = 0;
 }
 function command() {
   if (!pet || skillCD > 0) return;
-  let id = pet.id;
-  let enemies = bots.filter((b) => b.hp > 0 && dist(pet, b) < (id === 5 ? 100 : 220) && !blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)).sort((a, b) => dist(pet, a) - dist(pet, b));
+  // 기술 수치는 PET_SKILLS / PET_RULES (js/data/skills.js)
+  const id = pet.id, S = PET_SKILLS[id], reach = S.radius || PET_RULES.range;
+  let enemies = bots.filter((b) => b.hp > 0 && dist(pet, b) < reach && !blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)).sort((a, b) => dist(pet, a) - dist(pet, b));
   if (!enemies.length) return;
-  if ((id === 0 || id === 7) && enemies.length < 2 && pet.life > 7) return;
-  skillCD = 5;
+  if (S.minFoes && enemies.length < S.minFoes && pet.life > 7) return;
+  skillCD = PET_RULES.skillCD;
   sfx("pet_skill", pet);
-  fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: ["10만 볼트", "화염방사", "하이드로펌프", "씨폭탄", "섀도볼", "헤비봄버", "냉동빔", "노래하기"][id] });
-  for (let b of enemies.slice(0, id === 0 ? 3 : id === 5 || id === 7 ? 7 : 1)) {
+  fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: S.name });
+  for (let b of enemies.slice(0, S.targets || 1)) {
     if (id === 0) fx.push({ x: b.x, y: b.y, sx: pet.x, sy: pet.y, t: 0.48, bolt: true, strong: true });
     pet.pose = 0.35;
-    hit(pet, b, [420, 460, 350, 300, 350, 550, 330, 120][id]);
-    if (id === 3 || id === 7) b.stun = 1;
-    if (id === 6) b.slow = 2;
-    if (id === 4) b.weak = 3;
-    if (id === 1) {
-      b.burn = 3;
+    hit(pet, b, S.dmg);
+    if (S.stun) b.stun = S.stun;
+    if (S.slow) b.slow = S.slow;
+    if (S.weak) b.weak = S.weak;
+    if (S.burn) {
+      b.burn = S.burn;
       b.burnTick = 0;
     }
-    if (id === 2) {
+    if (S.push) {
       let dx = b.x - pet.x, dy = b.y - pet.y, n = Math.hypot(dx, dy) || 1;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < S.push / 10; i++) {
         let x = clamp(b.x + dx / n * 10, 18, W - 18), y = clamp(b.y + dy / n * 10, 18, H - 18);
         if (terrain(x, y) || blocked(x, y) || boxes.some((q) => dist({ x, y }, q) < 30)) break;
         b.x = x;
@@ -63,5 +64,5 @@ function command() {
       }
     }
   }
-  fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: id === 5 ? 100 : 220 });
+  fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
 }

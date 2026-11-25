@@ -16,22 +16,29 @@ function rollDrop() {
 
 function hit(a, b, d) {
   if (b === p && god) return;
+  // 스킬·패시브 수치는 SKILL_DATA (js/data/skills.js)
   if (b === p && p.guard > 0) {
-    d *= 0.5;
-    if (a.max && a !== p) a.hp -= d * 0.5;
+    d *= SKILL_DATA.suit.e.take;
+    if (a.max && a !== p) a.hp -= d * SKILL_DATA.suit.e.reflect;
   }
-  if (a === p && character === "suit" && (p.focus > 0 || Math.random() < 0.15)) d *= 1.4;
+  if (a === p && character === "suit") {
+    if (p.focus > 0) d *= SKILL_DATA.suit.q.mult;
+    else if (Math.random() < SKILL_DATA.suit.passive.chance) d *= SKILL_DATA.suit.passive.mult;
+  }
   if (a === p && character === "stripe" && b.max) {
     let vx = Math.sin(b.dir * Math.PI / 4), vy = -Math.cos(b.dir * Math.PI / 4);
-    if ((p.x - b.x) * vx + (p.y - b.y) * vy < 0) d *= 1.5;
+    if ((p.x - b.x) * vx + (p.y - b.y) * vy < 0) d *= SKILL_DATA.stripe.passive.mult;
   }
-  if (a === p && character === "soccer" && ++p.combo % 4 === 0) d *= 1.3;
-  d *= a.weak > 0 ? 0.8 : 1;
+  if (a === p && character === "soccer" && ++p.combo % SKILL_DATA.soccer.passive.every === 0) d *= SKILL_DATA.soccer.passive.mult;
+  d *= a.weak > 0 ? PET_SKILLS[4].weakMul : 1;
   // 싱글 강화 카드 (이번 미션의 p 에만 있는 값. 배틀로얄에서는 없음 → 1)
   if (a === p && p.dmgMul) d *= p.dmgMul;
   if (b === p && p.takeMul) d *= p.takeMul;
   d *= hasGear(b, 1) ? 0.9 : 1;
-  if (b === p && character === "bear") d *= 1 - 0.08 * Math.min(3, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < 120).length);
+  if (b === p && character === "bear") {
+    const B = SKILL_DATA.bear.passive;
+    d *= 1 - B.perFoe * Math.min(B.maxFoes, bots.filter((a2) => a2.hp > 0 && dist(a2, p) < B.radius).length);
+  }
   // 집계: 플레이어(와 내 포켓몬)가 적에게 입힌 피해·처치
   if (b.max && b !== p && b !== pet && (a === p || a === pet) && b.hp > 0) {
     stats.damage += Math.min(d, b.hp);
