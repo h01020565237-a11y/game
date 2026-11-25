@@ -226,6 +226,48 @@
       <div class="rs-card"><img id="rsFace" alt=""><b id="rsName"></b><span>웨이브 모드에서 사용할 수 있어요</span><button id="rsOk" class="btn btn-gold">확인</button></div>
     </section>
 
+    <!-- 영입 미션 성공 결과: 다음 스토리 안내 (컷신 종료·스킵 후) -->
+    <section id="recruitResult" class="screen" hidden aria-label="영입 완료 결과">
+      <div class="panel rr-card">
+        <div class="rr-hero">
+          <img id="rrArt" alt="">
+          <div class="rr-hero-text">
+            <p class="rr-kicker" id="rrKicker">영입 미션 성공</p>
+            <h3 id="rrTitle"></h3>
+            <p id="rrStats" class="rr-stats"></p>
+            <p class="rr-note" id="rrNote">웨이브 모드에서 사용할 수 있어요</p>
+          </div>
+        </div>
+        <div class="rr-next">
+          <h4 id="rrNextHead">다음 스토리</h4>
+          <div id="rrNextList" class="rr-next-list"></div>
+          <div id="rrAll" class="rr-all" hidden></div>
+        </div>
+        <div class="rr-btns">
+          <button id="rrMissions" class="btn btn-ghost rr-sub" type="button">미션 목록</button>
+          <button id="rrWave" class="btn btn-ghost rr-sub" type="button">웨이브 모드</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 영입 미션 준비 화면: 미션 정보 + 출전 캐릭터 (여럿이면 선택) -->
+    <section id="missionPrep" class="screen" hidden aria-label="영입 미션 준비">
+      <button id="prepBack" class="screen-back" type="button">◀ 미션 목록</button>
+      <div class="panel prep-card">
+        <div class="prep-target"><img id="prepArt" alt=""><span id="prepTarget"></span></div>
+        <div class="prep-info">
+          <p class="rr-kicker" id="prepKicker"></p>
+          <h3 id="prepTitle"></h3>
+          <p id="prepSub" class="prep-sub"></p>
+          <p id="prepMeta" class="prep-meta"></p>
+          <ul id="prepStages" class="prep-stages"></ul>
+          <h4>출전 캐릭터</h4>
+          <div id="prepWho" class="prep-who"></div>
+        </div>
+      </div>
+      <div class="lobby-cta"><button id="prepGo" class="btn btn-cta" type="button"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15l12-7.5z"/></svg></i><span>출전</span></button></div>
+    </section>
+
     <!-- 결과 화면 -->
     <section id="results" class="screen" hidden aria-label="게임 결과">
       <div class="panel res-card">

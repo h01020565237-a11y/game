@@ -337,3 +337,134 @@ function showRecruitSplash(id, done) {
   const t = setTimeout(close, 4000);
   el("rsOk").onclick = close;
 }
+
+
+// ----- 영입 성공 결과: 다음 스토리 안내 (2026-11-25) -----
+// 컷신이 끝나거나 스킵하면 이 화면. 다음에 도전할 수 있는 영입 미션(선행 조건 충족·아직 미영입)을 크게 보여 줌
+// 여럿이면 모두 버튼으로(첫 번째가 가장 큼), 하나도 없고 8명 모두 영입했으면 전체 영입 완료 화면
+function nextMissions() {
+  return SINGLE_MISSIONS.filter((ms) => missionOpen(ms) && !singleSave.recruited.includes(ms.reward));
+}
+function missionInfo(ms) {
+  const S = STORY_MISSIONS[ms.id], W = WAVE_MISSIONS[ms.id];
+  return {
+    title: S ? S.title : W.title,
+    sub: S ? S.sub : W.sub,
+    target: S ? S.target : "3~5분",
+    who: ms.players.map((k) => DISPLAY_NAMES[k]).join(ms.any ? " 또는 " : " + "),
+    stages: S ? S.stages.map((st) => st.label + (st.boss ? ` · ${DISPLAY_NAMES[st.boss]}` : st.time ? ` · ${st.time}초` : "")) : W.waves.map((w, i) => `${i + 1}웨이브`),
+  };
+}
+let rrLast = null;
+function showRecruitResult() {
+  const R = singleRun, ms = SINGLE_MISSIONS.find((m) => m.id === R.id), reward = ms ? ms.reward : (STORY_MISSIONS[R.id] || WAVE_MISSIONS[R.id]).reward;
+  rrLast = R.id;
+  el("results").hidden = true;
+  el("rrArt").src = lobbyArt[reward].full.src;
+  el("rrTitle").textContent = `${DISPLAY_NAMES[reward]} 영입 완료!`;
+  el("rrStats").textContent = `처치 ${stats.kills} · 입힌 피해 ${Math.round(stats.damage).toLocaleString("ko-KR")} · ${fmtTime(stats.time)}`;
+  const list = el("rrNextList"), next = nextMissions(), all = LOBBY_ORDER.every((k) => singleSave.recruited.includes(k));
+  list.innerHTML = "";
+  el("rrAll").hidden = !all;
+  el("rrNextHead").hidden = all || !next.length;
+  el("rrKicker").textContent = all ? `${DISPLAY_NAMES[reward]} 영입 · 모든 영입 미션 완료` : "영입 미션 성공";
+  el("rrWave").className = all ? "btn btn-cta rr-sub" : "btn btn-ghost rr-sub"; // 전체 완료: 웨이브 모드가 다음 진행
+  el("rrNote").textContent = "웨이브 모드에서 사용할 수 있어요";
+  if (all) {
+    el("rrTitle").textContent = "전체 캐릭터 영입 완료!";
+    el("rrAll").innerHTML = `<div class="rr-faces">${LOBBY_ORDER.map((k) => `<img src="${lobbyArt[k].face.src}" alt="${DISPLAY_NAMES[k]}">`).join("")}</div><p>${LOBBY_ORDER.length}명 모두 영입했어요. 웨이브 모드에서 누구로든 끝까지 버텨 보세요!</p>`;
+  }
+  next.forEach((m, i) => {
+    const info = missionInfo(m);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.id = m.id;
+    b.className = "rr-go" + (i === 0 ? " main btn-cta" : " btn");
+    b.innerHTML = `<img alt=""><span class="rr-go-text"><b></b><small></small><em></em></span><i class="rr-arrow" aria-hidden="true">▶</i>`;
+    b.querySelector("img").src = lobbyArt[m.reward].face.src;
+    b.querySelector("b").textContent = i === 0 ? "다음 스토리 · " + info.title : info.title;
+    b.querySelector("small").textContent = `영입 대상: ${DISPLAY_NAMES[m.reward]} · 출전: ${info.who}`;
+    b.querySelector("em").textContent = info.sub;
+    b.onclick = () => {
+      sfx("ui_click");
+      leaveRecruitResult("single");
+      openMissionPrep(m.id);
+    };
+    list.append(b);
+  });
+  if (!next.length && !all) { // 다음 미션이 잠겨 있음 (이론상 없음)
+    const p = document.createElement("p");
+    p.className = "rr-none";
+    p.textContent = "지금 도전할 수 있는 다음 영입 미션이 없어요.";
+    list.append(p);
+  }
+  el("recruitResult").hidden = false;
+  (list.querySelector("button") || el(all ? "rrWave" : "rrMissions")).focus?.({ preventScroll: true });
+}
+// 결과 화면에서 나가기: 미션 정리(로비 열기와 같은 처리) 후 모드 지정
+function leaveRecruitResult(mode) {
+  el("recruitResult").hidden = true;
+  lobbyMode = mode;
+  openLobby(); // 미션 종료·초기화 (js/ui/lobby.js)
+}
+el("rrMissions").onclick = () => {
+  sfx("ui_click");
+  leaveRecruitResult("single");
+  openSinglePanel();
+};
+el("rrWave").onclick = () => {
+  sfx("ui_click");
+  leaveRecruitResult("wave");
+};
+
+// ----- 영입 미션 준비 화면 -----
+let prepId = null, prepWho = null;
+function openMissionPrep(id) {
+  const ms = SINGLE_MISSIONS.find((m) => m.id === id), info = missionInfo(ms);
+  prepId = id;
+  const can = ms.players.filter((k) => singleSave.recruited.includes(k) || ROSTER.testMode);
+  prepWho = can[0] || null;
+  el("prepArt").src = lobbyArt[ms.reward].full.src;
+  el("prepTarget").textContent = `영입 대상 · ${DISPLAY_NAMES[ms.reward]}`;
+  el("prepKicker").textContent = `${DISPLAY_NAMES[ms.reward]} 영입 미션`;
+  el("prepTitle").textContent = info.title;
+  el("prepSub").textContent = info.sub;
+  el("prepMeta").textContent = `목표 ${info.target} · ${info.stages.length}단계`;
+  el("prepStages").innerHTML = "";
+  for (const t of info.stages) {
+    const li = document.createElement("li");
+    li.textContent = t;
+    el("prepStages").append(li);
+  }
+  const who = el("prepWho");
+  who.innerHTML = "";
+  for (const k of ms.players) {
+    const b = document.createElement("button");
+    const ok = can.includes(k);
+    b.type = "button";
+    b.className = "prep-pick" + (k === prepWho ? " sel" : "") + (ok ? "" : " locked");
+    b.innerHTML = `<img alt=""><span></span>`;
+    b.querySelector("img").src = lobbyArt[k].face.src;
+    b.querySelector("span").textContent = DISPLAY_NAMES[k] + (ok ? "" : " (미영입)");
+    b.disabled = !ok;
+    b.onclick = () => {
+      sfx("ui_click");
+      prepWho = k;
+      for (const x of who.children) x.classList.toggle("sel", x === b);
+    };
+    who.append(b);
+  }
+  el("prepGo").disabled = !prepWho;
+  el("missionPrep").hidden = false;
+}
+el("prepGo").onclick = () => {
+  if (!prepId || !prepWho) return;
+  el("missionPrep").hidden = true;
+  startMission(prepId, prepWho);
+};
+el("prepBack").onclick = () => {
+  sfx("ui_click");
+  el("missionPrep").hidden = true;
+  lobbyMode = "single";
+  openSinglePanel();
+};

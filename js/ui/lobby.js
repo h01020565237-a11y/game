@@ -19,6 +19,8 @@ function openLobby() {
   if (lobbyReady) buildLobby(); // 영입 상태가 바뀌었을 수 있으므로 타일 다시 그림
   document.body.classList.add("lobbyOpen");
   el("results").hidden = true;
+  el("recruitResult").hidden = true;
+  el("missionPrep").hidden = true;
   mvX = mvY = 0;
   releaseAttack(false);
   releaseGrenade(false);
@@ -410,6 +412,7 @@ function syncResults() {
     el("resTime").textContent = fmtTime(stats.time);
     el("resChar").src = lobbyArt[character].face.src;
     el("resName").textContent = DISPLAY_NAMES[character];
+    if (singleRun?.m && over === "미션 성공") return showRecruitResult(); // 영입 성공: 다음 스토리 안내 화면 (js/ui/single.js)
     if (singleRun?.m) showSingleResult();
     else restoreResultLabels();
     r.hidden = false;

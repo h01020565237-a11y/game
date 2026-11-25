@@ -670,3 +670,58 @@ body.mobile .screen-back { font-size: clamp(13px, 3.8cqh, 18px); }
 body.mobile #lobby .char-name { font-size: clamp(10px, 3cqh, 14px); }
 /* 싱글 미션 목록이 열려 있으면 뒤의 캐릭터 선택 화면은 감춤 (뒤로가기 버튼이 겹치지 않게) */
 body:has(#singlePanel:not([hidden])) #lobby { visibility: hidden; }
+
+/* ===== 영입 성공 결과 · 다음 스토리 / 미션 준비 화면 ===== */
+#recruitResult, #missionPrep { z-index: 13; }
+#recruitResult { background: radial-gradient(ellipse at 50% 30%, #6a8ff0 0%, #23398a 50%, #0d1636 100%); }
+.rr-card { width: min(94cqw, 860px); max-height: 94cqh; box-sizing: border-box; padding: clamp(8px, 2.4cqh, 18px) clamp(10px, 2.4cqw, 22px); display: flex; flex-direction: column; gap: clamp(4px, 1.6cqh, 12px); overflow-y: auto; }
+.rr-hero { display: flex; align-items: center; gap: clamp(8px, 2cqw, 18px); }
+.rr-hero img { height: clamp(70px, 24cqh, 170px); object-fit: contain; filter: drop-shadow(0 4px 12px #0008); animation: rsPop .5s ease-out; }
+.rr-hero-text { text-align: left; min-width: 0; }
+.rr-kicker { margin: 0; color: #9fd0ff; font-size: clamp(11px, 3.2cqh, 15px); }
+#rrTitle, #prepTitle { margin: 0; font-weight: normal; font-size: clamp(20px, 7.4cqh, 36px); color: #ffe07a; text-shadow: 0 3px 0 #6b3d00; }
+.rr-stats, .rr-note { margin: 0; color: #dbe9ff; font-size: clamp(11px, 3.2cqh, 15px); }
+.rr-note { color: #a6f0b0; }
+.rr-next h4, .prep-info h4 { margin: 0 0 4px; font-weight: normal; color: #9fd0ff; font-size: clamp(12px, 3.4cqh, 16px); text-align: left; }
+.rr-next h4[hidden] { display: none; }
+.rr-next-list { display: flex; flex-direction: column; gap: clamp(4px, 1.4cqh, 8px); }
+.rr-go { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border-radius: 14px; padding: 6px 12px; font-family: var(--bl-font); color: #fff; background: #0f183899; border: 2px solid var(--bl-edge); cursor: pointer; position: relative; }
+.rr-go img { height: clamp(34px, 10cqh, 56px); aspect-ratio: 256 / 225; object-fit: contain; flex: none; }
+.rr-go-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.rr-go b { font-weight: normal; font-size: clamp(14px, 4.2cqh, 19px); }
+.rr-go small, .rr-go em { font-style: normal; font-size: clamp(10px, 3cqh, 13px); color: #cfe1ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-go .rr-arrow { font-style: normal; font-size: 1.1em; }
+/* 첫 번째(다음 스토리)가 가장 크게: 금색 큰 버튼 */
+.rr-go.main { background: linear-gradient(180deg, #fff2a8 0%, #ffd23f 40%, #ffa90f 100%); box-shadow: 0 5px 0 var(--bl-gold-edge), 0 0 0 3px #fff6 inset, 0 0 22px #ffd23f99; min-width: 0; height: auto; min-height: clamp(58px, 18cqh, 96px); padding: 8px 18px; border: 0; color: #3b2700; border-radius: 18px; justify-content: flex-start; }
+.rr-go.main img { height: clamp(44px, 14cqh, 76px); }
+.rr-go.main b { font-size: clamp(17px, 5.6cqh, 26px); }
+.rr-go.main small, .rr-go.main em { color: #5a3d00; font-size: clamp(11px, 3.2cqh, 14px); }
+.rr-go::after { content: ""; position: absolute; inset: -4px; }
+body.mobile .rr-go { font-size: inherit; }
+.rr-none { margin: 0; color: #cfe1ff; }
+.rr-all[hidden] { display: none; }
+.rr-all p { margin: 4px 0 0; color: #ffe07a; font-size: clamp(12px, 3.6cqh, 17px); }
+.rr-faces { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.rr-faces img { width: 100%; aspect-ratio: 256 / 225; object-fit: contain; border-radius: 8px; background: linear-gradient(180deg, #5d8ae8, #2c4aa8); animation: rsPop .5s ease-out backwards; }
+.rr-btns { display: flex; gap: 10px; justify-content: center; }
+.rr-btns .rr-sub { font-size: clamp(13px, 3.8cqh, 17px); padding: 8px 18px; min-height: 40px; }
+body.mobile .rr-btns .rr-sub { font-size: clamp(13px, 3.8cqh, 17px); }
+/* 미션 준비 */
+#missionPrep { justify-content: center; gap: 0; padding: calc(clamp(6px, 2.4cqh, 16px) + clamp(34px, 9.5cqh, 48px) + 6px) clamp(8px, 2cqw, 20px) clamp(10px, 3.4cqh, 22px); box-sizing: border-box; }
+.prep-card { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(8px, 2cqw, 18px); width: min(100%, 900px); flex: 1 1 auto; min-height: 0; max-height: 520px; padding: clamp(8px, 2cqh, 16px); box-sizing: border-box; }
+.prep-target { position: relative; display: flex; align-items: flex-end; justify-content: center; border-radius: 14px; background: radial-gradient(ellipse at 50% 35%, #9fe0ff88, transparent 65%), linear-gradient(180deg, #5fb0e6, #6fcf7a 75%, #4f9e4f); overflow: hidden; min-height: 0; }
+.prep-target img { max-height: 92%; max-width: 92%; object-fit: contain; filter: drop-shadow(0 6px 4px #0005); }
+.prep-target span { position: absolute; left: 8px; top: 8px; background: #0f1838cc; color: #ffe07a; border-radius: 999px; padding: 2px 10px; font-size: clamp(11px, 3.2cqh, 14px); }
+.prep-info { display: flex; flex-direction: column; gap: clamp(3px, 1cqh, 6px); min-height: 0; overflow-y: auto; text-align: left; }
+.prep-sub, .prep-meta { margin: 0; color: #dbe9ff; font-size: clamp(11px, 3.2cqh, 15px); }
+.prep-meta { color: #ffd27a; }
+.prep-stages { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px; }
+.prep-stages li { background: #0f183899; border-radius: 8px; padding: 2px 8px; font-size: clamp(10px, 3cqh, 13px); color: #cfe1ff; }
+.prep-who { display: flex; gap: 8px; flex-wrap: wrap; }
+.prep-pick { display: flex; flex-direction: column; align-items: center; gap: 2px; width: clamp(64px, 18cqh, 96px); padding: 4px; border: 3px solid #13204d; border-radius: 12px; background: linear-gradient(180deg, #5d8ae8, #2c4aa8); color: #fff; font-family: var(--bl-font); cursor: pointer; }
+.prep-pick img { width: 100%; aspect-ratio: 256 / 225; object-fit: contain; }
+.prep-pick span { font-size: clamp(11px, 3cqh, 13px); }
+body.mobile .prep-pick span { font-size: clamp(11px, 3cqh, 13px); }
+.prep-pick.sel { border-color: var(--bl-gold); box-shadow: 0 0 0 2px var(--bl-gold); }
+.prep-pick.locked { filter: grayscale(.8) brightness(.6); cursor: not-allowed; }
+#prepGo:disabled { filter: grayscale(.85) brightness(.75); animation: none; }
