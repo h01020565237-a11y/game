@@ -5576,7 +5576,7 @@ function endlessRecord() {
   const R = singleRun, ch = character, time = Math.round(elapsed);
   const prev = endlessSave.best[ch], wave = R.lastCleared || 0;
   const rec={wave,time,level:R.level,kills:R.kills};
-  if(R.qaOnly||ROSTER.testMode)return {...rec,newBest:false};
+  if(R.abandoned||R.qaOnly||ROSTER.testMode)return {...rec,newBest:false};
   const best=seasonData.best[ch];const better=!best||rankSort(rec,best)<0;if(better&&wave>0){seasonData.best[ch]=rec;seasonWrite();}return {...rec,newBest:better||!!R.checkpointBest};
 }
 </script>
@@ -9991,7 +9991,7 @@ function pauseView(v) {
   el("pauseOpt").hidden = v !== "opt";
   el("pauseConfirm").hidden = v !== "confirm";
   el("pauseTitle").textContent = v === "opt" ? "옵션 (사운드)" : v === "confirm" ? "나가기" : "일시정지";
-  if(v === "confirm") el("pauseConfirm").querySelector("small").textContent=singleRun?.raid?"기여도·보스 피해·보상은 반영되지 않아요. 도전 횟수는 소모돼요.":"진행 중인 판은 저장되지 않아요";
+  if(v === "confirm") el("pauseConfirm").querySelector("small").textContent=singleRun?.raid?"기여도·보스 피해·보상은 반영되지 않아요. 도전 횟수는 소모돼요.":singleRun?.endless&&!singleRun.story?"중도 종료 시 이번 판의 랭킹과 보상은 저장되지 않아요.":"진행 중인 판은 저장되지 않아요";
   if (v === "opt") syncPauseAudio();
   const f = { main: "pauseResume", opt: "pOptBack", confirm: "pauseExitNo" }[v];
   setTimeout(() => el(f)?.focus?.({ preventScroll: true }), 0);
@@ -10024,7 +10024,7 @@ el("pauseExit").onclick = () => pauseView("confirm"); // 먼저 확인창
 el("pauseExitNo").onclick = () => pauseView("main");
 el("pauseExitYes").onclick = () => { // 나가기: 진행 중인 판을 정리하고 바로 전 화면으로 (웨이브 → 캐릭터 선택, 싱글 → 그 미션 출전 준비)
   if(singleRun?.raid){raidAbandon();return;}
-  if(singleRun?.endless&&!singleRun.story){document.body.classList.remove("paused");el("pauseMenu").hidden=true;over="중도 종료";stats.time=elapsed;return;}
+  if(singleRun?.endless&&!singleRun.story){singleRun.abandoned=true;document.body.classList.remove("paused");el("pauseMenu").hidden=true;el("waveCards").hidden=true;lobbyMode="wave";openLobby();return;}
   const missionId = singleRun && !singleRun.endless ? singleRun.id : singleRun?.story ? singleRun.id : null;
   document.body.classList.remove("paused");
   el("pauseMenu").hidden = true;
@@ -11519,6 +11519,7 @@ function renderEndlessCards() {
   });
 }
 function showEndlessResult() {
+  if(!singleRun || singleRun.abandoned)return;
   const r = endlessRecord();
   el("resTitle").textContent = r.newBest ? "🏆 최고 기록!" : "무한 생존 종료";
   el("resTitle").classList.toggle("lose", !r.newBest);
@@ -12719,7 +12720,7 @@ function seasonRewardCount(w){return w<2?0:w<10?1:w<20?2:3;}
 function seasonWaveReward(R){if(!R?.endless||R.story||R.raid||R.qaOnly||ROSTER.testMode)return;const r=seasonPending(R);if(r.claimed||R.wave<=r.last)return;for(let w=r.last+1;w<=R.wave;w++){r.gold+=60+w*10;r.stones+=1+Math.floor(w/5);r.mats+=w%5===0?3+Math.floor(w/5):1;}r.last=R.wave;}
 function seasonFinalizeWaveItems(R,roll=Math.random){const r=seasonPending(R);if(r.itemsFinalized||r.claimed||R.qaOnly||ROSTER.testMode)return;r.itemsFinalized=true;const w=Math.max(0,Math.floor(R.lastCleared??r.last??0));const count=seasonRewardCount(w);for(let i=0;i<count;i++){const first=i===0&&!seasonData.starterWeaponClaimed;const slot=first?0:Math.min(3,Math.floor(roll()*4));seasonQueueItem(R,seasonItem(slot,seasonGrade(w,roll()),slot===0?seasonWeaponChar(R.char||character,roll):null),first?' (첫 장비)':'');if(first)r.starter=true;}}
 function seasonRaidReward(R){if(R.gearReward)return;const d=R.dealt||0;const shards=d<=0?0:d<1000?1:d<5000?2:d<10000?3:d<20000?4:d<30000?5:6;const bonus=R.boss.hp<=0?20:0;R.gearReward={shards:R.qaOnly?0:shards+bonus};}
-function seasonClaimReward(R){const r=R?.gearReward;if(!r||r.claimed||R.qaOnly||ROSTER.testMode)return false;if(R.endless&&!R.story&&!R.raid)seasonFinalizeWaveItems(R);r.claimed=true;if(R.raid){seasonData.shards+=r.shards||0;}else if(R.endless&&!R.story){seasonData.gold+=r.gold||0;seasonData.stones+=r.stones||0;seasonData.mats+=r.mats||0;seasonData.bag.push(...(r.pendingItems||[]));if(r.starter)seasonData.starterWeaponClaimed=true;}else return false;seasonWrite();return true;}
+function seasonClaimReward(R){const r=R?.gearReward;if(!r||r.claimed||R.abandoned||R.qaOnly||ROSTER.testMode)return false;if(R.endless&&!R.story&&!R.raid)seasonFinalizeWaveItems(R);r.claimed=true;if(R.raid){seasonData.shards+=r.shards||0;}else if(R.endless&&!R.story){seasonData.gold+=r.gold||0;seasonData.stones+=r.stones||0;seasonData.mats+=r.mats||0;seasonData.bag.push(...(r.pendingItems||[]));if(r.starter)seasonData.starterWeaponClaimed=true;}else return false;seasonWrite();return true;}
 function seasonShowReward(R){const e=el('seasonReward');e.hidden=!R?.gearReward;if(e.hidden)return;seasonClaimReward(R);const r=R.gearReward;e.replaceChildren();const head=document.createElement('strong');head.textContent=R.qaOnly?'QA 연습 · 보상 미저장':'획득 보상';e.append(head);if(R.qaOnly)return;const row=document.createElement('div');row.className='reward-summary';for(const [name,n] of R.raid?[['지찬의 냄새나는 조각',r.shards||0]]:[['골드',r.gold||0],['강화석',r.stones||0],['제작 재료',r.mats||0]]){const a=document.createElement('span');a.textContent=name+' +'+n.toLocaleString();row.append(a);}if(!R.raid){const n=document.createElement('span');n.textContent='장비 '+(r.pendingItems?.length||0)+'개';row.append(n);if(R.skipped){const skip=document.createElement('span');skip.textContent=R.lastCleared>=R.startWave?'자동 클리어 W1~'+R.skipped+' 포함':'생략 보상 미지급 · 시작 웨이브 미클리어';row.append(skip);}}e.append(row);if(r.pendingItems?.length){const list=document.createElement('div');list.className='reward-items';for(const [i,it] of r.pendingItems.entries()){const x=document.createElement('span');x.style.color=SG_COLORS[it.grade];x.style.borderColor=SG_COLORS[it.grade]+'80';x.textContent=r.items[i]||seasonName(it);list.append(x);}e.append(list);}}
 function seasonEquip(it,ch){if(!it||!isRecruited(ch)||(it.slot===0&&it.weaponChar!==ch))return false;const old=seasonOwner(it.id);if(old)delete seasonData.equip[old][it.slot];(seasonData.equip[ch]??={})[it.slot]=it.id;seasonWrite();return true;}
 function seasonUnequip(it){const owner=seasonOwner(it.id);if(!owner)return false;delete seasonData.equip[owner][it.slot];seasonWrite();return true;}
