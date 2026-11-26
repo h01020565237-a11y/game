@@ -995,37 +995,34 @@ body.modeOpen #lobby { visibility: hidden; }
   grid-template-rows: minmax(0, 1fr);
   width: min(100%, 1040px); flex: 1 1 auto; height: auto; min-height: 0;
   /* 넓은 화면(PC)에서 타일이 세로로 길어져 그림 위가 비지 않게: 카드 높이를 폭에 맞춰 제한 (4×2 타일 ≈ 그림 비율) */
-  max-height: min(620px, calc(min(100cqw - 40px, 1040px) * 0.4));
+  max-height: min(620px, 65cqw);
 }
 .lobby-left { display: flex; flex-direction: column; min-height: 0; min-width: 0; gap: clamp(3px, 1cqh, 6px); background: #0f183866; border-radius: 14px; padding: clamp(4px, 1.2cqh, 8px); box-sizing: border-box; }
-.roster-view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: pan-y; }
+.roster-view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: manipulation; }
 .roster-track { display: flex; width: calc(var(--pages, 1) * 100%); height: 100%; transition: transform .28s ease; }
 .roster-page {
   width: calc(100% / var(--pages, 1)); height: 100%; box-sizing: border-box;
   display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 2), minmax(0, 1fr));
-  gap: clamp(4px, 1.4cqh, 10px); padding: 2px clamp(2px, 0.6cqw, 6px);
+  gap: clamp(3px, 1cqh, 7px); padding: 2px clamp(2px, 0.6cqw, 6px); justify-items: center;
 }
 /* 타일이 칸을 꽉 채움 (빈 공간 없음). 얼굴 그림은 contain 이라 비율 그대로 */
-#lobby .char-tile { max-width: none; width: 100%; height: 100%; min-height: 0; }
-#lobby .char-face { flex: 1 1 auto; min-height: 0; aspect-ratio: auto; padding: 5% 5% 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
-#lobby .face-in { position: relative; display: block; width: 100%; max-height: 100%; aspect-ratio: 256 / 225; } /* 그림 비율 그대로, 이름 칸 위에 세움 */
+#lobby .char-tile { max-width: min(100%, 26cqh); width: 100%; height: 100%; min-height: 0; border-width: 2px; border-radius: 9px; }
+#lobby .char-face { flex: 1 1 0; min-height: 0; aspect-ratio: auto; padding: 2px 3px 0; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+#lobby .face-in { position: relative; display: block; width: 100%; height: 100%; min-height: 0; } /* 그림 비율 그대로, 이름 칸 위에 세움 */
 #lobby .face-in img { width: 100%; height: 100%; object-fit: contain; display: block; }
 #lobby .char-tile.locked .face-in img { filter: brightness(.3) saturate(.35); }
-#lobby .char-name { flex: none; font-size: clamp(10px, 3cqh, 14px); line-height: 1.6; }
+#lobby .char-name { flex: none; font-size: clamp(9px, 2.8cqh, 14px); line-height: 1.35; }
 #lobby .char-lock { width: min(34%, 40px); }
 #lobby .char-tile.locked:not(.qa) { cursor: not-allowed; }
 #lobby .char-tile.locked .char-face { background: linear-gradient(180deg, #3b4b78, #222d55); }
 #lobby .char-tile.peek { border-color: #ffb0a8; }
 #lobby .char-tile.qa .char-name::after { content: " · QA"; color: #ffd27a; }
 #lobby .char-tile.qa .face-in img { filter: brightness(.6) saturate(.6); }
-.pg-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; display: none;
-  width: clamp(28px, 4cqw, 40px); height: clamp(48px, 16cqh, 80px); border-radius: 12px;
-  border: 2px solid var(--bl-edge); background: #0f1838cc; color: #fff; font-size: clamp(22px, 6cqh, 32px); line-height: 1; cursor: pointer;
-}
-.pg-arrow.prev { left: 0; } .pg-arrow.next { right: 0; }
-.pg-arrow:disabled { opacity: .25; cursor: default; }
-body:not(.mobile) .roster-view.paged .pg-arrow { display: block; } /* PC 만 화살표, 모바일은 스와이프 */
+/* 9명까지 한 화면, 10명 이상이면 하단 버튼으로만 이동. 회전 모드에서 좌표 혼동 방지. */
+.roster-nav { display:flex; align-items:center; gap:4px; flex:none; }
+.roster-nav[hidden] { display:none !important; }
+#lobby .pg-arrow { position:static; display:grid; place-items:center; width:clamp(28px, 5cqw, 44px); height:clamp(28px, 7cqh, 40px); padding:0; margin:0; border-radius:8px; border:1px solid var(--bl-edge); background:#20366e; color:white; font-size:22px; line-height:1; touch-action:manipulation; cursor:pointer; }
+#lobby .pg-arrow:disabled { opacity:.35; cursor:default; }
 .lobby-left-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: clamp(16px, 4.4cqh, 22px); padding: 0 4px; }
 .roster-dots { display: flex; align-items: center; gap: 5px; }
 .roster-dots[hidden] { display: none; }
@@ -1087,7 +1084,7 @@ body:not(.mobile) .roster-view.paged .pg-arrow { display: block; } /* PC 만 화
 /* 모바일 공통 button 12px 규칙(game.css)보다 우선: 큰 진행 버튼·뒤로가기 크기 유지 */
 body.mobile .btn-cta { font-size: clamp(19px, 6.4cqh, 30px); }
 body.mobile .screen-back { font-size: clamp(13px, 3.8cqh, 18px); }
-body.mobile #lobby .char-name { font-size: clamp(10px, 3cqh, 14px); }
+body.mobile #lobby .char-name { font-size: clamp(9px, 2.8cqh, 14px); }
 /* 싱글 미션 목록이 열려 있으면 뒤의 캐릭터 선택 화면은 감춤 (뒤로가기 버튼이 겹치지 않게) */
 body:has(#singlePanel:not([hidden])) #lobby { visibility: hidden; }
 
@@ -1349,7 +1346,7 @@ body:not(.mobile) #arena{padding-top:34px;box-sizing:border-box;background:#101b
 body:not(.mobile) #arena #c{position:relative;top:0}
 body:not(.mobile) #topHud{top:3px}
 #topHud #expHud{max-width:min(40%,360px);margin:auto}
-.char-tile[data-k="fallen_support"] img{filter:hue-rotate(245deg) saturate(1.7) brightness(.78) drop-shadow(0 0 5px #ad4cff)}
+.char-tile[data-k="fallen_support"] img{filter:drop-shadow(0 0 3px #ad4cff80)}
 body.fallenPlayer #resChar,#resChar.secretPortrait{filter:hue-rotate(245deg) saturate(1.7) brightness(.78)}
 #touch .petBtn.qa-pressed{transform:translateY(3px) scale(.9)!important}
 
@@ -1497,10 +1494,8 @@ body.summoner.summonChoose #touch .petBtn[data-i="2"]{right:calc(3% + var(--A)*1
         <div class="lobby-left">
           <div class="roster-view" id="rosterView">
             <div class="roster-track" id="charGrid"></div>
-            <button id="rosterPrev" class="pg-arrow prev" type="button" aria-label="이전 페이지">‹</button>
-            <button id="rosterNext" class="pg-arrow next" type="button" aria-label="다음 페이지">›</button>
           </div>
-          <div class="lobby-left-foot"><span id="rosterDots" class="roster-dots"></span><span id="rosterCount" class="roster-count"></span></div>
+          <div class="lobby-left-foot"><div id="rosterNav" class="roster-nav" hidden><button id="rosterPrev" class="pg-arrow prev" type="button" aria-label="이전 페이지">‹</button><span id="rosterDots" class="roster-dots" aria-live="polite"></span><button id="rosterNext" class="pg-arrow next" type="button" aria-label="다음 페이지">›</button></div><span id="rosterCount" class="roster-count"></span></div>
         </div>
         <div class="lobby-info">
           <p id="lobbyModeTag" class="lobby-mode-tag"></p>
@@ -1914,7 +1909,7 @@ const CHARACTER_STATS = {
   bear: { hp: 3050, speed: .89, sight: 370, defense: .25, attack: .90 },
 };
 // 로비 캐릭터 선택: 한 페이지 칸 수 (4열 × 2행). 캐릭터가 늘면 페이지가 자동으로 늘어남
-const LOBBY_PAGE = { cols: 4, rows: 2 };
+const LOBBY_PAGE = { cols: 3, rows: 3 };
 const CHARACTER_ORDER = ["summoner", "bear", "runner", "suit", "octo", "stripe", "soccer", "support"];
 
 // ===== 공격 모션 스프라이트 (교체 가능, 지금은 비어 있음) =====
@@ -2585,7 +2580,7 @@ const ENEMY_TYPES = {
   tank: { name: "탱커", visual: "bear", exp: 25, hp: 1300, spd: 0.42, dmg: 90, range: 40, cd: 1.6, r: 22, scale: 1.2 },
   thrower: { name: "투척", visual: "octo", exp: 20, hp: 450, spd: 0.5, dmg: 70, range: 300, cd: 2.6, r: 16, keep: [190, 280], lob: { radius: 60, tele: 0.8 } },
   assassin: { name: "암살", visual: "stripe", exp: 25, hp: 480, spd: 0.75, dmg: 120, range: 34, cd: 1.6, r: 16, stealthUntil: 120 },
-  support: { name: "지원", visual: "support", exp: 25, hp: 500, spd: 0.5, dmg: 40, range: 240, cd: 2.4, r: 16, keep: [200, 300], heal: { every: 4, radius: 200, amount: 0.15 } },
+  support: { name: "지원", visual: "support", exp: 25, hp: 500, spd: 0.5, dmg: 40, range: 240, cd: 2.4, r: 16, keep: [200, 300], heal: { every: 6, radius: 200, amount: 0.10 } },
   summoner: { name: "소환", visual: "summoner", exp: 30, hp: 600, spd: 0.48, dmg: 45, range: 240, cd: 2.4, r: 16, keep: [220, 320], summon: { every: 7, count: 2, cap: 4 } },
   elite: { name: "엘리트", exp: 50, hpMul: 4, dmgMul: 1.6, scale: 1.35, aura: 0.85 }, // 무작위 유형 + 강화 — 능력치 제안
   boss: { name: "보스", exp: 200 }, // 기획서
@@ -4106,7 +4101,7 @@ function makeMob(type, at) {
     a.x = sp.x;
     a.y = sp.y;
   }
-  fx.push({ x: a.x, y: a.y, t: 0.6, ring: T.r + 14 });
+  // Enemy arrival is indicated by sprite fade-in, not a ground circle.
   bots.push(a);
   return a;
 }
@@ -4581,7 +4576,9 @@ function makeEnemy(kind, at, opts = {}) {
   }
   const E = ENEMY_TYPES.elite, q = at || endlessSpawnPoint();
   const a = actor(q.x, q.y);
-  const hp = base.hp * sc.hp * (elite ? E.hpMul : 1);
+  const waveHP={melee:1200,ranged:950,mobile:1000,tank:2800,thrower:1000,assassin:1100,support:1200,summoner:1400};
+  const rebalance = R.endless && !R.story && !R.spec?.boss && waveHP[kind] != null;
+  const hp = (rebalance ? waveHP[kind] * Math.pow(1.07, R.wave-1) : base.hp * sc.hp) * (elite ? E.hpMul : 1);
   Object.assign(a, {
     mob: kind, endless: true, elite, hp, max: hp, spd: base.spd * sc.spd, dmg: base.dmg * sc.atk * (elite ? E.dmgMul : 1),
     r: base.r * (elite ? 1.2 : 1), exp: opts.noExp ? 0 : elite ? E.exp : base.exp, atkT: 0.5 + Math.random(), spawnT: 0.6, deadT: 0,
@@ -4596,7 +4593,7 @@ function makeEnemy(kind, at, opts = {}) {
     a.x = sp.x;
     a.y = sp.y;
   }
-  fx.push({ x: a.x, y: a.y, t: 0.6, ring: a.r + 14 });
+  // Enemy arrival is indicated by sprite fade-in, not a ground circle.
   bots.push(a);
   if (R.story) storyMarkHunter(a, kind); // 은숙이를 지켜라: 은숙 우선
   return a;
@@ -4790,8 +4787,12 @@ function enemyAI(a, dt) {
     case "support": { // 주변 적 회복 + 약한 탄
       if (a.specialT <= 0) {
         a.specialT = T.heal.every;
-        for (const b of bots) if (b !== a && b.hp > 0 && !b.bossId && dist(a, b) <= T.heal.radius) b.hp = Math.min(b.max, b.hp + b.max * T.heal.amount);
-        fx.push({ x: a.x, y: a.y, t: 0.5, ring: T.heal.radius });
+        // Single target, shared receiver cooldown: multiple healers cannot stack on one target.
+        const b=bots.filter(b=>b!==a && b.hp>0 && b.hp<b.max && !b.bossId && (b.enemyHealUntil||0)<=elapsed && dist(a,b)<=T.heal.radius)
+          .sort((b,c)=>b.hp/b.max-c.hp/c.max || dist(a,b)-dist(a,c))[0];
+        if(b){const got=Math.min(b.max-b.hp,b.max*T.heal.amount);b.hp+=got;b.enemyHealUntil=elapsed+T.heal.every;
+          fx.push({x:b.x,y:b.y,fromX:a.x,fromY:a.y,t:.5,enemyHealLink:true});
+          fx.push({x:b.x,y:b.y,t:.65,text:"+"+Math.round(got),tcol:"#84ffad"});}
       }
       if (keepAway() && d <= T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd);
@@ -4840,7 +4841,7 @@ function enemyAI(a, dt) {
         a.stealth = 0;
         a.reveal = 0.5;
         a.atkT = 0.35;
-        fx.push({ x: a.x, y: a.y, t: 0.4, ring: 30 });
+        // Stealth reveal uses the existing reveal animation without a range ring.
       }
       break;
   }
@@ -6706,6 +6707,7 @@ function update(dt) {
   if (singleRun && singleRun.phase === "cards") return; // 강화 카드 고르는 동안 전투 정지
   if (singleRun?.endless) {if(singleRun.boss?.hp<=0) gameTimers.length=0; updateGameTimers(dt); tickCurses(p,dt);}
   elapsed += dt;
+  tickFallenCast(dt);
   zone = singleRun?.m && !singleRun.m.zone ? 1e9 : Math.max(115, 1450 - Math.max(0, elapsed - 25) * 8);
   for (const pt of [pet, ...ultPets]) if (pt) {
     pt.reveal = Math.max(0, (pt.reveal || 0) - dt);
@@ -7012,7 +7014,7 @@ function update(dt) {
         if (s.vol) s.vol.hit.add(b);
         hit(s.a, b, s.d * (s.shotgun ? 0.35 + 0.65 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic });
         if (s.slow && b.max) b.slow = Math.max(b.slow || 0, s.slow);
-        if (s.fallenWeak && b.max) b.fallenWeakT=Math.max(b.fallenWeakT||0,s.fallenWeak);
+        if (s.fallenWeak && b.max) {b.fallenWeakT=Math.max(b.fallenWeakT||0,s.fallenWeak);fx.push({x:b.x,y:b.y,t:.4,dur:.4,fallenImpact:true});}
         s.dead = true;
       }
     }
@@ -7338,8 +7340,11 @@ function drawMob(a) {
   }
   g.restore();
   if (a.hp > 0 && appear >= 1 && a.mob !== "boss") bar(a.x, y - 6, a.hp, a.max); // 보스 체력은 화면 위 큰 막대
+  drawFallenDebuff(a,y-15);
 }
 // 시트가 아직 안 불러와졌을 때 대신 그리는 간단한 모양
+function tickFallenCast(dt){const c=p.fallenCast;if(!c)return;if(p.hp<=0||singleRun!==c.run||singleRun?.wave!==c.wave||singleRun?.phase!==c.phase){p.fallenCast=null;return;}if((c.t-=dt)>0)return;p.fallenCast=null;const {at,S}=c;for(const b of bots.filter(b=>b.hp>0&&dist(at,b)<=S.radius).sort((a,b)=>dist(at,a)-dist(at,b)).slice(0,6))hit(p,b,S.dmg,{ult:true});fx.push({...at,t:.7,fallenRing:S.radius,dur:.7,fallenUlt:true});shake(9);}
+function drawFallenDebuff(a,y){if(a.hp<=0||(!(a.fallenWeakT>0)&&!(character==="fallen_support"&&a.bottleSlow>0)))return;g.save();g.translate(a.x,y);g.fillStyle="#211033";g.strokeStyle="#c78cff";g.lineWidth=1.5;g.beginPath();g.arc(0,-5,7,0,Math.PI*2);g.fill();g.stroke();g.strokeStyle="#efceff";g.beginPath();if(a.fallenWeakT>0){g.moveTo(-3,-10);g.lineTo(3,-5);g.lineTo(-3,0);g.moveTo(3,-10);g.lineTo(-3,-5);g.lineTo(3,0);}else{g.moveTo(-3,-7);g.lineTo(0,-3);g.lineTo(3,-7);}g.stroke();g.restore();}
 function drawMobShape(a) {
   const r = a.r || MOB_TYPES[a.mob]?.r || 16;
   g.fillStyle = "#4a2a6e";
@@ -8214,7 +8219,9 @@ function draw() {
   setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
   if (singleRun && !vis) drawMobShots();
   for (let s of shots) {
-    if(s.fallenShot){g.save();g.strokeStyle="#b45cff";g.lineWidth=6;g.lineCap="round";g.beginPath();g.moveTo(s.x,s.y);g.lineTo(s.x-s.vx*.035,s.y-s.vy*.035);g.stroke();g.fillStyle="#f3d5ff";g.beginPath();g.arc(s.x,s.y,4,0,7);g.fill();g.restore();continue;}
+    if(s.fallenShot){g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(s.vy,s.vx));
+      const tail=g.createLinearGradient(-42,0,4,0);tail.addColorStop(0,"#8d3df000");tail.addColorStop(1,"#c783ffbb");g.fillStyle=tail;g.beginPath();g.moveTo(-44,0);g.lineTo(-9,-8);g.lineTo(4,0);g.lineTo(-9,8);g.closePath();g.fill();
+      g.fillStyle="#b465ff";g.strokeStyle="#f3d5ff";g.lineWidth=1.5;g.beginPath();g.moveTo(15,0);g.lineTo(-5,-8);g.lineTo(-14,0);g.lineTo(-5,8);g.closePath();g.fill();g.stroke();g.fillStyle="#f9e3ff";g.beginPath();g.moveTo(15,0);g.lineTo(-5,-8);g.lineTo(0,0);g.closePath();g.fill();g.restore();continue;}
     if (s.octo === 3) { // 상훈 기본 공격: 작은 먹물 덩어리 + 떨어질 곳 표시
       let u = clamp(1 - s.t / s.flight, 0, 1);
       g.strokeStyle = "#6b3d9a99";
@@ -8346,7 +8353,10 @@ function draw() {
       g.restore();
       continue;
     }
-    if(f.fallenRing){const u=1-f.t/f.dur;g.save();g.globalAlpha=Math.max(0,1-u);g.fillStyle=f.fallenUlt?"#a02adb44":"#5d238633";g.beginPath();g.arc(f.x,f.y,f.fallenRing,0,7);g.fill();g.strokeStyle="#d993ff";g.lineWidth=f.fallenUlt?5:3;g.beginPath();g.arc(f.x,f.y,Math.max(4,f.fallenRing*u),0,7);g.stroke();g.strokeStyle="#7742af";g.lineWidth=2;g.beginPath();g.arc(f.x,f.y,f.fallenRing,0,7);g.stroke();g.restore();continue;}
+    if(f.enemyHealLink){g.save();g.globalAlpha=clamp(f.t/.5,0,1);g.strokeStyle="#83ffb0";g.lineWidth=3;g.beginPath();g.moveTo(f.fromX,f.fromY-18);g.quadraticCurveTo((f.fromX+f.x)/2,(f.fromY+f.y)/2-45,f.x,f.y-18);g.stroke();g.fillStyle="#b7ffcf";g.beginPath();g.arc(f.x,f.y-18,7,0,7);g.fill();g.restore();continue;}
+    if(f.fallenWindup){const u=clamp(1-f.t/f.dur,0,1),r=f.fallenWindup;g.save();g.translate(f.x,f.y);g.strokeStyle="#ca8aff";g.fillStyle="#8735b72a";g.lineWidth=2;g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.fill();g.stroke();g.rotate(u*.8);for(let j=0;j<2;j++){g.beginPath();for(let i=0;i<3;i++){const a=i*Math.PI*2/3+j*Math.PI/3;g.lineTo(Math.cos(a)*r*.82,Math.sin(a)*r*.82);}g.closePath();g.stroke();}g.rotate(-u*.8);g.fillStyle="#da9dff";g.beginPath();g.moveTo(0,-75-u*20);g.lineTo(13,-51-u*20);g.lineTo(0,-27-u*20);g.lineTo(-13,-51-u*20);g.closePath();g.fill();g.restore();continue;}
+    if(f.fallenImpact){const u=clamp(1-f.t/f.dur,0,1);g.save();g.globalAlpha=1-u;g.fillStyle="#d7a0ff";for(let i=0;i<5;i++){const a=i*Math.PI*2/5,r=8+u*32;g.save();g.translate(f.x+Math.cos(a)*r,f.y-15+Math.sin(a)*r);g.rotate(a);g.fillRect(-2,-6,4,12);g.restore();}g.restore();continue;}
+    if(f.fallenRing){const u=clamp(1-f.t/f.dur,0,1),r=f.fallenRing;g.save();g.translate(f.x,f.y);g.globalAlpha=1-u;g.fillStyle=f.fallenUlt?"#9d36d855":"#8138b733";g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.fill();g.strokeStyle=f.fallenUlt?"#ebc0ff":"#bd82ff";g.lineWidth=f.fallenUlt?6:3;g.beginPath();g.arc(0,0,Math.max(3,r*Math.min(1,u*1.8)),0,Math.PI*2);g.stroke();g.lineWidth=2;for(let i=0;i<(f.fallenUlt?12:8);i++){const a=i*Math.PI*2/(f.fallenUlt?12:8),v=r*(.15+u*.82);g.beginPath();g.moveTo(Math.cos(a)*v*.4,Math.sin(a)*v*.4);g.lineTo(Math.cos(a+.12)*v*.7,Math.sin(a+.12)*v*.7);g.lineTo(Math.cos(a)*v,Math.sin(a)*v);g.stroke();}g.restore();continue;}
     if (f.inkBurst) {
       g.save();
       g.globalAlpha = f.t / (f.small ? 0.4 : 0.7);
@@ -9522,7 +9532,7 @@ function closeLobby() {
   document.body.classList.remove("lobbyOpen");
 }
 
-// ----- 캐릭터 선택: 4열×2행 페이지 (8명 넘으면 페이지 자동 추가). PC 화살표·키보드 ←→, 모바일 좌우 스와이프 -----
+// ----- 캐릭터 선택: 3열×3행. 9명 초과 시 하단 페이지 버튼 및 PC 키보드 ←→ -----
 let rosterPage = 0;
 const rosterPages = () => Math.max(1, Math.ceil(LOBBY_ORDER.length / (LOBBY_PAGE.cols * LOBBY_PAGE.rows)));
 const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#1b2550"/></svg>';
@@ -9580,7 +9590,6 @@ function charTile(k) {
   nm.textContent = CHARACTER_INFO[k].name;
   b.append(face, nm);
   b.onclick = () => {
-    if (rosterSwiped) return; // 스와이프 끝의 손 뗌은 선택이 아님
     sfx("ui_click");
     if (!canPlay(k)) { // 미영입: 선택·상세 열람 불가, 영입 조건만 보여 줌
       showRosterLock(k);
@@ -9614,7 +9623,8 @@ function setRosterPage(i, instant) {
   const track = el("charGrid");
   track.style.transition = instant ? "none" : "";
   track.style.transform = `translateX(${-rosterPage * 100 / n}%)`;
-  el("rosterView").classList.toggle("paged", n > 1);
+  el("rosterNav").hidden = n <= 1;
+  for (const [j, page] of [...track.children].entries()) { page.inert = j !== rosterPage; page.setAttribute("aria-hidden", String(j !== rosterPage)); }
   el("rosterPrev").disabled = rosterPage === 0;
   el("rosterNext").disabled = rosterPage === n - 1;
   const dots = el("rosterDots");
@@ -9628,38 +9638,6 @@ addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") setRosterPage(rosterPage - 1);
   else if (e.key === "ArrowRight") setRosterPage(rosterPage + 1);
 });
-// 스와이프: 가로로 12px 넘게 끌면 스와이프로 판정 (그 손가락의 탭은 캐릭터 선택으로 치지 않음), 50px 넘으면 페이지 넘김
-let rosterSwipe = null, rosterSwiped = false;
-el("rosterView").addEventListener("pointerdown", (e) => {
-  rosterSwiped = false;
-  if (rosterPages() <= 1) return;
-  rosterSwipe = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, on: false };
-});
-el("rosterView").addEventListener("pointermove", (e) => {
-  const S = rosterSwipe;
-  if (!S || S.id !== e.pointerId) return;
-  S.dx = e.clientX - S.x;
-  if (!S.on && Math.abs(S.dx) > 12 && Math.abs(S.dx) > Math.abs(e.clientY - S.y)) {
-    S.on = true;
-    rosterSwiped = true;
-    el("rosterView").setPointerCapture?.(e.pointerId);
-  }
-  if (S.on) {
-    const n = rosterPages(), w = el("rosterView").clientWidth || 1, track = el("charGrid");
-    track.style.transition = "none";
-    track.style.transform = `translateX(${(-rosterPage * w + clamp(S.dx, -w, w)) / (w * n) * 100}%)`;
-  }
-});
-const endRosterSwipe = (e) => {
-  const S = rosterSwipe;
-  if (!S || S.id !== e.pointerId) return;
-  rosterSwipe = null;
-  if (S.on) setRosterPage(rosterPage + (S.dx < -50 ? 1 : S.dx > 50 ? -1 : 0));
-  setTimeout(() => (rosterSwiped = false), 0); // 바로 뒤따르는 click 만 무시
-};
-el("rosterView").addEventListener("pointerup", endRosterSwipe);
-el("rosterView").addEventListener("pointercancel", endRosterSwipe);
-
 // 오른쪽 정보: 소개·능력치·기본 공격·패시브·Q/E·궁극기 (영역 안에서 스크롤)
 function basicText(k) {
   const B = SKILL_DATA[k]?.basic, w = weapons[0];
@@ -12075,7 +12053,7 @@ function applyCurse(a,k){const D=CURSE_DEFS[k];if(!D||a!==p)return;a.curse??={};
 function endCurse(a,k){if(k==="curse_hp"&&a.curseBaseMax){a.max=a.curseBaseMax;delete a.curseBaseMax;}a.curse[k]=0;a.curseImmune??={};a.curseImmune[k]=3;}
 function clearCurses(a){for(const k of Object.keys(a.curse||{}))if(a.curse[k]>0)endCurse(a,k);a.curse={};a.curseImmune={};}
 function tickCurses(a,dt){for(const k of Object.keys(a.curseImmune||{}))a.curseImmune[k]=Math.max(0,a.curseImmune[k]-dt);for(const k of Object.keys(a.curse||{}))if(a.curse[k]>0){a.curse[k]-=dt;if(a.curse[k]<=0)endCurse(a,k);}}
-function drawCurseMob(a,alpha,s){const im=CURSE_ART[a.curseKind];if(!im?.naturalWidth)return false;const w=68*s,pose=a.curseCast||a.atkAnim>0?2:a.moving?(Math.floor((a.frame||0)/2)%2):0;g.save();g.globalAlpha=alpha;g.drawImage(im,pose*96,(a.dir||0)*96,96,96,a.x-w/2,a.y-w*.82,w,w);if(a.curseCast){g.strokeStyle=CURSE_DEFS[a.curseKind].color;g.lineWidth=2;g.beginPath();g.arc(a.x,a.y,25,0,7);g.stroke();}g.restore();if(a.hp>0)bar(a.x,a.y-w*.82-6,a.hp,a.max);return true;}
+function drawCurseMob(a,alpha,s){const im=CURSE_ART[a.curseKind];if(!im?.naturalWidth)return false;const w=68*s,pose=a.curseCast||a.atkAnim>0?2:a.moving?(Math.floor((a.frame||0)/2)%2):0;g.save();g.globalAlpha=alpha;g.drawImage(im,pose*96,(a.dir||0)*96,96,96,a.x-w/2,a.y-w*.82,w,w);if(a.curseCast){g.strokeStyle=CURSE_DEFS[a.curseKind].color;g.lineWidth=2;g.beginPath();g.arc(a.x,a.y,25,0,7);g.stroke();}g.restore();if(a.hp>0)bar(a.x,a.y-w*.82-6,a.hp,a.max);drawFallenDebuff(a,a.y-w*.82-15);return true;}
 function drawFallenFrame(a,w){let im=sheets.fallen_support,col=a.moving?Math.floor(a.frame||0)%8:0;const A=a.fallenAnim;if(A&&elapsed-A.at<A.dur&&FALLEN_MOTIONS[A.kind]?.naturalWidth){im=FALLEN_MOTIONS[A.kind];col=Math.min(im.naturalWidth/96-1,Math.max(0,Math.floor((elapsed-A.at)/A.dur*(im.naturalWidth/96))));}g.save();g.drawImage(im,col*96,(a.dir||0)*96,96,96,a.x-w/2,a.y-w*.82,w,w);g.restore();}
 ENDLESS_CARDS.push({id:"shield",name:"보호막",icon:"🛡️",cat:"방어",tiers:{common:.03,rare:.05,legend:.08},cap:99,text:"웨이브 시작 보호막 +{v%} (최대 HP 기준)"});
 const CARD_LIMITS={shield:.15,atk:1,maxhp:.8,armor:.25,aspd:.4,ultc:.6,regen:.015,steal:.06,cdr:.35,speed:.2,sight:.4,support_shield:.1};
@@ -12185,12 +12163,21 @@ CHARACTER_INFO.fallen_support={name:DISPLAY_NAMES.fallen_support,role:"공격형
 SKILL_IMPL.fallen_support={
   q(S){for(const b of bots.filter(b=>b.hp>0&&dist(p,b)<=S.radius).sort((a,b)=>dist(p,a)-dist(p,b)).slice(0,4)){hit(p,b,S.dmg);b.bottleSlow=Math.max(b.bottleSlow||0,S.slow);}fx.push({x:p.x,y:p.y,t:.65,fallenRing:S.radius,dur:.65});return true;},
   e(S,t){const [x,y]=unitTo(t);faceVec(x,y);shots.push({a:p,x:p.x,y:p.y,vx:x*570,vy:y*570,left:S.range,d:S.dmg,fallenWeak:S.dur,fallenShot:true,hitR:20});return true;},
-  r(S){for(const b of bots.filter(b=>b.hp>0&&dist(p,b)<=S.radius).sort((a,b)=>dist(p,a)-dist(p,b)).slice(0,6))hit(p,b,S.dmg,{ult:true});fx.push({x:p.x,y:p.y,t:.8,fallenRing:S.radius,dur:.8,fallenUlt:true});shake(9);return true;}
+  r(S){const caster=p,run=singleRun,at={x:p.x,y:p.y};
+    fx.push({...at,t:.55,dur:.55,fallenWindup:S.radius});
+    // FX and actual radius share the cast position. Cancel on death or run transition.
+    caster.fallenCast={run,wave:run?.wave,phase:run?.phase,at,S,t:.55};return true;}
 };
 ENDLESS_BOSSES.fallen_support={name:"배신의 기억",tune:{dmg:1},basic:[{k:"slam",dmg:240,radius:125,rest:1.4},{k:"barrage",n:3,dmg:160,slow:1.5},{k:"zone",radius:100,dmg:65,dur:3}],ult:[{k:"ring",n:16,dmg:110,waves:3,spin:true},{k:"slam",dmg:420,radius:190}],adds:["melee","mobile"]};
 const qaSvgIcon=(symbol,color)=>"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g"><stop stop-color="${color}"/><stop offset="1" stop-color="#18234a"/></radialGradient></defs><circle cx="48" cy="48" r="45" fill="url(#g)" stroke="#d6edff" stroke-width="3"/><text x="48" y="64" font-size="49" text-anchor="middle" fill="white">${symbol}</text></svg>`);
 SKILL_ICON_SRC.summoner={...SKILL_ICON_SRC.summoner,q:qaSvgIcon("🛡","#407bd6"),e:qaSvgIcon("🍾","#458d50"),r:qaSvgIcon("✦","#b58a26")};
-SKILL_ICON_SRC.fallen_support={q:qaSvgIcon("✹","#9842d0"),e:qaSvgIcon("➶","#773bc4"),r:qaSvgIcon("✦","#651c99"),passive:qaSvgIcon("♥","#ae327e")};
+const fallenIcon=(art)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="bg"><stop stop-color="#51236f"/><stop offset="1" stop-color="#110b25"/></radialGradient><linearGradient id="cr" x2="1" y2="1"><stop stop-color="#fff1ff"/><stop offset=".4" stop-color="#c16bff"/><stop offset="1" stop-color="#51218d"/></linearGradient></defs><circle cx="48" cy="48" r="45" fill="url(#bg)" stroke="#e0b6ff" stroke-width="3"/>${art}</svg>`);
+SKILL_ICON_SRC.fallen_support={
+ passive:fallenIcon(`<path d="M48 73 23 49Q10 27 31 23Q43 20 48 34Q57 17 71 24Q89 35 72 53Z" fill="#a53dc4" stroke="#f0abff" stroke-width="3"/><path d="m50 28-10 18 12 5-8 19" fill="none" stroke="#180d2d" stroke-width="5"/><path d="M23 40Q48 19 73 40Q48 60 23 40Z" fill="#23133f" stroke="#edb9ff" stroke-width="2"/><ellipse cx="48" cy="40" rx="6" ry="11" fill="#e4a2ff"/>`),
+ q:fallenIcon(`<ellipse cx="48" cy="56" rx="35" ry="21" fill="#7123ac" fill-opacity=".45" stroke="#d591ff" stroke-width="3"/><ellipse cx="48" cy="56" rx="23" ry="13" fill="none" stroke="#f0c6ff" stroke-width="4"/><path d="m48 13 9 28-9 14-9-14Z" fill="url(#cr)" stroke="#e9baff" stroke-width="2"/><path d="m30 52-15-13m51 13 15-13M48 68v15M20 69l-8 7m64-7 8 7" stroke="#b46bff" stroke-width="3" stroke-linecap="round"/>`),
+ e:fallenIcon(`<path d="M13 76 45 43 27 76 52 57 39 83Z" fill="#8a42d5"/><path d="m31 62 17-36 35-13-10 39-31 23Z" fill="url(#cr)" stroke="#f3c9ff" stroke-width="2.5"/><path d="m31 62 31-26 21-23-21 39-20 23Z" fill="#6e32b1"/><path d="m13 51 24-12M51 83l15-15" stroke="#c68aff" stroke-width="3"/>`),
+ r:fallenIcon(`<circle cx="48" cy="49" r="32" fill="#9d3dea" fill-opacity=".25" stroke="#c97aff" stroke-width="3"/><path d="m48 15 29 51H19Zm0 67L19 32h58Z" fill="none" stroke="#d59aff" stroke-width="2.5"/><path d="m48 8 6 24 21-14-11 24 24 7-25 7 12 23-22-13-5 22-7-22-21 13 12-23-24-7 24-7-12-24 21 14Z" fill="#be61ff" fill-opacity=".65"/><path d="m48 24 13 21-13 25-13-25Z" fill="url(#cr)" stroke="#fff0ff" stroke-width="3"/>`)
+};
 sheets.fallen_support=loadImage(NEW_ART.fallen);
 lobbyArt.fallen_support={face:loadImage(NEW_ART.face),full:loadImage(NEW_ART.full)};
 // Separate hidden cinematic/achievement overlay. Uses already decoded portrait; no additional image cache.
