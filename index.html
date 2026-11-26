@@ -1901,14 +1901,14 @@ const CHARACTER_INFO = {
 };
 // 캐릭터 능력치 (로비 표시 + 게임 규칙). sight: 시야 반경(싱글·웨이브, 2026-11-25 초기값). 체력·이동은 전원 같음
 const CHARACTER_STATS = {
-  suit: { hp: 3000, speed: 1, sight: 300 },
-  summoner: { hp: 3000, speed: 1, sight: 350 },
-  support: { hp: 3000, speed: 1, sight: 380 },
-  runner: { hp: 3000, speed: 1, sight: 350 },
-  octo: { hp: 3000, speed: 1, sight: 320 },
-  stripe: { hp: 3000, speed: 1, sight: 400 },
-  soccer: { hp: 3000, speed: 1, sight: 420 },
-  bear: { hp: 3000, speed: 1, sight: 280 },
+  suit: { hp: 2800, speed: 1.12, sight: 330, defense: .05, attack: 1 },
+  summoner: { hp: 3100, speed: 1, sight: 340, defense: .08, attack: 1 },
+  support: { hp: 3000, speed: .97, sight: 400, defense: .05, attack: 1 },
+  runner: { hp: 3300, speed: .92, sight: 360, defense: .12, attack: 1 },
+  octo: { hp: 2500, speed: 1.09, sight: 410, defense: 0, attack: 1 },
+  stripe: { hp: 2700, speed: .95, sight: 420, defense: .05, attack: 1 },
+  soccer: { hp: 3600, speed: 1.04, sight: 350, defense: 0, attack: 1 },
+  bear: { hp: 3050, speed: .89, sight: 370, defense: .25, attack: .90 },
 };
 // 로비 캐릭터 선택: 한 페이지 칸 수 (4열 × 2행). 캐릭터가 늘면 페이지가 자동으로 늘어남
 const LOBBY_PAGE = { cols: 4, rows: 2 };
@@ -2022,9 +2022,9 @@ const SKILL_DATA = {
     // 기본 공격(맨손일 때): 빛의 구체 직선 발사 — 단일 대상, 장애물에 막힘
     basic: { name: "빛의 구체", kind: "orb", dmg: 110, range: 260, speed: 560, width: 14, reload: 0.55 },
     q: { name: "정신 차려!", cd: 8, dmg: 250, slow: 2.5, range: 350, speed: 650, aim: "dir", preview: "line", width: 16, text: "{dmg} 피해 탄을 쏴 {slow}초 둔화" },
-    e: { name: "걱정하지 마", cd: 10, heal: 0.2, guard: 0.3, dur: 3, radius: 200, aim: "none", text: "자신과 주변 아군 최대 HP {heal%} 즉시 회복, {dur}초간 받는 피해 -{guard%}" },
-    r: { name: "다들 내 뒤로!", dur: 6, radius: 130, tick: 0.5, healPerSec: 0.04, dmg: 100, slow: 1, aim: "none", text: "{dur}초간 따라다니는 영역: 아군 초당 {healPerSec%} 회복, 적 {tick}초마다 {dmg} 피해와 둔화" },
-    passive: { name: "내가 챙겨줄게", idle: 5, perSec: 0.02, radius: 200, text: "{idle}초간 안 맞으면 초당 최대 HP {perSec%} 회복 (자신·주변 아군, 맞으면 중단)" },
+    e: { name: "걱정하지 마", cd: 12, heal: 0.15, guard: 0.2, dur: 3, radius: 200, aim: "none", text: "자신과 주변 아군 최대 HP {heal%} 즉시 회복, {dur}초간 받는 피해 -{guard%}" },
+    r: { name: "다들 내 뒤로!", dur: 6, radius: 130, tick: 0.5, healPerSec: 0.03, dmg: 100, slow: 1, aim: "none", text: "{dur}초간 따라다니는 영역: 아군 초당 {healPerSec%} 회복, 적 {tick}초마다 {dmg} 피해와 둔화" },
+    passive: { name: "내가 챙겨줄게", idle: 7, perSec: 0.01, radius: 200, text: "{idle}초간 안 맞으면 초당 최대 HP {perSec%} 회복 (자신·주변 아군, 맞으면 중단)" },
   },
   runner: { // 기섭
     q: { name: "나 좀 봐라!", cd: 6, dur: 2, cost: 50, speed: 1.6, aim: "none", text: "자신감 게이지 {cost} 사용, {dur}초간 이동속도 ×{speed}" },
@@ -2073,7 +2073,7 @@ const ULT_RULES = {
   },
   overkill: false,                     // 적 남은 체력을 넘는 피해는 충전 제외 (기획서 권장)
   chargeDuringUlt: false,              // 궁극기 발동 중 충전 (테스트 후 결정, 초기값: 안 됨)
-  healCoef: 0.5,                       // 은숙: 실제 아군 회복량의 이 비율만큼 충전 (초기 테스트값)
+  healCoef: 0.25,                       // 은숙: 실제 아군 회복량의 이 비율만큼 충전 (초기 테스트값)
 };
 // 지속·광역 피해 판정: 같은 대상에게 tick 초마다 1번 (스킬 데이터의 tick 사용)
 
@@ -2697,7 +2697,7 @@ const ENDLESS_CARDS = [
   { id: "summoner_guard", only: "summoner", name: "든든한 동료", icon: "🛡️", cat: "전용", tiers: { common: 0.05 }, cap: 3, text: "소환 중 받는 피해 추가 -{v%}" },
   { id: "summoner_ult", only: "summoner", name: "든든한 소환수!", icon: "🛡️", cat: "전용", tiers: { legend: .15 }, cap: 2, text: "궁극기 소환수 최대 체력 +{v%}" },
   { id: "support_slow", only: "support", name: "정신 바짝", icon: "🧊", cat: "전용", tiers: { common: 1 }, cap: 3, text: "정신 차려! 둔화 +{v}초" },
-  { id: "support_shield", only: "support", name: "넘치는 챙김", icon: "🫧", cat: "전용", tiers: { rare: 0.2 }, cap: 2, text: "넘치는 회복을 보호막으로 (최대 HP {v%}까지)" },
+  { id: "support_shield", only: "support", name: "넘치는 챙김", icon: "🫧", cat: "전용", tiers: { rare: 0.1 }, cap: 2, text: "넘치는 회복을 보호막으로 (최대 HP {v%}까지)" },
   { id: "support_wave", only: "support", name: "회복 충격파", icon: "💫", cat: "전용", tiers: { rare: 150 }, cap: 2, text: "걱정하지 마 사용 시 주변 적에게 {v} 피해" },
   { id: "support_ult", only: "support", name: "다 내 뒤로!", icon: "🏰", cat: "전용", tiers: { legend: 0.3 }, cap: 2, text: "궁극기 범위·지속 +{v%}" },
   { id: "runner_more", only: "runner", name: "하트 폭주", icon: "💕", cat: "전용", tiers: { rare: 0.5 }, cap: 2, text: "하트 발사량 +{v%}" },
@@ -2934,6 +2934,14 @@ const bearSprintImg = loadImage("data:image/webp;base64,UklGRnDAAwBXRUJQVlA4WAoA
 const jungle = loadImage(MAP_JUNGLE.background);
 // 무한 생존 맵 그림: 처음 쓸 때 불러옴 (모바일 첫 로딩 부담 줄임)
 const mapImgs = { jungle };
+function releaseOldMaps(keepId, pendingId) {
+  for (const id of Object.keys(mapImgs)) {
+    if (id === "jungle" || id === keepId || id === pendingId) continue;
+    const im=mapImgs[id]; delete mapImgs[id];
+    const idx=assetList.findIndex(e=>e.im===im); if(idx>=0) assetList.splice(idx,1);
+    im.removeAttribute("src");
+  }
+}
 function mapImage() {
   const id = activeMap.id;
   return mapImgs[id] || (mapImgs[id] = loadImage(activeMap.background));
@@ -3302,17 +3310,20 @@ function sfx(name, pos) {
     src.playbackRate.value = 0.96 + fxRand() * 0.08; // 반복음이 덜 기계적으로 들리게
     gn.gain.value = v;
     src.connect(gn).connect(audio.sfxGain);
-    src.onended = done;
+    src.onended = () => {src.disconnect(); gn.disconnect(); done();};
     src.start();
   } else if (audio.els[name]) {
     // 미리 만든 <audio> 4개를 돌려 가며 재생 (복제 없음)
     const P = audio.els[name], el = P.pool[P.next++ % P.pool.length];
+    if (el._finishSound) el._finishSound();
+    let ended=false; const finish=()=>{if(ended)return;ended=true;el._finishSound=null;done();};
+    el._finishSound=finish;
     el.volume = clamp(v * audio.settings.sfx, 0, 1);
-    el.onended = done;
+    el.onended = finish; el.onerror = finish;
     try {
       el.currentTime = 0;
     } catch (e) {}
-    el.play().catch(done);
+    el.play().catch(finish);
   } else {
     synth(s.synth || name, v);
     setTimeout(done, 250);
@@ -3344,6 +3355,7 @@ function synth(kind, v) {
     env(0.2, 0.1);
   }
   o.start(t);
+  o.onended=()=>{o.disconnect();gn.disconnect();};
   o.stop(t + 0.35);
 }
 
@@ -3369,6 +3381,7 @@ function syncBgm(force) {
     s.loop = true;
     if (audio.bgmLoop) [s.loopStart, s.loopEnd] = audio.bgmLoop;
     s.connect(audio.bgmGain);
+    s.onended=()=>s.disconnect();
     s.start();
     audio.bgmNode = s;
     return;
@@ -3384,11 +3397,14 @@ function syncBgm(force) {
     gn.gain.exponentialRampToValueAtTime(0.0001, t + len);
     o.connect(gn).connect(audio.bgmGain);
     o.start(t);
+    o.onended=()=>{o.disconnect();gn.disconnect();};
     o.stop(t + len + 0.05);
   };
   const base = 220;
   audio.bgmNode = { stop() {} };
   audio.bgmTimer = setInterval(() => {
+    if(audio.ctx.state!=="running" || document.hidden) return;
+    if(next < audio.ctx.currentTime - .5) next=audio.ctx.currentTime+.05;
     while (next < audio.ctx.currentTime + 0.3) {
       const bar = Math.floor(step / 8) % bass.length;
       if (step % 2 === 0) tone(base * Math.pow(2, notes[(step * 3 + bar) % notes.length] / 12), next, 0.35, 0.12, "triangle");
@@ -3949,6 +3965,11 @@ function reset() {
   swapCD = 0;
   selected = 0;
   p = actor(...MAP_JUNGLE.playerSpawn);
+  const base = CHARACTER_STATS[character] || {};
+  p.hp = p.max = base.hp ?? 3000;
+  p.spd = base.speed ?? 1;
+  p.baseDefense = base.defense ?? 0;
+  p.weaponMul = base.attack ?? 1;
   // 스킬 상태 (판마다 새로): 쿨타임 q·e, 궁극기 충전 ult(0~1)·발동 중 ultT, 캐릭터별 게이지
   p.skcd = { q: 0, e: 0 }; // 스킬 쿨타임 (p.cd 는 기존 공격 간격)
   p.ult = 0;
@@ -3978,6 +3999,7 @@ function reset() {
   gameTimers = [];
   if (singleRun) setupWaveRun(); // 싱글 웨이브 미션·무한 생존: 봇 대신 웨이브 적
   else mobShots = [];
+  releaseOldMaps(activeMap.id, singleRun?.mapSwap?.def?.id);
 }
 </script>
   <script>/* js/game/wave.js */
@@ -4460,6 +4482,7 @@ function startEndlessFight() {
   R.plan = S.count;
   R.spawned = 0;
   R.spawnT = 0;
+  R.wavePX=p.x; R.wavePY=p.y; R.waveVX=R.waveVY=0;
   R.banner = R.story ? `${S.stage.label} · ${R.timer}초 버티기` : `W${R.wave} · ${ENDLESS.normalTime}초 생존`;
   R.bannerT = 1.6;
 }
@@ -4491,6 +4514,52 @@ let hazards = []; // 예고 후 터지는 범위 공격 (적 투척·보스 함�
 function endlessSpawnPoint() {
   return ((waveMapsOn() || activeMap.id === "jaehan_road") && waveMapSpawn(ENDLESS.spawnMinDist)) || spawnPoint(ENDLESS.spawnMinDist);
 }
+// WAVE AI QA 1126: normal endless waves only; retain original HP/ATK/SPD and boss scale.
+function waveMobDifficulty(R = singleRun) {
+  const w = R?.wave || 1;
+  if (!R?.endless || R.story || R.spec?.boss || R.phase !== "fight") return null;
+  return { rate: 1 + Math.min(.5, Math.max(0, (w - 5) * .02)), dash: w >= 6, ranged: w >= 11, flank: w >= 16, spread: w >= 21 };
+}
+function waveEnemyCD(a, cd) { return cd / (a.waveAI?.rate || 1); }
+// Fixed direction, preview ends before terrain, exactly the same swept collision during movement.
+function waveDashPlan(a, T) {
+  const ang = Math.atan2(p.y-a.y,p.x-a.x), vx=Math.cos(ang),vy=Math.sin(ang);
+  const r=a.r||16, speed=150*a.spd*T.dash.speed;
+  let len=0, limit=Math.min(190,speed*T.dash.dur);
+  for(let d=4;d<=limit;d+=4){
+    const x=a.x+vx*d,y=a.y+vy*d;
+    if(x<r+2||y<r+2||x>W-r-2||y>H-r-2||terrain(x,y,r)||blocked(x,y,r)||nearBox(x,y,r+14)) break;
+    len=d;
+  }
+  if(len<28)return null;
+  return {vx,vy,left:len,len,speed,t:.55,dur:.55,x:a.x,y:a.y};
+}
+function waveDashTick(a,dt) {
+  const c=a.waveDash;
+  if(!c)return false;
+  if(a.root>0||a.stun>0||a.hp<=0){a.waveDash=null;return false;}
+  if(c.t>0){c.t=Math.max(0,c.t-dt);a.moving=false;faceTo(a,c.x+c.vx*c.len,c.y+c.vy*c.len);return true;}
+  const step=Math.min(c.left,c.speed*(a.slow>0?.65:a.bottleSlow>0?.7:1)*dt);
+  const ox=a.x,oy=a.y;
+  const stop=chargeStep(a,c.vx,c.vy,step);
+  a.moving=Math.hypot(a.x-ox,a.y-oy)>.01;
+  a.dir=(Math.round(Math.atan2(c.vx,-c.vy)/(Math.PI/4))+8)%8;
+  if(a.moving){a.frame=(a.frame+dt*16)%8;a._anim=true;}
+  c.left-=step;
+  if(stop||c.left<=.001||!a.moving)a.waveDash=null;
+  return true; // contact damage is handled by existing shared cooldown, no extra hit
+}
+function waveFlank(a,dt) {
+  if(!a.waveAI?.flank || !a.flankSide || dist(a,p)<100 || dist(a,p)>360 || !visible(a,p))return false;
+  const R=singleRun, vx=R.waveVX||0,vy=R.waveVY||0;
+  const speed=Math.hypot(vx,vy); if(speed<35)return false;
+  const nx=vx/speed,ny=vy/speed, r=a.r||16;
+  const x=clamp(p.x+nx*95-ny*a.flankSide*48,r+2,W-r-2),y=clamp(p.y+ny*95+nx*a.flankSide*48,r+2,H-r-2);
+  if(terrain(x,y,r)||blocked(x,y,r)||nearBox(x,y,r+14))return false;
+  // Avoid costly extra path searches; normal chase handles obstacles.
+  if(!walkLine(a.x,a.y,x,y,r))return false;
+  move(a,x-a.x,y-a.y,dt);return true;
+}
 function makeEnemy(kind, at, opts = {}) {
   const R = singleRun, sc = waveScale(R.wave);
   let base = ENEMY_TYPES[kind], elite = false;
@@ -4509,6 +4578,8 @@ function makeEnemy(kind, at, opts = {}) {
     visual: base.visual, seed: Math.random() * 100, look: { scale: (base.scale || 1) * (elite ? E.scale : 1), aura: elite ? E.aura : 0.55 },
     specialT: 1 + Math.random() * 2, owner: null, summoner: opts.summoner || null, pk: base.pk,
   });
+  a.waveAI = waveMobDifficulty(R);
+  if(a.waveAI?.flank && (kind==="melee"||kind==="mobile") && Math.random()<.4) a.flankSide=Math.random()<.5?-1:1;
   if (kind === "assassin") a.stealth = 99;
   const sp = freeSpot(a.x, a.y, a.r); // 벽·물·상자 안 스폰 금지 (몸 크기 기준)
   if (sp) {
@@ -4546,10 +4617,18 @@ function updateEndless(dt) {
   if (R.phase === "fight") {
     R.timer -= dt;
     R.spawnT -= dt;
+    if(!R.story && dt>0){
+      const vx=(p.x-(R.wavePX??p.x))/dt,vy=(p.y-(R.wavePY??p.y))/dt;
+      const mag=Math.hypot(vx,vy), k=mag>240?240/mag:1;
+      R.waveVX=(R.waveVX||0)*.85+vx*k*.15; R.waveVY=(R.waveVY||0)*.85+vy*k*.15;
+      R.wavePX=p.x;R.wavePY=p.y;
+    }
     const alive = bots.filter((b) => b.hp > 0).length;
     if (R.spawned < R.plan && R.spawnT <= 0 && alive < ENDLESS.maxAlive) {
       const kinds = R.spec.kinds === "all" ? ENDLESS_ALL_KINDS : R.spec.kinds;
       let k = kinds[Math.floor(Math.random() * kinds.length)];
+      const diff=waveMobDifficulty(R);
+      if(diff?.ranged && Math.random()<.20) k=Math.random()<.65?"ranged":"thrower";
       if (k === "elite" && Math.random() > ELITE_SHARE * kinds.length) k = kinds.find((x) => x !== "elite") || "melee";
       const e = makeEnemy(k);
       R.spawned++;
@@ -4573,7 +4652,9 @@ function updateEndless(dt) {
       const m = 1 / ENDLESS.bossStatusMul - 1;
       for (const k of ["stun", "slow", "root"]) if (a[k] > 0) a[k] = Math.max(0, a[k] - dt * m);
     }
+    if(a.waveDash && (a.stun>0 || a.root>0 || (a.waveDash.t>0 && !visible(a,p)))) a.waveDash=null;
     if (a.stun > 0) continue;
+    if(a.waveDash && waveDashTick(a,dt)) continue;
     if (a.hunt && R.ward && R.ward.hp > 0) wardAI(a, dt); // 영입 미션: 보호 대상을 노리는 적
     else if (playerHidden() && !a.tele && !a.channel && !a.charge) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
     else if (a.bossId) endlessBossAI(a, dt);
@@ -4615,11 +4696,13 @@ function endEndlessWave(boss) {
   if (R.story && R.ward && R.ward.hp<=0 && !R.secretBoss) { updateStory(0); return; }
   if (R.secretBoss && boss) {
     if(p.hp<=0){storyFail("쓰러졌어요");return;}
-    bots=[]; mobShots=[]; hazards=[]; shots=[]; R.boss=null; R.cardQueue=[];
+    bots=[]; mobShots=[]; hazards=[]; shots=[]; gameTimers.length=0; R.boss=null; R.cardQueue=[];
     R.phase="secretClear"; R.banner="SECRET CLEAR!"; R.bannerT=3;
     if(!singleSave.recruited.includes("fallen_support")) {singleSave.recruited.push("fallen_support");singleSave.secretEunsuk=true;writeSingleSave();}
     qaExposeFallen(); return;
   }
+  if (boss) gameTimers.length=0;
+  if (!R.story && p.hp>0) checkpointEndless(R);
   if (R.story && storyStageClear(boss)) return; // 영입 미션 마지막 단계 → 성공
   // 남은 적 제거 (경험치 없음), 남은 아이템 자동 획득, 회복 (중복 없음)
   for (const b of bots) {
@@ -4646,12 +4729,12 @@ function endEndlessWave(boss) {
 
 // ----- 일반 적 행동 (유형별 대표 패턴 하나) -----
 function enemyAI(a, dt) {
-  const T = ENEMY_TYPES[a.mob], d = dist(a, p);
+  const T = ENEMY_TYPES[a.mob], d = dist(a, p), A=a.waveAI;
   a.atkT -= dt;
   a.specialT -= dt;
   if (p.hp <= 0) return;
   const shoot = (spd, dmg, extra = {}) => {
-    const ang = Math.atan2(p.y - a.y, p.x - a.x);
+    const ang = Math.atan2(p.y - a.y, p.x - a.x) + (extra.aimOffset || 0);
     mobShots.push({ x: a.x, y: a.y - 14, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, left: T.range + 80, d: dmg, a, r: 7, color: "#c77dff", ...extra });
     a.atkAnim = 0.3;
   };
@@ -4669,7 +4752,7 @@ function enemyAI(a, dt) {
   switch (a.mob) {
     case "pk_pika": case "pk_char": case "pk_squirt": { // 현곤 보스의 포켓몬: 피카츄 번개탄 / 파이리 화염(예고 원) / 꼬부기 물대포(밀침)
       if (keepAway() && d <= T.range && a.atkT <= 0) {
-        a.atkT = T.cd * (0.85 + Math.random() * 0.3);
+        a.atkT = waveEnemyCD(a,T.cd) * (0.85 + Math.random() * 0.3);
         a.atkAnim = 0.35;
         if (T.attack === "flame") hazards.push({ x: p.x, y: p.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "255, 110, 40" });
         else shoot(T.shot, a.dmg, T.attack === "bolt" ? { color: "#ffe14d", bolt: true, r: 8 } : { color: "#5ab4ff", water: true, push: T.push, r: 9 });
@@ -4679,17 +4762,20 @@ function enemyAI(a, dt) {
     }
     case "ranged": {
       if (keepAway() && d <= T.range && a.atkT <= 0) {
-        a.atkT = T.cd * (0.85 + Math.random() * 0.3);
-        shoot(T.shot, a.dmg);
+        a.atkT = waveEnemyCD(a,T.cd) * (0.85 + Math.random() * 0.3);
+        if(A?.spread){shoot(T.shot*1.08,a.dmg*.6,{aimOffset:-.09});shoot(T.shot*1.08,a.dmg*.6,{aimOffset:.09});}
+        else shoot(T.shot*(A?.ranged?1.12:1),a.dmg);
         sfx("pistol", a);
       }
       return;
     }
     case "thrower": { // 플레이어 위치에 예고 원 → 터짐
       if (keepAway() && d <= T.range && a.atkT <= 0) {
-        a.atkT = T.cd;
+        a.atkT = waveEnemyCD(a,T.cd);
         a.atkAnim = 0.3;
-        hazards.push({ x: p.x, y: p.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "200, 90, 255" });
+        const tx=A?.flank?clamp(p.x+(singleRun.waveVX||0)*.3,20,W-20):p.x;
+        const ty=A?.flank?clamp(p.y+(singleRun.waveVY||0)*.3,20,H-20):p.y;
+        hazards.push({ x: tx, y: ty, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "200, 90, 255" });
       }
       return;
     }
@@ -4700,7 +4786,7 @@ function enemyAI(a, dt) {
         fx.push({ x: a.x, y: a.y, t: 0.5, ring: T.heal.radius });
       }
       if (keepAway() && d <= T.range && a.atkT <= 0) {
-        a.atkT = T.cd;
+        a.atkT = waveEnemyCD(a,T.cd);
         shoot(220, a.dmg);
       }
       return;
@@ -4709,6 +4795,7 @@ function enemyAI(a, dt) {
       if (a.specialT <= 0 && (a.minions || 0) < T.summon.cap) {
         a.specialT = T.summon.every;
         for (let i = 0; i < T.summon.count; i++) {
+          if(A && ((a.minions||0)>=T.summon.cap || bots.filter(b=>b.hp>0).length>=ENDLESS.maxAlive)) break;
           const ang = Math.random() * 7, q = { x: clamp(a.x + Math.cos(ang) * 50, 30, W - 30), y: clamp(a.y + Math.sin(ang) * 50, 30, H - 30) };
           if (!terrain(q.x, q.y) && !blocked(q.x, q.y)) {
             makeEnemy("minion", q, { noExp: true, summoner: a });
@@ -4717,12 +4804,20 @@ function enemyAI(a, dt) {
         }
       }
       if (keepAway() && d <= T.range && a.atkT <= 0) {
-        a.atkT = T.cd;
+        a.atkT = waveEnemyCD(a,T.cd);
         shoot(220, a.dmg);
       }
       return;
     }
     case "mobile": // 주기적으로 빠른 돌진
+      if(A?.dash){
+        if(a.specialT<=0 && d<260 && d>75 && !(a.root>0) && clearLine(a,p)){
+          a.specialT=waveEnemyCD(a,T.dash.every);
+          a.waveDash=waveDashPlan(a,T);
+          if(a.waveDash){a.moving=false;return;}
+        }
+        break;
+      }
       if (a.specialT <= 0 && d < 300 && d > 60) {
         a.specialT = T.dash.every;
         a.dashLeft = T.dash.dur;
@@ -4742,12 +4837,12 @@ function enemyAI(a, dt) {
       break;
   }
   // 근접 공통 (근접·기동·탱커·암살·졸개)
-  if (d > T.range + 16) chase(a, dt);
+  if (d > T.range + 16) { if(!waveFlank(a,dt)) chase(a,dt); }
   else {
     a.moving = false;
     faceTo(a, p.x, p.y);
     if (a.atkT <= 0) {
-      a.atkT = T.cd;
+      a.atkT = waveEnemyCD(a,T.cd);
       a.atkAnim = 0.3;
       if (a.mob === "tank") { // 탱커: 작은 범위 내려찍기
         hazards.push({ x: a.x, y: a.y, r: 55, t: 0.45, dur: 0.45, dmg: a.dmg, a, color: "255, 120, 80" });
@@ -5235,7 +5330,7 @@ function applyEndlessCard(c, v) {
     case "summoner_guard": D.passive.take = Math.max(0.3, D.passive.take - v); break;
     case "summoner_ult": M.petUltHp=(M.petUltHp||0)+v; break;
     case "support_slow": D.q.slow += v; break;
-    case "support_shield": M.shieldCap = Math.max(M.shieldCap || 0, 0) + v; break;
+    case "support_shield": M.shieldCap = Math.min(.2, Math.max(M.shieldCap || 0, 0) + v); break;
     case "support_wave": D.e.waveDmg = (D.e.waveDmg || 0) + v; break;
     case "support_ult": D.r.radius *= 1 + v; D.r.dur *= 1 + v; break;
     case "runner_more": D.r.hearts = Math.round(D.r.hearts * (1 + v)); break;
@@ -5284,15 +5379,22 @@ function endlessOnHurt(d) {
 }
 
 // ----- 기록 -----
-function endlessRecord() {
-  const R = singleRun, ch = character, time = elapsed;
-  const prev = endlessSave.best[ch], wave = R.wave;
-  const better = !prev || wave > prev.wave || (wave === prev.wave && time > prev.time);
-  if (better) {
-    endlessSave.best[ch] = { wave, time: Math.round(time), level: R.level, kills: R.kills };
-    writeEndlessSave();
+function checkpointEndless(R) {
+  const rec={character, wave:R.wave, time:Math.round(elapsed), level:R.level, kills:R.kills};
+  const prev=endlessSave.best[character];
+  if(!prev || rankSort(rec,prev)<0){
+    endlessSave.best[character]={wave:rec.wave,time:rec.time,level:rec.level,kills:rec.kills};
+    writeEndlessSave(); R.checkpointBest=true;
+    if(!ROSTER.testMode && character!=="fallen_support" && profile?.nickname){queueWaveRecord(rec); void flushRankQueue();}
   }
-  return { wave, time, level: R.level, kills: R.kills, newBest: better };
+}
+function endlessRecord() {
+  const R = singleRun, ch = character, time = Math.round(elapsed);
+  const prev = endlessSave.best[ch], wave = R.wave;
+  const rec={wave,time,level:R.level,kills:R.kills};
+  const better = !prev || rankSort(rec,prev)<0;
+  if (better) {endlessSave.best[ch]=rec;writeEndlessSave();}
+  return {...rec,newBest:better || !!R.checkpointBest};
 }
 </script>
   <script>/* js/engine/input.js */
@@ -5418,6 +5520,7 @@ function hit(a, b, d, o = {}) {
   // 싱글 강화 카드 (이번 판의 p 에만 있는 값. 배틀로얄에서는 없음 → 1)
   if (isMine(a) && p.dmgMul) d *= p.dmgMul;
   if (b === p && p.takeMul) d *= p.takeMul;
+  if (b === p) d *= 1 - (p.baseDefense || 0);
   d *= hasGear(b, 1) ? 0.9 : 1;
   if (b === p) {
     if (character === "bear") {
@@ -5590,6 +5693,19 @@ function targets(a) {
   return out;
 }
 // 성능: targets(a).find(b => dist(c, b) < r) 와 같은 결과, 배열을 만들지 않음
+function shotgunTargetNear(a, s) {
+  let best, bestEntry = Infinity;
+  const n = Math.hypot(s.vx,s.vy) || 1, ux=s.vx/n, uy=s.vy/n;
+  forEachCandidate(b => {
+    if (!canHit(a,b)) return false;
+    const dx=b.x-s.x,dy=b.y-s.y, radius=bodyR(b)+13;
+    const along=dx*ux+dy*uy, perp2=Math.max(0,dx*dx+dy*dy-along*along);
+    if (dx*dx+dy*dy > radius*radius || perp2>radius*radius) return false;
+    const entry=along-Math.sqrt(Math.max(0,radius*radius-perp2));
+    if(entry<bestEntry){bestEntry=entry;best=b;} return false;
+  });
+  return best;
+}
 function firstTargetNear(a, c, r) {
   let hitB;
   forEachCandidate((b) => dist(c, b) < r + bodyR(b) && canHit(a, b) && (hitB = b, true)); // 투사체: 은신해도 맞음, 큰 적(보스)은 몸 크기만큼 넓게
@@ -5643,6 +5759,7 @@ function updateAmmo(a, dt) {
 function throwGrenade(a, x, y) {
   if (a.stun > 0 || (a.grenades || 0) < 1 || (a.grenCD || 0) > 0) return false;
   let [, d, , r] = weapons[GRENADE.weaponId];
+  if (a === p) d *= p.weaponMul || 1;
   d *= hasGear(a, 2) ? 1.15 : 1;
   const ang = Math.atan2(y - a.y, x - a.x), len = Math.min(r, Math.hypot(x - a.x, y - a.y));
   a.grenades--;
@@ -5664,6 +5781,7 @@ function attack(a, x, y) {
   a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
   if (a === p) p.stealth = 0;
   let [name, d, cd, r] = weapons[a.w];
+  if (a === p) d *= p.weaponMul || 1;
   // 동기: 맨손 3연타 콤보(잽-스트레이트-훅), 카운터 게이지가 가득이면 이번 공격이 카운터 펀치
   if (a === p && character === "suit") {
     const C = SKILL_DATA.suit.combo;
@@ -6867,7 +6985,7 @@ function update(dt) {
         });
         continue;
       }
-      let b = firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
+      let b = s.shotgun ? shotgunTargetNear(s.a, s) : firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
       if (b && s.vol && !s.vol.hit.has(b) && s.vol.hit.size >= s.vol.max) b = null; // 샷건 한 발 묶음: 최대 인원 넘으면 새 대상은 안 맞음
       if (b) {
         if (s.vol) s.vol.hit.add(b);
@@ -6880,6 +6998,12 @@ function update(dt) {
   }
   compact(shots, (s) => !s.dead);
   compact(fx, (f) => (f.t -= dt) > 0);
+  if (fx.length > 240) {
+    let excess=fx.length-240;
+    compact(fx,f=>{if(excess>0 && (f.text!==undefined || f.impact || f.trail) && !f.big){excess--;return false;}return true;});
+  }
+  if (!(p.run > 0)) p.runHits=null;
+  if (!(p.tackle > 0)) p.tackleHits=null;
   if (p.hp <= 0 || singleRun?.failReason) over = "패배"; // 영입 미션: 보호 대상 쓰러짐·시간 초과도 실패
   else if (singleRun) {
     if (singleRun.phase === "secretClear") { over="히든 성공"; }
@@ -8416,7 +8540,16 @@ function drawSummonAim() {
 // 위험 표시: 범위 공격 예고·보스 패턴 예고·적 투사체 (시야 켜짐이면 어둠 위에, 시야 밖이어도 보임)
 function drawDangerLayer(withShots) {
   if (!singleRun) return;
-  if (singleRun.endless) drawHazards();
+  if (singleRun.endless) {
+    drawHazards();
+    for(const a of bots){const c=a.waveDash;if(!c||a.hp<=0||c.t<=0)continue;
+      g.save();g.translate(c.x,c.y);g.rotate(Math.atan2(c.vy,c.vx));
+      const r=(a.r||16)+3;
+      g.fillStyle="rgba(255,75,55,.22)";g.strokeStyle="#ff795e";g.lineWidth=2;
+      g.fillRect(0,-r,c.len,r*2);g.strokeRect(0,-r,c.len,r*2);
+      g.fillStyle="rgba(255,90,60,.35)";g.fillRect(0,-r,c.len*(1-c.t/c.dur),r*2);g.restore();
+    }
+  }
   for (const a of bots) if (a.mob === "boss" && a.hp > 0) a.bossId ? drawEndlessTele(a) : drawBossTele(a);
   if (withShots) drawMobShots();
 }
@@ -9513,7 +9646,7 @@ function renderLobbyInfo() {
   el("ciRole").hidden = !info.role;
   el("ciIntro").textContent = info.intro || "";
   el("ciIntro").hidden = !info.intro;
-  el("ciStats").innerHTML = `<span><b>체력</b>${st.hp ?? 3000}</span><span><b>이동</b>${Math.round((st.speed ?? 1) * 100)}%</span><span><b>시야</b>${st.sight ?? "-"}</span>`;
+  el("ciStats").innerHTML = `<span><b>체력</b>${st.hp ?? 3000}</span><span><b>이동</b>${Math.round((st.speed ?? 1) * 100)}%</span><span><b>시야</b>${st.sight ?? "-"}</span><span><b>공격</b>${Math.round((st.attack ?? 1)*100)}%</span><span><b>방어</b>${Math.round((st.defense ?? 0)*100)}%</span>`;
   el("ciBasic").innerHTML = "<b>기본 공격</b> ";
   el("ciBasic").append(basicText(lobbySel));
   el("ciPassive").innerHTML = "<b>패시브</b> ";
@@ -9883,7 +10016,7 @@ function csApplyVolumes() {
 function csLoad(key, src) {
   if (cs.buf[key] || !audio.ctx || !src) return Promise.resolve(cs.buf[key]);
   const job = src.startsWith("data:") ? Promise.resolve(dataUriToBuffer(src)) : fetch(src).then((r) => r.arrayBuffer());
-  return job.then((ab) => audio.ctx.decodeAudioData(ab)).then((b) => (cs.buf[key] = b)).catch(() => null);
+  const run=cs.run; return job.then((ab) => audio.ctx.decodeAudioData(ab)).then((b) => {if(run===cs.run)cs.buf[key]=b;return b;}).catch(() => null);
 }
 function csPreloadAudio(story) {
   if (!audio.ctx) return;
@@ -9904,7 +10037,7 @@ function csPlayBuf(key, node, vol = 1, loop = false) {
   s.connect(g).connect(node);
   s.start();
   cs.srcs.push(s);
-  s.onended = () => (cs.srcs = cs.srcs.filter((x) => x !== s));
+  s.onended = () => {s.disconnect();g.disconnect();cs.srcs = cs.srcs.filter((x) => x !== s);};
   return { s, g };
 }
 function csSfx(id) {
@@ -10144,6 +10277,10 @@ function csStop() {
 function csCloseStory() {
   csStop();
   cs.story = null;
+  for(const id of ["csFrameA","csFrameB"]) el(id).querySelector("img").removeAttribute("src");
+  el("csBlur").style.backgroundImage="none";
+  for(const key of Object.keys(csImgCache)){csImgCache[key].removeAttribute("src");delete csImgCache[key];}
+  cs.buf={}; cs.utter=null;
   el("csStory").hidden = true;
   el("cutscene").classList.remove("story", "jaeIntro");
   el("jaeSubtitle").hidden=true;el("jaeMission").hidden=true;
@@ -10310,9 +10447,9 @@ function setRankQueue(q) {
 }
 // 웨이브 판 종료 시 (QA·싱글 제외). 같은 캐릭터는 더 좋은 기록만 남김
 function queueWaveRecord(rec) {
-  const q = rankQueue().filter((x) => !(x.character === rec.character && rankSort(x, rec) <= 0));
-  if (!q.some((x) => x.character === rec.character)) q.push(rec);
-  setRankQueue(q);
+  const q=rankQueue(), same=q.filter(x=>x.character===rec.character);
+  const best=[rec,...same].sort(rankSort)[0];
+  setRankQueue([...q.filter(x=>x.character!==rec.character),best]);
 }
 let rankSending = false;
 async function flushRankQueue() {
@@ -11631,6 +11768,7 @@ function preloadMap(def) {
 // 맵 실제 교체 (전투 정리 + 배치). 런 진행(체력·레벨·카드·궁극기·포켓몬·기록)은 그대로
 function applyWaveMap(def) {
   setActiveMap(def);
+  releaseOldMaps(def.id);
   bots = bots.filter((b) => !b.mob); // 이전 맵 적 (웨이브 끝에 이미 비워짐, 안전용)
   shots = [];
   mobShots = [];
@@ -11952,7 +12090,7 @@ function qaPetEnemy(a,dt){
   if(!pt)return false;
   const T=ENEMY_TYPES[a.mob];a.atkT-=dt;
   if(dist(a,pt)>(T.range||34)+16)steer(a,pt.x,pt.y,dt);
-  else{a.moving=false;faceTo(a,pt.x,pt.y);if(a.atkT<=0){a.atkT=T.cd||1.2;a.atkAnim=.3;hit(a,pt,a.dmg||T.dmg);}}
+  else{a.moving=false;faceTo(a,pt.x,pt.y);if(a.atkT<=0){a.atkT=waveEnemyCD(a,T.cd||1.2);a.atkAnim=.3;hit(a,pt,a.dmg||T.dmg);}}
   separate(a);return true;
 }
 function qaStartSecretBoss(R){
@@ -11965,7 +12103,7 @@ function qaStartSecretBoss(R){
   shake(10);sfx("zone_warning");
 }
 DISPLAY_NAMES.fallen_support="타락한 은숙이";
-CHARACTER_STATS.fallen_support={...CHARACTER_STATS.support};
+CHARACTER_STATS.fallen_support={hp:3000,speed:1,sight:380,defense:0,attack:1};
 SKILL_DATA.fallen_support={
   q:{name:"니들이 그럴 줄 알았어!",cd:8,dmg:400,radius:130,slow:3,aim:"none",text:"주변 {dmg} 피해, 3초간 이동속도 30% 감소"},
   e:{name:"나도 안 지켜!",cd:10,dmg:500,range:300,dur:4,aim:"dir",preview:"line",width:30,text:"암흑 투사체 {dmg} 피해, {dur}초간 받는 피해 +25%"},
@@ -12051,6 +12189,18 @@ document.addEventListener("visibilitychange", () => {
     acc = 0;
   }
 });
+
+// Kakao in-app browser advisory: no forced redirect, no gameplay pause.
+if (/KAKAOTALK/i.test(navigator.userAgent)) {
+  let seen=false;try{seen=sessionStorage.getItem("bl.kakaoNotice")==="1";}catch(e){}
+  if(!seen){
+    const tip=document.createElement("div");tip.setAttribute("role","status");
+    tip.style.cssText="position:absolute;z-index:50;left:50%;bottom:3%;transform:translateX(-50%);width:min(86%,560px);box-sizing:border-box;padding:10px 12px;background:#102044f5;border:2px solid #7fb3ff;border-radius:12px;color:#fff;font:14px/1.4 system-ui;box-shadow:0 4px 16px #0008;";
+    tip.textContent="카카오톡 안에서 실행 중이에요. 장시간 플레이는 메뉴에서 삼성 인터넷 또는 Chrome으로 열기를 권장해요. 브라우저를 바꾸면 기기 저장 기록이 다를 수 있어요. ";
+    const close=document.createElement("button");close.textContent="확인";close.className="btn btn-gold";close.style.cssText="font-size:14px;padding:5px 12px;margin:0;";
+    close.onclick=()=>{try{sessionStorage.setItem("bl.kakaoNotice","1");}catch(e){}tip.remove();};tip.append(close);document.querySelector("#title").append(tip);
+  }
+}
 </script>
 </body>
 </html>
