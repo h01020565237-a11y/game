@@ -6187,7 +6187,7 @@ function weaponKind(a) {
 let ultPets = [], clones = [];
 
 function tackleInput() {
-  return Math.hypot(mvX, mvY) > 0.15 ? [mvX, mvY] : [(keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), (keys.KeyS ? 1 : 0) - (keys.KeyW ? 1 : 0)];
+  return Math.hypot(mvX, mvY) > 0.05 ? [mvX, mvY] : [(keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), (keys.KeyS ? 1 : 0) - (keys.KeyW ? 1 : 0)];
 }
 function skillOf(slot, ch = character) {
   if (slot === "dash") return DASH; // 공통 대시 (이동형 스킬 조작 공유)
@@ -6201,7 +6201,7 @@ function moveDir(aim) {
     if (n >= 1) return [dx / n, dy / n, n];
   }
   const [ix, iy] = tackleInput(), m = Math.hypot(ix, iy);
-  if (m > 0.15) return [ix / m, iy / m, 0];
+  if (m > 0.05) return [ix / m, iy / m, 0];
   const [fx0, fy0] = facingVec();
   return [fx0, fy0, 0];
 }
@@ -7121,9 +7121,9 @@ function update(dt) {
     p.dash=stopped?0:Math.max(0,p.dash-step);
   } else {
     let [ix, iy] = p.moveLock ? [p.moveLock.x, p.moveLock.y] : tackleInput();
-    if(character==="bear"&&p.run>0){if(Math.hypot(ix,iy)>.15){const n=Math.hypot(ix,iy);p.bearRunDir=[ix/n,iy/n];}[ix,iy]=p.bearRunDir||facingVec();} // 이동형 스킬 중엔 발동 방향 고정
+    if(character==="bear"&&p.run>0){if(Math.hypot(ix,iy)>.05){const n=Math.hypot(ix,iy);p.bearRunDir=[ix/n,iy/n];}[ix,iy]=p.bearRunDir||facingVec();} // 이동형 스킬 중엔 발동 방향 고정
     const mag = Math.hypot(ix, iy);
-    if (mag > 0.15) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
+    if (mag > 0.05) p.lastMoveDir = (Math.round(Math.atan2(ix, -iy) / (Math.PI / 4)) + 8) % 8;
     move(p, ix, iy, dt * (mag < 1 && !p.moveLock ? clamp(mag * 1.25, 0.4, 1) : 1)); // 조이스틱 세기 반영 (살짝 밀면 천천히)
     if (aiming) {
       autoAttack();
@@ -9435,10 +9435,10 @@ addEventListener("pagehide", releaseSticks);
 // 왼쪽 이동 영역(#mvZone) 어디서든 누르면 그 자리가 조이스틱 중심. 360도, 끈 방향·거리(세기) 반영
 // 손가락이 영역 밖으로 나가도 그 손가락(pointerId) 계속 추적. 떼거나 취소되면 정지·원래 자리로
 // 멀티터치: 손가락마다 따로. 다른 손가락(공격·대시 등)을 떼도 이동 손가락은 유지 (touch identifier 로 확인)
-const MV_STICK = { dead: 0.12, radius: 0.5 }; // dead: 이 안쪽은 정지, radius: 최대 세기가 되는 거리(조이스틱 지름 비율)
+const MV_STICK = { dead: 0.05, radius: 0.28 }; // dead: 이 안쪽은 정지, radius: 최대 세기가 되는 거리(조이스틱 지름 비율)
 function floatStick(zone, st, fn) {
   const knob = st.querySelector("i"), arena = document.getElementById("arena");
-  let pid = null, tid = null, cx = 0, cy = 0;
+  let pid = null, cx = 0, cy = 0;
   const rot = () => document.body.classList.contains("rot");
   function local(clx, cly) { // 화면 좌표 → #touch 안 좌표 (세로 폰 회전 포함)
     const r = arena.getBoundingClientRect(), s = (rot() ? r.height : r.width) / (arena.offsetWidth || 1) || 1;
@@ -9465,30 +9465,29 @@ function floatStick(zone, st, fn) {
       y /= n;
     }
     knob.style.transform = `translate(${x * st.offsetWidth * 0.3}px,${y * st.offsetHeight * 0.3}px)`;
-    if (n < MV_STICK.dead) fn(0, 0, true);
+    if (n <= MV_STICK.dead) fn(0, 0, true);
     else fn(x, y, true);
   }
   function release() {
-    if (pid !== null) {
+    const oldPid = pid;
+    pid = null;
+    if (oldPid !== null) {
       try {
-        zone.releasePointerCapture(pid);
+        zone.releasePointerCapture(oldPid);
       } catch (err) {}
     }
-    pid = tid = null;
     home();
     fn(0, 0, false);
   }
   function down(e) {
     if (e.button > 0) return;
     e.preventDefault();
-    if (pid !== null && pid !== e.pointerId) release(); // 남아 있던 손가락 상태는 버리고 새 손가락으로
+    if (pid !== null) return; // 이동 손가락을 다른 터치로 교체하지 않음
     pid = e.pointerId;
     cx = e.clientX;
     cy = e.clientY;
     const [lx, ly] = local(cx, cy);
-    const padX=Math.max(20,arena.offsetWidth*.045),padY=Math.max(16,arena.offsetHeight*.035);
-    if(lx<padX||ly>arena.offsetHeight-padY){pid=null;return;}
-    place(clamp(lx,padX+st.offsetWidth/2,Math.max(padX+st.offsetWidth/2,arena.offsetWidth*.40-st.offsetWidth/2)),clamp(ly,st.offsetHeight/2,arena.offsetHeight-padY-st.offsetHeight/2));
+    place(lx,ly); // 표시 중심과 입력 중심 일치
     try {
       zone.setPointerCapture(pid);
     } catch (err) {}
@@ -9503,14 +9502,8 @@ function floatStick(zone, st, fn) {
   for (const t of [zone, st]) for (const ev of ["pointerup", "pointercancel"]) t.addEventListener(ev, end);
   document.addEventListener("pointerup", end, true);
   document.addEventListener("pointercancel", end, true);
-  const tstart = (e) => (tid = e.changedTouches[0]?.identifier ?? tid);
-  zone.addEventListener("touchstart", tstart, { passive: true });
-  st.addEventListener("touchstart", tstart, { passive: true });
-  const tcheck = (e) => { // 이동 손가락(identifier)이 더 이상 화면에 없으면 놓음 (다른 손가락을 뗀 건 상관없음)
-    if (pid === null || tid === null) return;
-    for (const t of e.touches) if (t.identifier === tid) return;
-    release();
-  };
+  zone.addEventListener("lostpointercapture", end);
+  const tcheck = (e) => { if (pid !== null && e.touches.length === 0) release(); };
   document.addEventListener("touchend", tcheck, true);
   document.addEventListener("touchcancel", tcheck, true);
   sticks.push({ el: st, release, held: () => pid !== null });
@@ -13409,7 +13402,7 @@ body.mobile #arena #touch #mv{width:min(43cqh,25cqw,200px)!important;box-sizing:
 body.mobile #arena #touch .stick#mv{opacity:.45;pointer-events:auto;}
 body.mobile #arena #touch .stick#mv.on{opacity:1;}
 body.mobile #arena #touch #mv i{width:48%;}
-body.mobile #arena #touch #mvZone{left:2%;bottom:3%;width:38%;height:65%;}
+body.mobile #arena #touch #mvZone{left:0;bottom:0;width:38%;height:65%;}
 body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i]{width:var(--small)!important;height:var(--small)!important;bottom:calc(var(--floor) + var(--big) + var(--gap) + var(--pitch))!important;}
 body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i="0"]{right:var(--edge)!important;}
 body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--edge) + var(--pitch))!important;}
@@ -13419,13 +13412,13 @@ body.raidActive #arena #raidItems button{width:clamp(36px,7vmin,54px)!important;
 </style>
 <style id="combat-controls-18">
 /* Attack-centered arc. All offsets use the battle overlay, not window size. */
-#arena #touch{--arcR:calc((var(--big) + var(--small))/2 + var(--gap));--arcX:calc(var(--edge) + var(--big)/2 + var(--small)*.65);--arcY:calc(var(--floor) + var(--big)/2);}
+#arena #touch{--arcR:calc((var(--big) + var(--small))/2 + var(--gap));--arcX:calc(var(--edge) + var(--big)/2 + var(--small) + var(--gap));--arcY:calc(var(--floor) + var(--big)/2);}
 body #arena #touch #atk{right:calc(var(--arcX) - var(--big)/2)!important;bottom:var(--floor)!important;}
 body #arena #touch #summonBtn{right:calc(var(--arcX) + var(--arcR)*.7071 - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR)*.7071 - var(--small)/2)!important;}
 body #arena #touch #bearHeal{right:calc(var(--arcX) - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR) - var(--small)/2)!important;}
 body #arena #touch #ultBtn{right:calc(var(--arcX) - var(--arcR)*.7071 - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR)*.7071 - var(--small)/2)!important;}
 body #arena #touch #dashBtn{right:calc(var(--arcX) + var(--arcR) - var(--small)/2)!important;bottom:calc(var(--arcY) - var(--small)/2)!important;}
-body #arena #touch #pickBtn{right:calc(var(--arcX) + var(--arcR) + var(--pitch) - var(--small)/2)!important;bottom:calc(var(--arcY) - var(--small)/2)!important;}
+body #arena #touch #pickBtn{right:var(--edge)!important;bottom:calc(var(--arcY) - var(--small)/2)!important;}
 body #arena #touch #grenBtn{right:calc(var(--arcX) + var(--arcR) + var(--pitch) - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--pitch) - var(--small)/2)!important;}
 body #arena #touch :is(#atk,#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn,.petBtn){clip-path:circle(50% at 50% 50%);}
 body #arena #touch #atk .w-ico{width:72%;height:72%;}
