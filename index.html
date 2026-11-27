@@ -1021,7 +1021,8 @@ body.modeOpen #lobby { visibility: hidden; }
 /* 9명까지 한 화면, 10명 이상이면 하단 버튼으로만 이동. 회전 모드에서 좌표 혼동 방지. */
 .roster-nav { display:flex; align-items:center; gap:4px; flex:none; }
 .roster-nav[hidden] { display:none !important; }
-#lobby .pg-arrow { position:static; display:grid; place-items:center; width:clamp(28px, 5cqw, 44px); height:clamp(28px, 7cqh, 40px); padding:0; margin:0; border-radius:8px; border:1px solid var(--bl-edge); background:#20366e; color:white; font-size:22px; line-height:1; touch-action:manipulation; cursor:pointer; }
+#lobby .pg-arrow { position:static; display:grid; place-items:center; width:auto; min-width:clamp(32px, 5cqw, 44px); height:clamp(32px, 8cqh, 44px); padding:0; margin:0; border-radius:8px; border:1px solid var(--bl-edge); background:#20366e; color:white; font-size:22px; line-height:1; touch-action:manipulation; cursor:pointer; }
+#lobby .pg-arrow.next { padding:0 8px; font-size:clamp(11px, 3cqh, 16px); background:linear-gradient(180deg,#ffe29a,#d6a648); color:#30200b; font-weight:bold; }
 #lobby .pg-arrow:disabled { opacity:.35; cursor:default; }
 .lobby-left-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: clamp(16px, 4.4cqh, 22px); padding: 0 4px; }
 .roster-dots { display: flex; align-items: center; gap: 5px; }
@@ -1623,7 +1624,7 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
           <div class="roster-view" id="rosterView">
             <div class="roster-track" id="charGrid"></div>
           </div>
-          <div class="lobby-left-foot"><div id="rosterNav" class="roster-nav" hidden><button id="rosterPrev" class="pg-arrow prev" type="button" aria-label="이전 페이지">‹</button><span id="rosterDots" class="roster-dots" aria-live="polite"></span><button id="rosterNext" class="pg-arrow next" type="button" aria-label="다음 페이지">›</button></div><span id="rosterCount" class="roster-count"></span></div>
+          <div class="lobby-left-foot"><div id="rosterNav" class="roster-nav" hidden><button id="rosterPrev" class="pg-arrow prev" type="button" aria-label="이전 페이지">‹</button><span id="rosterDots" class="roster-dots" aria-live="polite"></span><button id="rosterNext" class="pg-arrow next" type="button" aria-label="다음 페이지">다음 ›</button></div><span id="rosterCount" class="roster-count"></span></div>
         </div>
         <div class="lobby-info">
           <p id="lobbyModeTag" class="lobby-mode-tag"></p>
@@ -9812,6 +9813,7 @@ function openLobby() {
     reset();
   }
   lobbySel = null;
+  rosterPage = 0;
   lobbyDeck = deck.slice();
   if (lobbyReady) buildLobby(); // 영입 상태가 바뀌었을 수 있으므로 타일 다시 그림
   document.body.classList.add("lobbyOpen");
@@ -9830,7 +9832,7 @@ function closeLobby() {
 
 // ----- 캐릭터 선택: 3열×3행. 9명 초과 시 하단 페이지 버튼 및 PC 키보드 ←→ -----
 let rosterPage = 0;
-const visibleLobbyOrder=()=>LOBBY_ORDER.includes("fallen_support")?LOBBY_ORDER:[...LOBBY_ORDER,"fallen_support"];
+const visibleLobbyOrder=()=>[...LOBBY_ORDER.filter(k=>k!=="fallen_support"),"fallen_support"];
 const rosterPages = () => Math.max(1, Math.ceil(visibleLobbyOrder().length / (LOBBY_PAGE.cols * LOBBY_PAGE.rows)));
 const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#1b2550"/></svg>';
 function buildLobby() {
@@ -9847,10 +9849,10 @@ function buildLobby() {
   }
   if (lobbySel && !canPlay(lobbySel)) lobbySel = null; // 미영입 캐릭터는 고를 수 없음
   rosterPage = Math.min(rosterPage, n - 1);
-  const got = LOBBY_ORDER.filter(isRecruited).length;
-  el("rosterCount").textContent = `영입 완료 ${got}/${LOBBY_ORDER.length}`;
+  const got = visibleLobbyOrder().filter(isRecruited).length;
+  el("rosterCount").textContent = `영입 완료 ${got}/${visibleLobbyOrder().length}`;
   lobbyReady = true;
-  setRosterPage(Math.floor(LOBBY_ORDER.indexOf(lobbySel) / per), true);
+  setRosterPage(lobbySel ? Math.max(0,Math.floor(visibleLobbyOrder().indexOf(lobbySel) / per)) : rosterPage, true);
   renderLobbyInfo();
 }
 function charTile(k) {
@@ -9919,6 +9921,7 @@ function showRosterLock(k) {
 function setRosterPage(i, instant) {
   const n = rosterPages();
   rosterPage = clamp(i, 0, n - 1);
+  el("ciLocked").hidden = true;
   const track = el("charGrid");
   track.style.transition = instant ? "none" : "";
   track.style.transform = `translateX(${-rosterPage * 100 / n}%)`;
@@ -13046,7 +13049,7 @@ body.mobile #minimap{width:12%;opacity:.53;bottom:5px;left:50%;}
 #seasonGearPanel #sgStats .sgStatValue{display:block;white-space:nowrap;overflow:visible;font-size:.93em;line-height:1.2;}
 </style>
 <style>
-.char-tile.secret-locked .face-in img{filter:brightness(.18) saturate(.1)!important;opacity:.95}.char-tile.secret-locked{border-color:#a477df!important}.char-tile.secret-locked .char-name{color:#d5abff}
+.char-tile.secret-locked .face-in img{filter:brightness(.48) saturate(.55)!important;opacity:.95}.char-tile.secret-locked{border-color:#a477df!important}.char-tile.secret-locked .char-name{color:#d5abff}
 #seasonGearPanel #sgStats{display:none!important}
 #seasonGearPanel .sgbody{grid-template-columns:27% minmax(0,1fr);gap:1%}
 #seasonGearPanel #sgChars{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:max-content;align-items:start;align-content:start;gap:4px;overflow-y:auto}
