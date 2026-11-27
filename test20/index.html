@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="ko">
-<head>
+<head><script>
+(function(){
+const lines=[];let panel;
+function show(msg){lines.push(String(msg));if(panel)panel.textContent=lines.slice(-5).join("\n");}
+window.addEventListener("error",e=>{if(e.message)show(e.message+" @"+e.lineno);else if(e.target?.src)show("이미지 실패: "+e.target.src.split("/").pop());},true);
+window.addEventListener("unhandledrejection",e=>show(e.reason?.message||e.reason));
+window.addEventListener("DOMContentLoaded",()=>{
+panel=document.createElement("div");panel.style.cssText="position:fixed;top:4px;left:4px;z-index:2147483647;background:#000d;color:#fff;font:12px monospace;padding:5px;white-space:pre-wrap;max-width:90%;pointer-events:none";
+document.body.append(panel);
+setInterval(()=>{try{panel.textContent="TEST20 V4 | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
+});
+})();
+</script>
 <base href="/game/">
 <script>
 function test20Storage(storage) {
