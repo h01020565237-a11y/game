@@ -13280,7 +13280,7 @@ el('eoClaim').onclick=eoClaim;el('eoSceneNext').onclick=()=>eoSceneIndex<5?eoSho
 function eoPurchase(i){const m=EO_MENU[i];if(!m||ROSTER.testMode||!el("eoModal").hidden||seasonData.gold<m.price)return;const prev=JSON.stringify(seasonData),before=eoCount();let text;seasonData.gold-=m.price;const k=eoRoll(m),amount=range=>range[0]+Math.floor(Math.random()*(range[1]-range[0]+1));if(k===0){const n=amount(m.gold);seasonData.gold+=n;text='골드 +'+n;}else if(k===1){const n=amount(m.stone);seasonData.stones+=n;text='강화석 +'+n;}else{const slot=Math.floor(Math.random()*4),it=seasonItem(slot,k-2,slot===0?seasonWeaponChar(lobbySel||'suit'):null);seasonData.bag.push(it);text=seasonName(it);}
  seasonData.eodalOrders=before+1;if(!seasonWrite()){seasonData=JSON.parse(prev);eoModal('저장 실패','구매가 취소되었습니다.');return;}eoRender();if(lobbyReady)buildLobby();eoModal('주문 보상',text);const modal=el('eoModal');modal.dataset.grade=k>=2?String(k-2):'';el('eoModalTitle').style.color=k>=2?SG_COLORS[k-2]:'#ffdb92';sfx(k>=5?'victory':'pickup');}
 el('eoClose').onclick=()=>{if(eoScene.hidden)eo.hidden=true;};el('eoModalClose').onclick=()=>{el('eoModal').hidden=true;el('eoModalClose').textContent='확인';el('eoModal').dataset.grade='';};for(const b of eo.querySelectorAll('.eoBuy'))b.onclick=()=>eoPurchase(Number(b.dataset.i));for(const b of eo.querySelectorAll('.eoOdds'))b.onclick=()=>{eoModal('상품별 보상 확률','');const modal=el('eoModal'),body=el('eoModalText');modal.dataset.layout='odds';for(const m of EO_MENU){const group=document.createElement('section');group.className='eoOddsGroup';const heading=document.createElement('h3');heading.textContent=m.name+' ('+m.price.toLocaleString()+'G)';group.append(heading);const grid=document.createElement('div');grid.className='eoOddsGrid';const labels=['골드 '+m.gold.join('~'),'강화석 '+m.stone.join('~'),...SG_GRADES.slice(0,5).map(n=>n+' 장비 1개')];m.weights.forEach((v,i)=>{if(!v)return;const row=document.createElement('div');row.className='eoOddsItem';const name=document.createElement('span');name.textContent=labels[i];const rate=document.createElement('b');rate.textContent=v+'%';row.append(name,rate);grid.append(row);});group.append(grid);body.append(group);}body.scrollTop=0;modal.firstElementChild.scrollTop=0;};
-const eoMode=document.createElement('button');eoMode.id='eoModeBtn';eoMode.type='button';eoMode.setAttribute('aria-label','어달밤 상점');eoMode.innerHTML='<i class="modeGlyph shop" aria-hidden="true"></i><span><strong>어달밤 상점</strong><small>랜덤 보상 · 단골 도장</small></span>';eoMode.onclick=()=>{sfx('ui_click');eoOpen();};el('modePvp').before(eoMode);
+const eoMode=document.createElement('button');eoMode.id='eoModeBtn';eoMode.type='button';eoMode.setAttribute('aria-pressed','false');eoMode.setAttribute('aria-label','어달밤 상점');eoMode.innerHTML='<i class="modeGlyph shop" aria-hidden="true"></i><span><strong>어달밤 상점</strong><small>랜덤 보상 · 단골 도장</small></span>';eoMode.onclick=()=>{sfx('ui_click');eoOpen();};el('modePvp').before(eoMode);
 const eoLobby=document.createElement('button');eoLobby.id='eoLobbyBtn';eoLobby.type='button';eoLobby.className='btn btn-gold';eoLobby.textContent='☾ 어달밤';eoLobby.onclick=eoOpen;eoLobby.hidden=false;el('lobbyPlay').parentElement.prepend(eoLobby);
 const eoResult=document.createElement('button');eoResult.id='eoResultBtn';eoResult.type='button';eoResult.className='btn btn-gold';eoResult.textContent='☾ 어달밤';eoResult.onclick=eoOpen;eoResult.hidden=true;el('resLobby').parentElement.prepend(eoResult);
 const eoRenderLobby=renderLobbyInfo;renderLobbyInfo=function(){eoRenderLobby();eoLobby.hidden=false;};
@@ -13364,6 +13364,35 @@ body.mobile.raidActive #raidItems button{width:calc(var(--A)*.78)!important;heig
 #eodalbam #eoModalText{text-align:left}#eodalbam #eoModal>div{max-height:94%;overflow:auto}
 #seasonGearPanel #sgChars .sgCharLabel,#lobby .char-name{white-space:nowrap;word-break:keep-all;overflow-wrap:normal;font-size:clamp(8px,2.25cqh,13px)}
 </style>
+<style id="build14-inline-shop">
+#modePanel .mode-new.shop14>main{visibility:hidden!important;pointer-events:none} #modePanel .mode-new.shop14>footer{visibility:hidden!important;pointer-events:none} #modePanel .mode-new.shop14>footer #modeGuide{visibility:visible;pointer-events:auto} #modePanel .mode-new.shop14>footer #modeGuide{visibility:hidden;pointer-events:none}
+#modePanel .mode-new.shop14>nav{min-height:0}
+#arena #eodalbam.inline14{position:relative;inset:auto;grid-column:2;grid-row:2 / 4;width:100%;height:100%;min-width:0;min-height:0;z-index:2;border-radius:10px;border:1px solid #9d784a;box-sizing:border-box;background:#22150e}
+#arena #eodalbam.inline14 .eoBoard #eoClose{display:none!important}
+#eodalbam.inline14 .eoBoard:before{content:'';position:absolute;left:0;top:0;width:4%;height:10%;background:linear-gradient(125deg,#4c2b17,#28170e);z-index:1;border-radius:0 0 7px 0;pointer-events:none}
+#arena #eodalbam.inline14 .eoBoard button:not(:disabled):after{content:'';position:absolute;inset:-4px 0;pointer-events:auto}
+#modePanel #modeHeroArt[hidden]{display:none!important}
+#modePanel .mode-new[data-active-mode=pvp] #modeRaidHP{display:none!important}
+#modePanel #eoModeBtn.selected,#modePanel #eoModeBtn.selected:hover{background:linear-gradient(100deg,#e1b65532,#a5843510);border:1px solid #e6be6675;color:#ffe5a0;box-shadow:inset 3px 0 #ffd069,0 0 15px #ffd06909}#modePanel #eoModeBtn.selected small{color:#e6c983}</style><script>
+(function(){
+ const root=el('modePanel').querySelector('.mode-new'), arena=el('arena');
+ const navs=['modeSingle','modeWave','raidEntry','modePvp'];
+ function detachShop14(){if(!eo.classList.contains('inline14'))return;eo.hidden=true;eo.classList.remove('inline14');root.classList.remove('shop14');eoMode.classList.remove('selected');eoMode.setAttribute('aria-pressed','false');arena.append(eo);eo.removeAttribute('aria-label');eo.setAttribute('role','dialog');eo.setAttribute('aria-modal','true');}
+ const prevMode14=modePreview;
+ modePreview=function(k){
+   detachShop14();
+   const old=el('modeHeroArt');const art=old.cloneNode(false);art.removeAttribute('src');art.hidden=true;old.replaceWith(art);domCache.modeHeroArt=art;
+   prevMode14(k);
+   const requested=art.getAttribute('src');
+   function reveal(){if(art.isConnected&&art.getAttribute('src')===requested&&art.naturalWidth>0)art.hidden=false;}
+   art.addEventListener('load',reveal,{once:true});art.addEventListener('error',()=>{art.hidden=true;},{once:true});if(art.complete)reveal();
+ };
+ eoMode.onclick=()=>{if(!eoScene.hidden||!el('eoModal').hidden&&!eo.hidden)return;sfx('ui_click');root.classList.add('shop14');root.append(eo);eo.classList.add('inline14');eo.setAttribute('role','region');eo.setAttribute('aria-label','어달밤 상점');eo.removeAttribute('aria-modal');el('modeScreenTitle').textContent='☾ 어달밤 상점';eoMode.classList.add('selected');eoMode.setAttribute('aria-pressed','true');for(const id of navs){el(id).classList.remove('selected');el(id).setAttribute('aria-pressed','false');}eoOpen();};
+ for(const id of navs){const old=el(id).onclick;el(id).onclick=function(e){if(eo.classList.contains('inline14')&&!eoScene.hidden)return;return old.call(this,e);};}
+ const close14=closeModePanels;closeModePanels=function(){detachShop14();return close14.apply(this,arguments);};
+ const eoOpen14=eoOpen;eoOpen=function(){if(eo.classList.contains('inline14')&&el('modePanel').hidden)detachShop14();return eoOpen14.apply(this,arguments);};
+})();
+</script>
 </body>
 </html>
 
