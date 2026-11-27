@@ -13134,8 +13134,8 @@ body.mobile #nickPopup .nick-card .btn{min-height:28px;height:auto;padding:5px 9
 <section id="saveTransfer" hidden role="dialog" aria-modal="true" aria-label="계정 이전"><article>
 <h2>계정·저장 데이터 이전</h2><p>기존 게임에서 백업을 내보낸 뒤, 새 웹앱에서 가져오세요. 장비·영입·랭킹 계정이 함께 이전됩니다.</p>
 <p style="color:#ffcf86">백업에는 비밀 로그인 정보가 들어 있습니다. 다른 사람에게 보내거나 공개하지 마세요. 이전 후에는 한쪽에서만 플레이하세요.</p>
-<button id="stExport" type="button">백업 파일 저장</button><button id="stCode" type="button">이전 코드 표시</button>
-<p>백업 파일 선택 또는 이전 코드 붙여넣기</p><input id="stFile" type="file" accept=".json,application/json,text/plain">
+<button id="stExport" type="button">백업 파일 저장</button><button id="stCode" type="button">이전 코드 표시</button><button id="stCopy" type="button">이전 코드 복사</button>
+<p>백업 파일 선택 또는 이전 코드 붙여넣기</p><input id="stFile" type="file" accept=".txt,.json,application/json,text/plain">
 <textarea id="stText" placeholder="이전 코드를 붙여넣으세요" autocomplete="off" spellcheck="false"></textarea>
 <button id="stImport" type="button">가져오기</button><button id="stClose" type="button">닫기</button><p id="stStatus" role="status"></p>
 </article></section>
@@ -13154,8 +13154,9 @@ if(!confirm(p.nickname+' 계정의 백업을 가져올까요? 현재 이 브라�
 const old={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keys.includes(k)||k.startsWith('battlelab.raid.pending.v2.'))old[k]=localStorage.getItem(k);}try{for(const k of Object.keys(old))localStorage.removeItem(k);for(const [k,v] of Object.entries(data))localStorage.setItem(k,v);}catch(e){for(const k of Object.keys(data))localStorage.removeItem(k);for(const [k,v] of Object.entries(old))localStorage.setItem(k,v);throw Error('저장 공간에 복원하지 못했습니다.');}location.reload();}
 document.querySelectorAll('[data-save-transfer]').forEach(b=>b.addEventListener('click',()=>{document.activeElement?.blur();field.value='';status.textContent='';root.hidden=false;}));
 document.getElementById('stClose').onclick=()=>{root.hidden=true;field.value='';};
-document.getElementById('stExport').onclick=()=>{try{const url=URL.createObjectURL(new Blob([backup()],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='juyeop-private-save.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);status.textContent='파일 저장을 확인하세요. 안 되면 이전 코드를 사용하세요.';}catch(e){report(e);}};
+document.getElementById('stExport').onclick=()=>{try{const url=URL.createObjectURL(new Blob([backup()],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='juyeop-private-save.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);status.textContent='파일 저장을 확인하세요. 안 되면 이전 코드를 사용하세요.';}catch(e){report(e);}};
 document.getElementById('stCode').onclick=()=>{try{field.value=encode(backup());field.focus();field.select();status.textContent='전체 코드를 복사하세요. 공개하거나 공유하지 마세요.';}catch(e){report(e);}};
+document.getElementById('stCopy').onclick=async()=>{try{field.value=encode(backup());try{await navigator.clipboard.writeText(field.value);}catch{field.focus();field.select();if(!document.execCommand('copy')){status.textContent='코드를 길게 눌러 전체 복사해 주세요.';return;}}status.textContent='이전 코드 복사 완료. 다른 사람에게 공유하지 마세요.';}catch(e){report(e);}};
 document.getElementById('stImport').onclick=async()=>{try{const f=document.getElementById('stFile').files[0];const raw=field.value.trim()||(f?await f.text():'');if(!raw)throw Error('파일 또는 이전 코드를 입력해 주세요.');restore(raw);}catch(e){report(e);}};
 })();
 </script>
@@ -13180,5 +13181,23 @@ document.getElementById('stImport').onclick=async()=>{try{const f=document.getEl
 #seasonGearPanel #sgActions button{min-height:8cqh;font-size:.9em;padding:2px}
 #seasonGearPanel #sgDetailArea{grid-template-rows:minmax(0,1fr) auto auto}
 #seasonGearPanel footer{padding:0;gap:4px}#seasonGearPanel footer .sgtab{padding:.25em .8em}
+</style><style id="gear-bottom-fix">
+#seasonGearPanel{container-type:size;grid-template-rows:auto minmax(0,1fr) auto auto;gap:4px;padding:6px 1.5%;min-width:0;min-height:0;font-size:clamp(9px,2.65cqh,15px)}
+#seasonGearPanel .sgbody{min-height:0;overflow:hidden}
+#seasonGearPanel #sgRight{box-sizing:border-box;height:100%;min-height:0;grid-template-rows:auto auto minmax(0,1fr)}
+#seasonGearPanel #sgSlots{min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+#seasonGearPanel #sgSlots button{height:clamp(30px,12cqh,65px);min-height:0;flex-direction:row;gap:3px;padding:2px 4px}
+#seasonGearPanel #sgSlots i{width:clamp(16px,6cqh,35px);height:clamp(16px,6cqh,35px);flex:0 0 auto}
+#seasonGearPanel #sgListArea{min-height:0;grid-template-rows:auto minmax(0,1fr) auto}
+#seasonGearPanel #sgInventory.sgIconGrid{grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:max-content;align-content:start;align-items:start;overflow-y:auto;min-height:0}
+#seasonGearPanel #sgInventory.sgIconGrid button{height:clamp(34px,14cqh,76px);min-height:34px;max-height:none;aspect-ratio:auto;box-sizing:border-box}
+#seasonGearPanel #sgRoster{height:clamp(42px,19cqh,110px);box-sizing:border-box;min-height:0;padding:3px;grid-template-columns:5em minmax(0,1fr)}
+#seasonGearPanel #sgRoster .sgSectionHead{min-height:0;font-size:.85em}
+#seasonGearPanel #sgChars{min-height:0}
+#seasonGearPanel #sgChars button{flex:0 0 clamp(39px,17cqh,100px);width:clamp(39px,17cqh,100px);height:100%;min-height:0;max-height:100%;box-sizing:border-box}
+#seasonGearPanel #sgChars img{max-height:100%;min-height:0;object-fit:contain}
+#seasonGearPanel #sgChars .sgCharLabel{white-space:pre-line;line-height:1.05;padding:0}
+#seasonGearPanel #sgActions button{min-height:clamp(24px,7cqh,40px)}
+#seasonGearPanel #sgDetailArea{min-height:0}
 </style></body>
 </html>
