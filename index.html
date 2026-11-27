@@ -7216,6 +7216,14 @@ function update(dt) {
       }
       continue;
     }
+    if (s.fallenHoming) {
+      let tg=s.fallenTarget;
+      if(!tg||!bots.includes(tg)||!canTarget(s.a,tg)){
+        tg=minBy(bots.filter(b=>canTarget(s.a,b)&&dist(s,b)<=s.left+bodyR(b)&&clearLine(s,b)),b=>dist(s,b));
+        s.fallenTarget=tg||null;
+      }
+      if(tg){const cur=Math.atan2(s.vy,s.vx),want=Math.atan2(tg.y-s.y,tg.x-s.x),sp=Math.hypot(s.vx,s.vy),d=Math.atan2(Math.sin(want-cur),Math.cos(want-cur)),ang=cur+clamp(d,-12*dt,12*dt);s.vx=Math.cos(ang)*sp;s.vy=Math.sin(ang)*sp;}
+    }
     if (s.home) { // 기섭 하트 1발: 가까운 적 쪽으로 약하게 휨 (초당 homeTurn 라디안까지)
       const tg = minBy(bots.filter((b) => b.hp > 0 && visible(p, b) && dist(s, b) < s.home.homeRange), (b) => dist(s, b));
       if (tg) {
@@ -7266,6 +7274,7 @@ function update(dt) {
         hit(s.a, b, s.d * (s.shotgun ? 0.60 + 0.40 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic, raidSource:s.raidSource, rangedWeapon:s.rangedWeapon===true });
         if(s.boastHeart){s.boastHit.add(b);if(!bossControlImmune(b)){b.stun=Math.max(b.stun||0,s.charm);b.boastCharmT=Math.max(b.boastCharmT||0,s.charm);fx.push({x:b.x,y:b.y,t:.65,text:"♥ 매혹",tcol:"#ff93cb"});}}
         if (s.slow && b.max && !bossControlImmune(b)) b.slow = Math.max(b.slow || 0, s.slow);
+        if(s.fallenSlow&&b.max&&!bossControlImmune(b))b.bottleSlow=Math.max(b.bottleSlow||0,s.fallenSlow);
         if (s.fallenWeak && b.max) {b.fallenWeakT=Math.max(b.fallenWeakT||0,s.fallenWeak);fx.push({x:b.x,y:b.y,t:.4,dur:.4,fallenImpact:true});}
         if(s.sniperHits&&s.sniperHits.size<3){s.d*=s.sniperHits.size===1?.7:4/7;}else s.dead = true;
       }
@@ -7606,7 +7615,7 @@ function drawMob(a) {
   drawFallenDebuff(a,y-15);drawBoastDebuff(a,y-15);
 }
 // 시트가 아직 안 불러와졌을 때 대신 그리는 간단한 모양
-function tickFallenCast(dt){const c=p.fallenCast;if(!c)return;if(p.hp<=0||singleRun!==c.run||singleRun?.wave!==c.wave||singleRun?.phase!==c.phase){p.fallenCast=null;return;}if((c.t-=dt)>0)return;p.fallenCast=null;const {at,S}=c;for(const b of bots.filter(b=>b.hp>0&&dist(at,b)<=S.radius).sort((a,b)=>dist(at,a)-dist(at,b)).slice(0,6))hit(p,b,S.dmg,{ult:true});fx.push({...at,t:.7,fallenRing:S.radius,dur:.7,fallenUlt:true});shake(9);}
+function tickFallenCast(dt){const c=p.fallenCast;if(!c)return;if(p.hp<=0||singleRun!==c.run||singleRun?.wave!==c.wave||singleRun?.phase!==c.phase){p.fallenCast=null;return;}if((c.t-=dt)>0)return;p.fallenCast=null;const {at,S}=c;for(const b of bots.filter(b=>canHit(p,b)&&dist(at,b)<=S.radius+bodyR(b)).sort((a,b)=>dist(at,a)-dist(at,b)).slice(0,6))hit(p,b,S.dmg,{ult:true,raidSource:"r"});fx.push({...at,t:.7,fallenRing:S.radius,dur:.7,fallenUlt:true});shake(9);}
 function drawFallenDebuff(a,y){if(a.hp<=0||(!(a.fallenWeakT>0)&&!(character==="fallen_support"&&a.bottleSlow>0)))return;g.save();g.translate(a.x,y);g.fillStyle="#211033";g.strokeStyle="#c78cff";g.lineWidth=1.5;g.beginPath();g.arc(0,-5,7,0,Math.PI*2);g.fill();g.stroke();g.strokeStyle="#efceff";g.beginPath();if(a.fallenWeakT>0){g.moveTo(-3,-10);g.lineTo(3,-5);g.lineTo(-3,0);g.moveTo(3,-10);g.lineTo(-3,-5);g.lineTo(3,0);}else{g.moveTo(-3,-7);g.lineTo(0,-3);g.lineTo(3,-7);}g.stroke();g.restore();}
 function drawMobShape(a) {
   const r = a.r || MOB_TYPES[a.mob]?.r || 16;
@@ -12420,18 +12429,35 @@ function qaStartSecretBoss(R){
 DISPLAY_NAMES.fallen_support="타락한 은숙이";
 CHARACTER_STATS.fallen_support={hp:2800,speed:1,sight:380,defense:0,attack:1};
 SKILL_DATA.fallen_support={
-  q:{name:"니들이 그럴 줄 알았어!",cd:8,dmg:300,radius:130,slow:3,aim:"none",text:"주변 {dmg} 피해, 3초간 이동속도 30% 감소"},
-  e:{name:"나도 안 지켜!",cd:10,dmg:400,range:300,dur:4,aim:"dir",preview:"line",width:30,text:"암흑 투사체 {dmg} 피해, {dur}초간 받는 피해 +15%"},
-  r:{name:"다 죽었어!!",dmg:1000,radius:200,aim:"none",text:"주변 암흑 폭발 {dmg} 피해"},
+  q:{name:"니들이 그럴 줄 알았어!",cd:8,dmg:100,range:360,travel:450,slow:3,aim:"none",text:"가까운 적을 추적하는 암흑탄 3발 (각 {dmg} 피해), 3초간 이동속도 30% 감소"},
+  e:{name:"나도 안 지켜!",cd:10,dmg:400,range:300,radius:95,dur:4,aim:"point",preview:"circle",text:"지정 위치 암흑 폭발, 최대 3명에게 {dmg} 피해 및 {dur}초간 받는 피해 +15%"},
+  r:{name:"다 죽었어!!",dmg:1000,range:320,radius:200,aim:"point",preview:"circle",text:"지정 위치 암흑 폭발, 최대 6명에게 {dmg} 피해"},
   passive:{name:"배신의 기억",text:"입힌 실제 피해의 3% 체력 흡수"}
 };
 CHARACTER_INFO.fallen_support={name:DISPLAY_NAMES.fallen_support,role:"공격형 · 흡혈",intro:"이제 니들이 알아서 살아남아.",skills:[SKILL_DATA.fallen_support.q,SKILL_DATA.fallen_support.e].map(x=>[x.name,skillText(x)+" · "+x.cd+"초"]),ult:[SKILL_DATA.fallen_support.r.name,skillText(SKILL_DATA.fallen_support.r)],passive:skillText(SKILL_DATA.fallen_support.passive)};
 SKILL_IMPL.fallen_support={
-  q(S){for(const b of bots.filter(b=>b.hp>0&&dist(p,b)<=S.radius).sort((a,b)=>dist(p,a)-dist(p,b)).slice(0,4)){hit(p,b,S.dmg);if(!bossControlImmune(b)) b.bottleSlow=Math.max(b.bottleSlow||0,S.slow);}fx.push({x:p.x,y:p.y,t:.65,fallenRing:S.radius,dur:.65});return true;},
-  e(S,t){const [x,y]=unitTo(t);faceVec(x,y);shots.push({a:p,x:p.x,y:p.y,vx:x*570,vy:y*570,left:S.range,d:S.dmg,fallenWeak:S.dur,fallenShot:true,hitR:20});return true;},
-  r(S){const caster=p,run=singleRun,at={x:p.x,y:p.y};
+  q(S){
+    const near=bots.filter(b=>canTarget(p,b)&&dist(p,b)<=S.range+bodyR(b)&&clearLine(p,b)).sort((a,b)=>dist(p,a)-dist(p,b));
+    const [fx0,fy0]=facingVec();
+    if(near.length)faceVec(...unitTo(near[0]));
+    for(let i=0;i<3;i++){
+      const tg=near.length?near[i%Math.min(3,near.length)]:null;
+      const [ux,uy]=tg?unitTo(tg):[fx0,fy0];
+      const ang=Math.atan2(uy,ux)+(i-1)*.14;
+      shots.push({a:p,x:p.x+Math.cos(ang)*12,y:p.y+Math.sin(ang)*12,vx:Math.cos(ang)*640,vy:Math.sin(ang)*640,left:S.travel,d:S.dmg,fallenShot:true,fallenHoming:true,fallenTarget:tg,fallenSlow:S.slow,hitR:16,raidSource:"q"});
+    }
+    return true;
+  },
+  e(S,t){
+    const at=clampAim("e",t);faceVec(...unitTo(at));
+    for(const b of bots.filter(b=>canHit(p,b)&&dist(at,b)<=S.radius+bodyR(b)).sort((a,b)=>dist(at,a)-dist(at,b)).slice(0,3)){
+      hit(p,b,S.dmg,{raidSource:"e"});if(b.hp>0)b.fallenWeakT=Math.max(b.fallenWeakT||0,S.dur);
+      fx.push({x:b.x,y:b.y,t:.4,dur:.4,fallenImpact:true});
+    }
+    fx.push({...at,t:.65,dur:.65,fallenRing:S.radius});shake(3);return true;
+  },
+  r(S,t){const caster=p,run=singleRun,at=clampAim("r",t);faceVec(...unitTo(at));
     fx.push({...at,t:.55,dur:.55,fallenWindup:S.radius});
-    // FX and actual radius share the cast position. Cancel on death or run transition.
     caster.fallenCast={run,wave:run?.wave,phase:run?.phase,at,S,t:.55};return true;}
 };
 ENDLESS_BOSSES.fallen_support={name:"배신의 기억",tune:{dmg:1},basic:[{k:"slam",dmg:240,radius:125,rest:1.4},{k:"barrage",n:3,dmg:160,slow:1.5},{k:"zone",radius:100,dmg:65,dur:3}],ult:[{k:"ring",n:16,dmg:110,waves:3,spin:true},{k:"slam",dmg:420,radius:190}],adds:["melee","mobile"]};
