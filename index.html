@@ -9488,7 +9488,7 @@ function floatStick(zone, st, fn) {
     const [lx, ly] = local(cx, cy);
     const padX=Math.max(20,arena.offsetWidth*.045),padY=Math.max(16,arena.offsetHeight*.035);
     if(lx<padX||ly>arena.offsetHeight-padY){pid=null;return;}
-    place(clamp(lx,padX+st.offsetWidth/2,arena.offsetWidth*.46),clamp(ly,st.offsetHeight/2,arena.offsetHeight-padY-st.offsetHeight/2));
+    place(clamp(lx,padX+st.offsetWidth/2,Math.max(padX+st.offsetWidth/2,arena.offsetWidth*.40-st.offsetWidth/2)),clamp(ly,st.offsetHeight/2,arena.offsetHeight-padY-st.offsetHeight/2));
     try {
       zone.setPointerCapture(pid);
     } catch (err) {}
@@ -13393,6 +13393,48 @@ body.mobile.raidActive #raidItems button{width:calc(var(--A)*.78)!important;heig
  const eoOpen14=eoOpen;eoOpen=function(){if(eo.classList.contains('inline14')&&el('modePanel').hidden)detachShop14();return eoOpen14.apply(this,arguments);};
 })();
 </script>
+<style id="combat-controls-17">
+/* Use the actual battle overlay dimensions, including rotated mobile screens. */
+#touch{container-type:size;--big: min(36cqh,22cqw,180px);--small:min(18cqh,10cqw,86px);--gap:min(2.5cqh,12px);--pitch:calc(var(--small) + var(--gap));--edge:3%;--floor:5%;}
+body.mobile #touch,body.mobile.rot #touch,body.mobile.raidActive #touch{--A:var(--small);--pitch:calc(var(--small) + var(--gap));}
+body #arena #touch #atk{width:var(--big)!important;height:var(--big)!important;right:var(--edge)!important;bottom:var(--floor)!important;left:auto!important;top:auto!important;box-sizing:border-box;}
+body #arena #touch :is(#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn){width:var(--small)!important;height:var(--small)!important;left:auto!important;top:auto!important;box-sizing:border-box;}
+body #arena #touch #summonBtn{right:var(--edge)!important;bottom:calc(var(--floor) + var(--big) + var(--gap))!important;}
+body #arena #touch #bearHeal{right:calc(var(--edge) + var(--pitch))!important;bottom:calc(var(--floor) + var(--big) + var(--gap))!important;}
+body #arena #touch #grenBtn{right:calc(var(--edge) + var(--pitch)*2)!important;bottom:calc(var(--floor) + var(--big) + var(--gap))!important;}
+body #arena #touch #pickBtn{right:calc(var(--edge) + var(--pitch)*3)!important;bottom:calc(var(--floor) + var(--big) + var(--gap))!important;}
+body #arena #touch #dashBtn{right:calc(var(--edge) + var(--big) + var(--gap))!important;bottom:var(--floor)!important;}
+body #arena #touch #ultBtn{right:calc(var(--edge) + var(--big) + var(--gap) + var(--pitch))!important;bottom:var(--floor)!important;}
+body.mobile #arena #touch #mv{width:min(43cqh,25cqw,200px)!important;box-sizing:border-box;left:5%;bottom:8%;}
+body.mobile #arena #touch .stick#mv{opacity:.45;pointer-events:auto;}
+body.mobile #arena #touch .stick#mv.on{opacity:1;}
+body.mobile #arena #touch #mv i{width:48%;}
+body.mobile #arena #touch #mvZone{left:2%;bottom:3%;width:38%;height:65%;}
+body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i]{width:var(--small)!important;height:var(--small)!important;bottom:calc(var(--floor) + var(--big) + var(--gap) + var(--pitch))!important;}
+body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i="0"]{right:var(--edge)!important;}
+body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--edge) + var(--pitch))!important;}
+body.mobile.summoner.summonChoose #arena #touch .petBtn[data-i="2"]{right:calc(var(--edge) + var(--pitch)*2)!important;}
+body.raidActive #arena #raidItems{left:42%!important;right:auto!important;bottom:5%!important;transform:translateX(-50%)!important;flex-direction:column-reverse;gap:6px;}
+body.raidActive #arena #raidItems button{width:clamp(36px,7vmin,54px)!important;height:clamp(36px,7vmin,54px)!important;}
+</style>
+<style id="combat-controls-18">
+/* Attack-centered arc. All offsets use the battle overlay, not window size. */
+#arena #touch{--arcR:calc((var(--big) + var(--small))/2 + var(--gap));--arcX:calc(var(--edge) + var(--big)/2 + var(--small)*.65);--arcY:calc(var(--floor) + var(--big)/2);}
+body #arena #touch #atk{right:calc(var(--arcX) - var(--big)/2)!important;bottom:var(--floor)!important;}
+body #arena #touch #summonBtn{right:calc(var(--arcX) + var(--arcR)*.7071 - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR)*.7071 - var(--small)/2)!important;}
+body #arena #touch #bearHeal{right:calc(var(--arcX) - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR) - var(--small)/2)!important;}
+body #arena #touch #ultBtn{right:calc(var(--arcX) - var(--arcR)*.7071 - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--arcR)*.7071 - var(--small)/2)!important;}
+body #arena #touch #dashBtn{right:calc(var(--arcX) + var(--arcR) - var(--small)/2)!important;bottom:calc(var(--arcY) - var(--small)/2)!important;}
+body #arena #touch #pickBtn{right:calc(var(--arcX) + var(--arcR) + var(--pitch) - var(--small)/2)!important;bottom:calc(var(--arcY) - var(--small)/2)!important;}
+body #arena #touch #grenBtn{right:calc(var(--arcX) + var(--arcR) + var(--pitch) - var(--small)/2)!important;bottom:calc(var(--arcY) + var(--pitch) - var(--small)/2)!important;}
+body #arena #touch :is(#atk,#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn,.petBtn){clip-path:circle(50% at 50% 50%);}
+body #arena #touch #atk .w-ico{width:72%;height:72%;}
+body.raidActive #arena #raidItems{left:39%!important;}
+body.summoner.summonChoose #arena #touch .petBtn[data-i]{width:var(--small)!important;height:var(--small)!important;bottom:calc(var(--arcY) + var(--arcR) + var(--small)/2 + var(--gap))!important;top:auto!important;left:auto!important;}
+body.summoner.summonChoose #arena #touch .petBtn[data-i="0"]{right:var(--edge)!important;}
+body.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--edge) + var(--pitch))!important;}
+body.summoner.summonChoose #arena #touch .petBtn[data-i="2"]{right:calc(var(--edge) + var(--pitch)*2)!important;}
+</style>
 </body>
 </html>
 
