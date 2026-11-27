@@ -2913,7 +2913,7 @@ const RARITY_LOOK = { common: { name: "일반", color: "#9fb4dc" }, rare: { name
 // 자동 생성: tools/import_wave_maps.py (Juyeop_Wave_Maps_V2 + Juyeop_Hyeongon_Arena_V1). 직접 고치지 말고 원본 JSON 수정 후 다시 생성
 // 무한 생존 전용 맵. 스토리 미션·PvP는 정글 맵 그대로
 // 순환: cycle[Math.floor(wave / 5) % cycle.length], 현곤 보스 웨이브만 경기장(arenaBoss)
-const WAVE_MAPS = {"schoolyard": {"id": "schoolyard", "name": "주엽공고 운동장", "sub": "넓은 운동장 · 기본 전투", "width": 1600, "height": 1000, "background": "assets/maps/map-002.webp", "walls": [[0, 0, 1600, 72], [0, 928, 1600, 72], [0, 0, 72, 1000], [1528, 0, 72, 1000], [240, 220, 140, 66], [1220, 220, 140, 66], [240, 714, 140, 66], [1220, 714, 140, 66], [460, 110, 180, 65], [960, 825, 180, 65]], "playerSpawn": [800, 680], "bossSpawn": [800, 320], "enemySpawns": [[160, 150], [800, 150], [1440, 150], [1450, 500], [1440, 850], [800, 850], [160, 850], [150, 500]], "spawnMin": 240}, "gym": {"id": "gym", "name": "학교 체육관", "sub": "코트 · 엄폐와 돌진", "width": 1600, "height": 1000, "background": "assets/maps/map-003.webp", "walls": [[0, 0, 1600, 72], [0, 928, 1600, 72], [0, 0, 72, 1000], [1528, 0, 72, 1000], [220, 240, 155, 75], [1225, 240, 155, 75], [220, 685, 155, 75], [1225, 685, 155, 75], [655, 115, 290, 65], [655, 820, 290, 65]], "playerSpawn": [800, 680], "bossSpawn": [800, 320], "enemySpawns": [[160, 150], [1440, 150], [1450, 500], [1440, 850], [160, 850], [150, 500], [530, 180], [1070, 180]], "spawnMin": 240}, "rooftop": {"id": "rooftop", "name": "노을빛 옥상", "sub": "넓은 옥상 · 사선 회피", "width": 1600, "height": 1000, "background": "assets/maps/map-004.webp", "walls": [[0, 0, 1600, 72], [0, 928, 1600, 72], [0, 0, 72, 1000], [1528, 0, 72, 1000], [220, 190, 155, 90], [1225, 190, 155, 90], [220, 720, 155, 90], [1225, 720, 155, 90], [425, 405, 85, 170], [1090, 425, 85, 170]], "playerSpawn": [800, 680], "bossSpawn": [800, 320], "enemySpawns": [[160, 150], [800, 150], [1440, 150], [1450, 500], [1440, 850], [800, 850], [160, 850], [150, 500]], "spawnMin": 240}, "nightstreet": {"id": "nightstreet", "name": "네온 번화가", "sub": "광장 · 측면 우회", "width": 1600, "height": 1000, "background": "assets/maps/map-005.webp", "walls": [[0, 0, 1600, 72], [0, 928, 1600, 72], [0, 0, 72, 1000], [1528, 0, 72, 1000], [215, 190, 190, 80], [1195, 190, 190, 80], [215, 730, 190, 80], [1195, 730, 190, 80], [420, 435, 85, 130], [1095, 435, 85, 130]], "playerSpawn": [800, 680], "bossSpawn": [800, 320], "enemySpawns": [[160, 150], [800, 150], [1440, 150], [1450, 500], [1440, 850], [800, 850], [160, 850], [150, 500]], "spawnMin": 240}, "temple": {"id": "temple", "name": "잊혀진 정글 신전", "sub": "신전 광장 · 최종 난전", "width": 1600, "height": 1000, "background": "assets/maps/map-006.webp", "walls": [[0, 0, 1600, 72], [0, 928, 1600, 72], [0, 0, 72, 1000], [1528, 0, 72, 1000], [230, 200, 145, 85], [1225, 200, 145, 85], [230, 715, 145, 85], [1225, 715, 145, 85], [475, 115, 155, 80], [970, 805, 155, 80], [405, 460, 80, 80], [1115, 460, 80, 80]], "playerSpawn": [800, 680], "bossSpawn": [800, 320], "enemySpawns": [[160, 150], [800, 150], [1440, 150], [1450, 500], [1440, 850], [800, 850], [160, 850], [150, 500]], "spawnMin": 240}, "hyeongon_stadium": {"id": "hyeongon_stadium", "name": "현곤 전용 포켓몬 경기장", "sub": "현곤 보스 전용", "width": 1672, "height": 941, "background": "assets/maps/map-007.webp", "walls": [[0, 0, 1672, 276], [0, 831, 1672, 110], [0, 276, 249, 37], [1420, 276, 252, 37], [0, 313, 242, 37], [1427, 313, 245, 37], [0, 350, 235, 37], [1434, 350, 238, 37], [0, 387, 227, 37], [1442, 387, 230, 37], [0, 424, 220, 37], [1449, 424, 223, 37], [0, 461, 212, 37], [1457, 461, 215, 37], [0, 498, 205, 37], [1464, 498, 208, 37], [0, 535, 197, 37], [1472, 535, 200, 37], [0, 572, 190, 37], [1479, 572, 193, 37], [0, 609, 182, 37], [1487, 609, 185, 37], [0, 646, 175, 37], [1494, 646, 178, 37], [0, 683, 167, 37], [1502, 683, 170, 37], [0, 720, 160, 37], [1509, 720, 163, 37], [0, 757, 152, 37], [1517, 757, 155, 37], [0, 794, 145, 37], [1524, 794, 148, 37], [374, 287, 125, 81], [1174, 287, 124, 81], [744, 293, 184, 83], [484, 388, 127, 64], [1062, 388, 126, 64], [243, 468, 98, 143], [1332, 468, 99, 143], [454, 609, 140, 72], [1079, 609, 139, 72], [302, 700, 143, 97], [1228, 700, 142, 97], [733, 715, 206, 94]], "playerSpawn": [836, 664], "bossSpawn": [836, 436], "enemySpawns": [[330, 416], [1339, 416], [401, 527], [1273, 527], [543, 766], [1126, 766], [659, 340], [1013, 340]], "spawnMin": 240}};
+const WAVE_MAPS = {"schoolyard":{"id":"schoolyard","name":"주엽공고 운동장","sub":"넓은 운동장 · 기본 전투","width":1600,"height":1000,"background":"assets/maps/map-002.webp","walls":[[0,0,1600,72],[0,928,1600,72],[0,0,72,1000],[1528,0,72,1000],[240,220,140,66],[1220,220,140,66],[240,714,140,66],[1220,714,140,66],[460,110,180,65],[960,825,180,65]],"playerSpawn":[800,680],"bossSpawn":[800,320],"enemySpawns":[[160,150],[800,150],[1440,150],[1450,500],[1440,850],[800,850],[160,850],[150,500]],"spawnMin":240},"gym":{"id":"gym","name":"학교 체육관","sub":"코트 · 엄폐와 돌진","width":1600,"height":1000,"background":"assets/maps/map-003.webp","walls":[[0,0,1600,72],[0,928,1600,72],[0,0,72,1000],[1528,0,72,1000],[220,240,155,75],[1225,240,155,75],[220,685,155,75],[1225,685,155,75],[655,115,290,65],[655,820,290,65]],"playerSpawn":[800,680],"bossSpawn":[800,320],"enemySpawns":[[160,150],[1440,150],[1450,500],[1440,850],[160,850],[150,500],[530,180],[1070,180]],"spawnMin":240},"rooftop":{"id":"rooftop","name":"노을빛 옥상","sub":"넓은 옥상 · 사선 회피","width":1600,"height":1000,"background":"assets/maps/map-004.webp","walls":[[0,0,1600,72],[0,928,1600,72],[0,0,72,1000],[1528,0,72,1000],[220,190,155,90],[1225,190,155,90],[220,720,155,90],[1225,720,155,90],[425,405,85,170],[1090,425,85,170]],"playerSpawn":[800,680],"bossSpawn":[800,320],"enemySpawns":[[160,150],[800,150],[1440,150],[1450,500],[1440,850],[800,850],[160,850],[150,500]],"spawnMin":240},"nightstreet":{"id":"nightstreet","name":"네온 번화가","sub":"광장 · 측면 우회","width":1600,"height":1000,"background":"assets/maps/map-005.webp","walls":[[0,0,1600,72],[0,928,1600,72],[0,0,72,1000],[1528,0,72,1000],[215,190,190,80],[1195,190,190,80],[215,730,190,80],[1195,730,190,80],[420,435,85,130],[1095,435,85,130]],"playerSpawn":[800,680],"bossSpawn":[800,320],"enemySpawns":[[160,150],[800,150],[1440,150],[1450,500],[1440,850],[800,850],[160,850],[150,500]],"spawnMin":240},"temple":{"id":"temple","name":"잊혀진 정글 신전","sub":"신전 광장 · 최종 난전","width":1600,"height":1000,"background":"assets/maps/map-006.webp","walls":[[0,0,1600,72],[0,928,1600,72],[0,0,72,1000],[1528,0,72,1000],[230,200,145,85],[1225,200,145,85],[230,715,145,85],[1225,715,145,85],[475,115,155,80],[970,805,155,80],[405,460,80,80],[1115,460,80,80]],"playerSpawn":[800,680],"bossSpawn":[800,320],"enemySpawns":[[160,150],[800,150],[1440,150],[1450,500],[1440,850],[800,850],[160,850],[150,500]],"spawnMin":240},"hyeongon_stadium":{"id":"hyeongon_stadium","name":"현곤 전용 포켓몬 경기장","sub":"현곤 보스 전용","width":1672,"height":941,"background":"assets/maps/map-007.webp","walls":[[0,0,1672,276],[0,831,1672,110],[0,276,249,37],[1420,276,252,37],[0,313,242,37],[1427,313,245,37],[0,350,235,37],[1434,350,238,37],[0,387,227,37],[1442,387,230,37],[0,424,220,37],[1449,424,223,37],[0,461,212,37],[1457,461,215,37],[0,498,205,37],[1464,498,208,37],[0,535,197,37],[1472,535,200,37],[0,572,190,37],[1479,572,193,37],[0,609,182,37],[1487,609,185,37],[0,646,175,37],[1494,646,178,37],[0,683,167,37],[1502,683,170,37],[0,720,160,37],[1509,720,163,37],[0,757,152,37],[1517,757,155,37],[0,794,145,37],[1524,794,148,37],[390,303,93,49],[1190,303,92,49],[760,309,152,51],[500,404,95,32],[1078,404,94,32],[259,484,66,111],[1348,484,67,111],[470,625,108,40],[1095,625,107,40],[318,716,111,65],[1244,716,110,65],[749,731,174,62]],"playerSpawn":[836,664],"bossSpawn":[836,436],"enemySpawns":[[330,416],[1339,416],[401,527],[1273,527],[543,766],[1126,766],[659,340],[1013,340]],"spawnMin":240}};
 const WAVE_MAP_RULES = {"cycle": ["schoolyard", "gym", "rooftop", "nightstreet", "temple"], "every": 5, "arena": "hyeongon_stadium", "arenaBoss": "summoner", "fadeOut": 0.4, "fadeIn": 0.5, "nameBanner": 2.2};
 </script>
   <script>/* js/data/vision.js */
@@ -3255,6 +3255,10 @@ function move(a, dx, dy, dt) {
   let s = 150 * (a === p && (pet || ultPets.length) ? SKILL_DATA.summoner.passive.speed : 1) * (a === p && p.punchRush ? SKILL_DATA.suit.r.moveMul : 1) * (a === p && a.run > 0 ? character === "runner" ? SKILL_DATA.runner.q.speed : SKILL_DATA.bear.q.speed : 1) * (a === p && a.heal > 0 ? SKILL_DATA.bear.e.moveMul : 1) * (a.slow > 0 ? 0.65 : a.bottleSlow > 0 ? .70 : 1) * (a === p && p.hyeGuardT > 0 ? 1.15 : 1) * (a.dash > 0 ? 4 : 1) * (hasGear(a, 0) ? 1.1 : 1) * (a.spd || 1) * (a===p&&character===GC_ID&&p.gcImmune>0 ? SKILL_DATA[GC_ID].r.speed : 1) * (a === p && p.stealth > 0 ? p.stealthSpd || 1 : 1) * dt;
   // 몸 크기(a.r, 기본 16)만큼 벽·물·상자 판정. 한 번에 많이 움직여도(빠른 이동·큰 dt) 8px 씩 나눠 검사 → 벽을 건너뛰지 않음
   const r = a.r || 16, steps = Math.max(1, Math.ceil(s / 8)), st = s / steps;
+  if(blocked(a.x,a.y,r)||terrain(a.x,a.y,r)||nearBox(a.x,a.y,r+14)){
+    const q=freeSpot(a.x,a.y,r);
+    if(q&&dist(a,q)<=110&&!blocked(q.x,q.y,r)&&!terrain(q.x,q.y,r)&&!nearBox(q.x,q.y,r+14)){a.x=q.x;a.y=q.y;a._nav=null;}
+  }
   for (let k = 0; k < steps; k++) {
     const x = clamp(a.x + dx * st, r + 2, W - r - 2), y = clamp(a.y + dy * st, r + 2, H - r - 2);
     const free = (px, py) => !terrain(px, py, r) && !blocked(px, py, r) && !nearBox(px, py, r + 14);
@@ -4391,11 +4395,8 @@ function mobAI(a, dt) {
   if (p.hp <= 0) return;
   if (a.mob !== "boss" && !visible(a, p)) return chase(a, dt); // 못 보면 찾으러 감 (공격 안 함)
   if (a.mob === "ranged") {
-    const see = d < T.range + 20 && clearLine(a, p);
-    if (d > T.keep[1] || !see) chase(a, dt);
-    else if (d < T.keep[0]) move(a, a.x - p.x, a.y - p.y, dt);
-    else a.moving = false;
-    if (see && d <= T.range && a.atkT <= 0) {
+    const see = enemyRangedPosition(a,T,dt,d);
+    if (see && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
       a.atkT = T.cd * (0.85 + Math.random() * 0.3);
       faceTo(a, p.x, p.y);
       a.atkAnim = 0.3;
@@ -4406,7 +4407,7 @@ function mobAI(a, dt) {
     return;
   }
   // 근접: 쫓아가서 붙으면 공격
-  if (d > T.range + p_r()) chase(a, dt);
+  if (d > T.range + p_r() || !clearLine(a,p)) chase(a, dt);
   else {
     a.moving = false;
     faceTo(a, p.x, p.y);
@@ -4969,6 +4970,55 @@ function endEndlessWave(boss) {
 }
 
 // ----- 일반 적 행동 (유형별 대표 패턴 하나) -----
+function enemyShotClear(a,b) {
+  const dx=b.x-a.x,dy=b.y-a.y,n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/4));
+  for(let i=0;i<=n;i++){
+    const x=a.x+dx*i/n,y=a.y-14+dy*i/n;
+    if(blocked(x,y,2)||gcSchoolCover(x,y+10,null,2))return false;
+  }
+  return true;
+}
+// Search a reachable firing point on rings around target. Cache per enemy, stagger refresh.
+function enemyFiringMove(a,T,dt){
+  const r=a.r||16,rad=navRadius(a), old=a._fireSpot;
+  if(!old||old.map!==activeMap||elapsed>=old.until||Math.hypot(p.x-old.px,p.y-old.py)>36||dist(a,old)<8){
+    const choices=[], base=Math.atan2(a.y-p.y,a.x-p.x), preferred=Math.min(T.range*.78,T.keep?.[1]||T.range*.78);
+    for(const rr of [preferred,T.range*.52,T.range*.30])for(let j=0;j<16;j++){
+      const offset=j===0?0:Math.ceil(j/2)*(j%2?1:-1)*Math.PI/8;
+      const ang=base+offset*(a._fireSide||(a._fireSide=Math.random()<.5?-1:1));
+      const q={x:p.x+Math.cos(ang)*rr,y:p.y+Math.sin(ang)*rr};
+      if(q.x<r+2||q.y<r+2||q.x>W-r-2||q.y>H-r-2||blocked(q.x,q.y,r+3)||terrain(q.x,q.y,r)||nearBox(q.x,q.y,r+14)||!enemyShotClear(q,p))continue;
+      choices.push({ ...q,score:dist(a,q)+Math.abs(rr-preferred)*.45+(walkLine(a.x,a.y,q.x,q.y,rad)?0:65)});
+    }
+    choices.sort((u,v)=>u.score-v.score);
+    let goal=null;
+    for(const q of choices.slice(0,5)){
+      if(walkLine(a.x,a.y,q.x,q.y,rad)){goal=q;break;}
+      const path=findPath(a.x,a.y,q.x,q.y,rad),end=path?.[path.length-1];
+      if(end&&Math.hypot(end[0]-q.x,end[1]-q.y)<1){goal=q;break;}
+    }
+    a._fireSpot=goal?{...goal,map:activeMap,px:p.x,py:p.y,until:elapsed+.75+Math.random()*.35}:null;
+    a._fireRetry=elapsed+.45+Math.random()*.25;
+    a._nav=null;
+  }
+  if(a._fireSpot){steer(a,a._fireSpot.x,a._fireSpot.y,dt);return;}
+  chase(a,dt);
+}
+function enemyRangedPosition(a,T,dt,d){
+  const clear=enemyShotClear(a,p), see=clear&&d<=T.range;
+  if(!clear){
+    if(!a._fireSpot&&elapsed<(a._fireRetry||0))chase(a,dt);else enemyFiringMove(a,T,dt);
+  }else{
+    a._fireSpot=null;
+    if(d>T.range||d>T.keep[1])chase(a,dt);
+    else if(d<T.keep[0]){
+      const dx=a.x-p.x,dy=a.y-p.y,n=Math.hypot(dx,dy)||1,q={x:a.x+dx/n*20,y:a.y+dy/n*20};
+      if(enemyShotClear(q,p)&&walkLine(a.x,a.y,q.x,q.y,a.r||16))move(a,dx,dy,dt);else a.moving=false;
+    }else a.moving=false;
+  }
+  return see;
+}
+
 function enemyAI(a, dt) {
   const T = ENEMY_TYPES[a.mob], d = dist(a, p), A=a.waveAI;
   a.atkT -= dt;
@@ -4980,10 +5030,7 @@ function enemyAI(a, dt) {
     a.atkAnim = 0.3;
   };
   const keepAway = () => {
-    const see = d < T.range + 20 && clearLine(a, p);
-    if (d > T.keep[1] || !see) chase(a, dt);
-    else if (d < T.keep[0]) move(a, a.x - p.x, a.y - p.y, dt);
-    else a.moving = false;
+    const see = enemyRangedPosition(a,T,dt,d);
     return see;
   };
   if (!visible(a, p)) { // 시야 밖·풀숲에 숨은 플레이어: 공격 없이 찾으러 감 (js/game/vision.js mobGoal)
@@ -4992,7 +5039,7 @@ function enemyAI(a, dt) {
   }
   switch (a.mob) {
     case "pk_pika": case "pk_char": case "pk_squirt": { // 현곤 보스의 포켓몬: 피카츄 번개탄 / 파이리 화염(예고 원) / 꼬부기 물대포(밀침)
-      if (keepAway() && d <= T.range && a.atkT <= 0) {
+      if (keepAway() && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd) * (0.85 + Math.random() * 0.3);
         a.atkAnim = 0.35;
         if (T.attack === "flame") hazards.push({ x: p.x, y: p.y, r: T.lob.radius, t: T.lob.tele, dur: T.lob.tele, dmg: a.dmg, a, color: "255, 110, 40" });
@@ -5002,7 +5049,7 @@ function enemyAI(a, dt) {
       return;
     }
     case "ranged": {
-      if (keepAway() && d <= T.range && a.atkT <= 0) {
+      if (keepAway() && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd) * (0.85 + Math.random() * 0.3);
         if(A?.spread){shoot(T.shot*1.08,a.dmg*.6,{aimOffset:-.09});shoot(T.shot*1.08,a.dmg*.6,{aimOffset:.09});}
         else shoot(T.shot*(A?.ranged?1.12:1),a.dmg);
@@ -5011,7 +5058,7 @@ function enemyAI(a, dt) {
       return;
     }
     case "thrower": { // 플레이어 위치에 예고 원 → 터짐
-      if (keepAway() && d <= T.range && a.atkT <= 0) {
+      if (keepAway() && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd);
         a.atkAnim = 0.3;
         const tx=A?.flank?clamp(p.x+(singleRun.waveVX||0)*.3,20,W-20):p.x;
@@ -5030,7 +5077,7 @@ function enemyAI(a, dt) {
           fx.push({x:b.x,y:b.y,fromX:a.x,fromY:a.y,t:.5,enemyHealLink:true});
           fx.push({x:b.x,y:b.y,t:.65,text:"+"+Math.round(got),tcol:"#84ffad"});}
       }
-      if (keepAway() && d <= T.range && a.atkT <= 0) {
+      if (keepAway() && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd);
         shoot(220, a.dmg);
       }
@@ -5048,7 +5095,7 @@ function enemyAI(a, dt) {
           }
         }
       }
-      if (keepAway() && d <= T.range && a.atkT <= 0) {
+      if (keepAway() && enemyShotClear(a,p) && dist(a,p)<=T.range && a.atkT <= 0) {
         a.atkT = waveEnemyCD(a,T.cd);
         shoot(220, a.dmg);
       }
@@ -5082,7 +5129,7 @@ function enemyAI(a, dt) {
       break;
   }
   // 근접 공통 (근접·기동·탱커·암살·졸개)
-  if (d > T.range + 16) { if(!waveFlank(a,dt)) chase(a,dt); }
+  if (d > T.range + 16 || !clearLine(a,p)) { if(!clearLine(a,p)||!waveFlank(a,dt)) chase(a,dt); }
   else {
     a.moving = false;
     faceTo(a, p.x, p.y);
@@ -6725,14 +6772,14 @@ const NAVS = {}; // 반경별 격자
 let navStats = { paths: 0, ms: 0 };
 function navRadius(a) {
   const r = (a && a.r) || 16;
-  return r <= 18 ? 16 : Math.ceil(r / 4) * 4; // 17~18 은 보통 크기로 (좁은 길 막힘 방지)
+  return Math.ceil(r / 2) * 2; // 17~18 은 보통 크기로 (좁은 길 막힘 방지)
 }
 function resetNav() {
   for (const k in NAVS) delete NAVS[k];
 }
 function navOf(r = 16) {
   if (NAVS[r]) return NAVS[r];
-  const cs = NAV_CELL, cols = Math.ceil(W / cs), rows = Math.ceil(H / cs), n = cols * rows;
+  const cs = activeMap.id==="hyeongon_stadium"?8:NAV_CELL, cols = Math.ceil(W / cs), rows = Math.ceil(H / cs), n = cols * rows;
   const N = { r, cell: cs, cols, rows, walk: new Uint8Array(n), g: new Float32Array(n), from: new Int32Array(n), stamp: new Int32Array(n), closed: new Int32Array(n), run: 0 };
   for (let row = 0; row < rows; row++) for (let c2 = 0; c2 < cols; c2++) {
     const x = (c2 + 0.5) * cs, y = (row + 0.5) * cs;
@@ -9412,7 +9459,9 @@ function floatStick(zone, st, fn) {
     cx = e.clientX;
     cy = e.clientY;
     const [lx, ly] = local(cx, cy);
-    place(lx, ly);
+    const padX=Math.max(20,arena.offsetWidth*.045),padY=Math.max(16,arena.offsetHeight*.035);
+    if(lx<padX||ly>arena.offsetHeight-padY){pid=null;return;}
+    place(clamp(lx,padX+st.offsetWidth/2,arena.offsetWidth*.46),clamp(ly,st.offsetHeight/2,arena.offsetHeight-padY-st.offsetHeight/2));
     try {
       zone.setPointerCapture(pid);
     } catch (err) {}
@@ -11583,7 +11632,7 @@ function showWaveStart(k,resume){
   overlay.replaceChildren();const panel=document.createElement("div");panel.className="wave-start-panel";
   const title=document.createElement("h2");title.textContent=DISPLAY_NAMES[k]+" · 시작 웨이브";
   const desc=document.createElement("p");desc.textContent="최고 클리어 W"+seasonData.best[k].wave+" · W"+resume+"부터 도전 가능";
-  const info=document.createElement("small");info.textContent="W"+resume+" 시작 시 W1~"+(resume-1)+" 강화 카드를 먼저 선택합니다. W"+resume+" 클리어 후 생략 구간 보상도 인정됩니다.";
+  const info=document.createElement("small");info.textContent="W1~"+(resume-1)+" 강화 카드를 먼저 선택합니다.\nW"+resume+" 클리어 시 생략 구간 보상도 인정됩니다.";
   const a=sgButton("W1 처음부터",()=>{overlay.hidden=true;startEndless(k,1);});
   const b=sgButton("W"+resume+" 빠른 시작",()=>{overlay.hidden=true;startEndless(k,resume);});b.className="wave-start-fast";
   const cancel=sgButton("취소",()=>{overlay.hidden=true;});
@@ -12866,7 +12915,7 @@ function seasonCraft(slot){if(seasonData.shards<100||seasonData.mats<40||seasonD
 function sgPct(v){return +(v*100).toFixed(1)+'%';}
 function sgButton(label,fn,disabled=false){const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=disabled;b.onclick=fn;return b;}
 function sgAct(fn,ok,fail){sgNotice=fn()?ok:fail;sgRender();}
-function sgRender(){const v=seasonData;el('sgCurrency').replaceChildren();for(const [label,value,cls] of [['골드',v.gold,'gold'],['강화석',v.stones,'stone'],['제작',v.mats,'mat'],['지찬의 냄새나는 조각',v.shards,'shard']]){const item=document.createElement('span');item.className=cls;const l=document.createElement('small');l.textContent=label;const n=document.createElement('b');n.textContent=value.toLocaleString();item.append(l,n);el('sgCurrency').append(item);}const chars=LOBBY_ORDER.filter(isRecruited);if(!chars.includes(sgChar))sgChar=chars[0]||'suit';el('sgChars').replaceChildren();for(const ch of chars){const b=sgButton(DISPLAY_NAMES[ch],()=>{sgChar=ch;sgSelected=seasonFind(v.equip[ch]?.[sgSlot])?.id||null;sgNotice='';sgRender();});b.classList.toggle('active',ch===sgChar);b.setAttribute('aria-pressed',String(ch===sgChar));b.dataset.character=ch;const im=document.createElement('img');im.src=lobbyArt[ch].face.src;im.alt='';b.prepend(im);el('sgChars').append(b);}el('sgCount').textContent=chars.length+'명';el('sgName').textContent=DISPLAY_NAMES[sgChar];el('sgHeroInfo').textContent='장비 '+Object.keys(v.equip[sgChar]||{}).length+'/4 · 영구 성장';const slots=el('sgSlots');slots.replaceChildren();for(let i=0;i<4;i++){const it=seasonFind(v.equip[sgChar]?.[i]);const b=sgButton('',()=>{sgSlot=i;sgSelected=it?.id||null;sgNotice='';sgRender();});b.classList.toggle('active',sgSlot===i);const icon=document.createElement('i');icon.textContent=SG_ICONS[i];const info=document.createElement('span');info.textContent=SG_SLOTS[i];const t=document.createElement('b');t.textContent=it?seasonName(it)+' +'+it.lv:'미착용';t.style.color=it?SG_COLORS[it.grade]:'';info.append(t);b.append(icon,info);slots.append(b);}const a=seasonStats(sgChar),base=CHARACTER_STATS[sgChar]||{};const stats=el('sgStats');stats.replaceChildren();for(const [k,val] of Object.entries(a)){const t=document.createElement('span');const bv=k==='hp'?Math.round((base.hp||3000)*(1+a.hp))+' · ':k==='speed'?sgPct((base.speed||1)*(1+a.speed))+' · ':'';t.textContent=SG_STAT[k]+' '+bv;const b=document.createElement('b');b.textContent='+'+sgPct(val);t.append(b);stats.append(t);}const bag=el('sgInventory'),actions=el('sgActions');bag.replaceChildren();actions.replaceChildren();el('sgCompare').hidden=el('sgUpgradeInfo').hidden=true;el('sgListTitle').textContent=sgView==='craft'?'레이드 장비 제작':SG_SLOTS[sgSlot]+' 보관함';el('sgListCount').textContent='';el('sgBag').classList.toggle('active',sgView==='bag');el('sgCraft').classList.toggle('active',sgView==='craft');if(sgView==='craft'){for(let i=0;i<4;i++){const b=sgButton(SG_ICONS[i]+' '+SG_RAID_NAMES[i]+' · '+(i===0?DISPLAY_NAMES[sgChar]+' 전용':SG_SLOTS[i]),()=>{sgSlot=i;sgRender();});b.classList.toggle('active',sgSlot===i);bag.append(b);}actions.append(sgButton('제작 · 지찬의 냄새나는 조각 100 / 공통 40 / 3,000 G',()=>sgAct(()=>seasonCraft(sgSlot),'레이드 장비 제작 완료','재료 부족'),v.shards<100||v.mats<40||v.gold<3000));}else{const list=v.bag.filter(it=>it.slot===sgSlot).sort((a,b)=>(sgSlot===0?Number(b.weaponChar===sgChar)-Number(a.weaponChar===sgChar):0)||b.grade-a.grade||b.lv-a.lv);el('sgListCount').textContent=list.length+'개 · 등급순';if(!list.length)bag.textContent='보유 장비 없음 · 웨이브 종료 시 W2~9: 1개 / W10~19: 2개 / W20+: 3개';for(const it of list){const owner=seasonOwner(it.id),b=sgButton(seasonName(it)+' +'+it.lv+(owner?' · '+DISPLAY_NAMES[owner]+' 착용 중':''),()=>{sgSelected=it.id;sgNotice='';sgRender();});b.style.color=SG_COLORS[it.grade];b.style.setProperty('--grade',SG_COLORS[it.grade]);b.classList.toggle('active',sgSelected===it.id);if(it.locked)b.append(' · 잠금');if(owner&&lobbyArt[owner]?.face?.src){const face=document.createElement('img');face.className='sgOwner';face.src=lobbyArt[owner].face.src;face.alt=DISPLAY_NAMES[owner];b.prepend(face);}const small=document.createElement('small');small.textContent=Object.entries(seasonItemStats(it)).map(([k,val])=>SG_STAT[k]+' +'+sgPct(val)).join(' · ');b.append(small);bag.append(b);}const it=seasonFind(sgSelected);if(it&&it.slot===sgSlot){const owner=seasonOwner(it.id);const compatible=it.slot!==0||it.weaponChar===sgChar;actions.append(sgButton(!compatible?(DISPLAY_NAMES[it.weaponChar]||it.weaponChar)+' 전용':owner===sgChar?'해제':owner?'이전 착용':'착용',()=>sgAct(()=>owner===sgChar?seasonUnequip(it):seasonEquip(it,sgChar),'장비 변경 완료','변경 실패'),!compatible));const current=seasonFind(v.equip[sgChar]?.[sgSlot]);const cmp=el('sgCompare');cmp.hidden=false;const before=current?seasonItemStats(current):{},after=seasonItemStats(it);cmp.replaceChildren();const heading=document.createElement('b');heading.textContent=!compatible?'다른 캐릭터 전용 · 착용 불가':current===it?'현재 착용 장비':'착용 시 옵션 변화';cmp.append(heading);for(const k of (compatible?new Set([...Object.keys(before),...Object.keys(after)]):[])){const delta=(after[k]||0)-(before[k]||0);const span=document.createElement('span');span.textContent=SG_STAT[k]+' '+(current===it?'+'+sgPct(after[k]||0):(delta>0?'+':'')+sgPct(delta));span.className=delta<0?'minus':delta>0?'plus':'';cmp.append(span);}const c=seasonUpgradeCost(it),up=el('sgUpgradeInfo');up.hidden=false;up.replaceChildren();if(it.lv===10){up.textContent='최대 강화 완료';}else{const k=SG_MAIN[it.slot],next=seasonItemStats({...it,lv:it.lv+1})[k];up.innerHTML=`<b>+${it.lv} → +${it.lv+1}</b><span>${SG_STAT[k]} ${sgPct(after[k])} → <strong>${sgPct(next)}</strong></span><span class="sgRate">성공 ${c.rate}%</span><span>${c.gold.toLocaleString()} G · 강화석 ${c.stones}</span><span class="sgRisk">실패: ${it.lv+1>=7?'+ '+(it.lv-1)+'로 하락':'단계 유지'}</span>`;}const ms=document.createElement('div');ms.className='sgMilestone';for(const level of [5,8,10]){const o=it.milestones?.[level],tag=document.createElement('span');tag.className=it.lv>=level?'unlocked':'locked';tag.textContent='+'+level+' '+(o?SG_STAT[o.key]+' +'+sgPct(o.value)+(it.lv<level?' (잠김)':''):'랜덤 옵션');ms.append(tag);}up.append(ms);const ub=sgButton(it.lv===10?'최대 강화':'강화',()=>{const r=seasonUpgrade(it);sgNotice=r==='success'?'강화 성공! +'+it.lv:r==='down'?'강화 실패 · +'+it.lv+'로 하락':r==='fail'?'강화 실패 · 재료 소모, 강화 단계 유지':'강화 재료 부족 또는 최대 단계';sfx(r==='success'?'ui_click':'ui_click');sgRender();el('sgStatus').className=r==='success'?'sgSuccess':(r==='fail'||r==='down')?'sgFail':'';},it.lv>=10||v.gold<c.gold||v.stones<c.stones);ub.className='sgUpgradeBtn';actions.append(ub);actions.append(sgButton(it.locked?'잠금 해제':'잠금',()=>{it.locked=!it.locked;seasonWrite();sgNotice=it.locked?'장비 잠금 완료':'잠금 해제';sgRender();}));actions.append(sgButton('분해',()=>{if(confirm(seasonName(it)+' +'+it.lv+' 장비를 분해할까요?'))sgAct(()=>seasonDismantle(it),'분해 완료','분해할 수 없는 장비');},!!owner||it.grade===5||it.locked));}}el('sgStatus').textContent=sgNotice||'웨이브 재화로만 강화 · 제작에는 지찬의 냄새나는 조각 추가 필요';}
+function sgRender(){const v=seasonData;el('sgCurrency').replaceChildren();for(const [label,value,cls] of [['골드',v.gold,'gold'],['강화석',v.stones,'stone'],['제작',v.mats,'mat'],['지찬의 냄새나는 조각',v.shards,'shard']]){const item=document.createElement('span');item.className=cls;const l=document.createElement('small');l.textContent=label;const n=document.createElement('b');n.textContent=value.toLocaleString();item.append(l,n);el('sgCurrency').append(item);}const chars=LOBBY_ORDER.filter(isRecruited);if(!chars.includes(sgChar))sgChar=chars[0]||'suit';el('sgChars').replaceChildren();for(const ch of chars){const b=sgButton(DISPLAY_NAMES[ch],()=>{sgChar=ch;sgSelected=seasonFind(v.equip[ch]?.[sgSlot])?.id||null;sgNotice='';sgRender();});b.classList.toggle('active',ch===sgChar);b.setAttribute('aria-pressed',String(ch===sgChar));b.dataset.character=ch;const im=document.createElement('img');im.src=lobbyArt[ch].face.src;im.alt='';const label=document.createElement('span');label.className='sgCharLabel';label.textContent=DISPLAY_NAMES[ch];b.replaceChildren(im,label);el('sgChars').append(b);}el('sgCount').textContent=chars.length+'명';el('sgName').textContent=DISPLAY_NAMES[sgChar];el('sgHeroInfo').textContent='장비 '+Object.keys(v.equip[sgChar]||{}).length+'/4 · 영구 성장';const slots=el('sgSlots');slots.replaceChildren();for(let i=0;i<4;i++){const it=seasonFind(v.equip[sgChar]?.[i]);const b=sgButton('',()=>{sgSlot=i;sgSelected=it?.id||null;sgNotice='';sgRender();});b.classList.toggle('active',sgSlot===i);const icon=document.createElement('i');icon.textContent=SG_ICONS[i];const info=document.createElement('span');info.textContent=SG_SLOTS[i];const t=document.createElement('b');t.textContent=it?seasonName(it)+' +'+it.lv:'미착용';t.style.color=it?SG_COLORS[it.grade]:'';info.append(t);b.append(icon,info);slots.append(b);}const a=seasonStats(sgChar),base=CHARACTER_STATS[sgChar]||{};const stats=el('sgStats');stats.replaceChildren();for(const [k,val] of Object.entries(a)){const t=document.createElement('span');const bv=k==='hp'?Math.round((base.hp||3000)*(1+a.hp))+' · ':k==='speed'?sgPct((base.speed||1)*(1+a.speed))+' · ':'';const label=document.createElement('small');label.textContent=SG_STAT[k];const value=document.createElement('span');value.className='sgStatValue';value.textContent=bv;const b=document.createElement('b');b.textContent='+'+sgPct(val);value.append(b);t.append(label,value);stats.append(t);}const bag=el('sgInventory'),actions=el('sgActions');bag.replaceChildren();actions.replaceChildren();el('sgCompare').hidden=el('sgUpgradeInfo').hidden=true;el('sgListTitle').textContent=sgView==='craft'?'레이드 장비 제작':SG_SLOTS[sgSlot]+' 보관함';el('sgListCount').textContent='';el('sgBag').classList.toggle('active',sgView==='bag');el('sgCraft').classList.toggle('active',sgView==='craft');if(sgView==='craft'){for(let i=0;i<4;i++){const b=sgButton(SG_ICONS[i]+' '+SG_RAID_NAMES[i]+' · '+(i===0?DISPLAY_NAMES[sgChar]+' 전용':SG_SLOTS[i]),()=>{sgSlot=i;sgRender();});b.classList.toggle('active',sgSlot===i);bag.append(b);}actions.append(sgButton('제작 · 지찬의 냄새나는 조각 100 / 공통 40 / 3,000 G',()=>sgAct(()=>seasonCraft(sgSlot),'레이드 장비 제작 완료','재료 부족'),v.shards<100||v.mats<40||v.gold<3000));}else{const list=v.bag.filter(it=>it.slot===sgSlot).sort((a,b)=>(sgSlot===0?Number(b.weaponChar===sgChar)-Number(a.weaponChar===sgChar):0)||b.grade-a.grade||b.lv-a.lv);el('sgListCount').textContent=list.length+'개 · 등급순';if(!list.length)bag.textContent='보유 장비 없음 · 웨이브 종료 시 W2~9: 1개 / W10~19: 2개 / W20+: 3개';for(const it of list){const owner=seasonOwner(it.id),b=sgButton(seasonName(it)+' +'+it.lv+(owner?' · '+DISPLAY_NAMES[owner]+' 착용 중':''),()=>{sgSelected=it.id;sgNotice='';sgRender();});b.style.color=SG_COLORS[it.grade];b.style.setProperty('--grade',SG_COLORS[it.grade]);b.classList.toggle('active',sgSelected===it.id);if(it.locked)b.append(' · 잠금');if(owner&&lobbyArt[owner]?.face?.src){const face=document.createElement('img');face.className='sgOwner';face.src=lobbyArt[owner].face.src;face.alt=DISPLAY_NAMES[owner];b.prepend(face);}const small=document.createElement('small');small.textContent=Object.entries(seasonItemStats(it)).map(([k,val])=>SG_STAT[k]+' +'+sgPct(val)).join(' · ');b.append(small);bag.append(b);}const it=seasonFind(sgSelected);if(it&&it.slot===sgSlot){const owner=seasonOwner(it.id);const compatible=it.slot!==0||it.weaponChar===sgChar;actions.append(sgButton(!compatible?(DISPLAY_NAMES[it.weaponChar]||it.weaponChar)+' 전용':owner===sgChar?'해제':owner?'이전 착용':'착용',()=>sgAct(()=>owner===sgChar?seasonUnequip(it):seasonEquip(it,sgChar),'장비 변경 완료','변경 실패'),!compatible));const current=seasonFind(v.equip[sgChar]?.[sgSlot]);const cmp=el('sgCompare');cmp.hidden=false;const before=current?seasonItemStats(current):{},after=seasonItemStats(it);cmp.replaceChildren();const heading=document.createElement('b');heading.textContent=!compatible?'다른 캐릭터 전용 · 착용 불가':current===it?'현재 착용 장비':'착용 시 옵션 변화';cmp.append(heading);for(const k of (compatible?new Set([...Object.keys(before),...Object.keys(after)]):[])){const delta=(after[k]||0)-(before[k]||0);const span=document.createElement('span');span.textContent=SG_STAT[k]+' '+(current===it?'+'+sgPct(after[k]||0):(delta>0?'+':'')+sgPct(delta));span.className=delta<0?'minus':delta>0?'plus':'';cmp.append(span);}const c=seasonUpgradeCost(it),up=el('sgUpgradeInfo');up.hidden=false;up.replaceChildren();if(it.lv===10){up.textContent='최대 강화 완료';}else{const k=SG_MAIN[it.slot],next=seasonItemStats({...it,lv:it.lv+1})[k];up.innerHTML=`<b>+${it.lv} → +${it.lv+1}</b><span>${SG_STAT[k]} ${sgPct(after[k])} → <strong>${sgPct(next)}</strong></span><span class="sgRate">성공 ${c.rate}%</span><span>${c.gold.toLocaleString()} G · 강화석 ${c.stones}</span><span class="sgRisk">실패: ${it.lv+1>=7?'+ '+(it.lv-1)+'로 하락':'단계 유지'}</span>`;}const ms=document.createElement('div');ms.className='sgMilestone';for(const level of [5,8,10]){const o=it.milestones?.[level],tag=document.createElement('span');tag.className=it.lv>=level?'unlocked':'locked';tag.textContent='+'+level+' '+(o?SG_STAT[o.key]+' +'+sgPct(o.value)+(it.lv<level?' (잠김)':''):'랜덤 옵션');ms.append(tag);}up.append(ms);const ub=sgButton(it.lv===10?'최대 강화':'강화',()=>{const r=seasonUpgrade(it);sgNotice=r==='success'?'강화 성공! +'+it.lv:r==='down'?'강화 실패 · +'+it.lv+'로 하락':r==='fail'?'강화 실패 · 재료 소모, 강화 단계 유지':'강화 재료 부족 또는 최대 단계';sfx(r==='success'?'ui_click':'ui_click');sgRender();el('sgStatus').className=r==='success'?'sgSuccess':(r==='fail'||r==='down')?'sgFail':'';},it.lv>=10||v.gold<c.gold||v.stones<c.stones);ub.className='sgUpgradeBtn';actions.append(ub);actions.append(sgButton(it.locked?'잠금 해제':'잠금',()=>{it.locked=!it.locked;seasonWrite();sgNotice=it.locked?'장비 잠금 완료':'잠금 해제';sgRender();}));actions.append(sgButton('분해',()=>{if(confirm(seasonName(it)+' +'+it.lv+' 장비를 분해할까요?'))sgAct(()=>seasonDismantle(it),'분해 완료','분해할 수 없는 장비');},!!owner||it.grade===5||it.locked));}}el('sgStatus').textContent=sgNotice||'웨이브 재화로만 강화 · 제작에는 지찬의 냄새나는 조각 추가 필요';}
 el('modeGear').onclick=()=>{if(modeChoice==='pvp')return;sfx('ui_click');el('modeSet').hidden=true;sgView='bag';sgNotice='';el('sgModeContext').textContent=' / '+(modeChoice==='raid'?'월드 레이드':modeLabels[modeChoice][1]);sgRender();el('seasonGearPanel').hidden=false;};el('sgClose').onclick=()=>{sfx('ui_click');el('seasonGearPanel').hidden=true;modePreview(modeChoice);};el('sgBag').onclick=()=>{sgView='bag';sgNotice='';sgRender();};el('sgCraft').onclick=()=>{sgView='craft';sgNotice='';sgRender();};
 
 
@@ -12973,5 +13022,22 @@ async function raidLoginSync(){if(ROSTER.testMode||!profile?.nickname||raidLogin
 window.addEventListener('online',raidLoginSync);window.addEventListener('focus',raidLoginSync);setTimeout(raidLoginSync,1200);
 const raidRegisterBase=registerNickname;registerNickname=async function(nickname){await raidRegisterBase(nickname);setTimeout(raidLoginSync,300);};
 
-</script></body>
+</script><style id="stability-ui-1127">
+body.mobile #touch #mv{width:clamp(74px,14.95vw,138px);left:9%;bottom:13%;}
+body.mobile #mvZone{left:4.5%;bottom:4%;width:41.5%;height:72%;}
+body.mobile #minimap{width:12%;opacity:.53;bottom:5px;left:50%;}
+#waveStartChoice .wave-start-panel{display:flex;flex-direction:column;align-items:stretch;gap:clamp(5px,1.4cqh,10px);width:min(82%,560px);max-height:94%;overflow:auto;box-sizing:border-box;}
+#waveStartChoice .wave-start-panel>h2,#waveStartChoice .wave-start-panel>p,#waveStartChoice .wave-start-panel>small{position:static!important;inset:auto!important;transform:none!important;display:block!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;flex:0 0 auto;line-height:1.3!important;white-space:normal!important;text-align:center;}
+#waveStartChoice .wave-start-panel>small{white-space:pre-line!important;font-size:clamp(10px,2.6cqh,14px);}
+#waveStartChoice .wave-start-panel>button{position:static!important;flex:0 0 auto;font-family:inherit;font-size:clamp(12px,3cqh,16px);line-height:1.25;min-height:2.1em;}
+#seasonGearPanel #sgChars{grid-auto-rows:auto;overflow-y:auto;}
+#seasonGearPanel #sgChars button{height:auto;min-height:0;justify-content:flex-start;overflow:hidden;gap:2px;}
+#seasonGearPanel #sgChars .sgCharLabel{display:block;width:100%;min-height:2.2em;line-height:1.1;white-space:normal;overflow-wrap:anywhere;font-size:.92em;}
+#seasonGearPanel #sgChars img{max-height:8cqh;object-fit:contain;}
+#seasonGearPanel #sgStats{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px 5px;}
+#seasonGearPanel #sgStats>span{display:flex;flex-direction:column;overflow:visible;white-space:normal;gap:1px;}
+#seasonGearPanel #sgStats>span>small{font-size:.94em;line-height:1.15;}
+#seasonGearPanel #sgStats .sgStatValue{display:block;white-space:nowrap;overflow:visible;font-size:.93em;line-height:1.2;}
+</style>
+</body>
 </html>
