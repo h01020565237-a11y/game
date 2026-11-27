@@ -2466,7 +2466,7 @@ function summonImg(src) { // 불러온 그림만 돌려줌 (공개 빌드처럼 
   }
   return im.complete && im.naturalWidth ? im : null;
 }
-for (const k in SUMMON_GFX) for (const src of [SUMMON_GFX[k].icon, ...Object.values(SUMMON_GFX[k].anims)]) summonImg(src); // 미리 불러오기
+// 소환수 모션은 실제 사용 시 summonImg에서 요청한다.
 function summonGfx(id) {
   const d = PET_DEX[id];
   if (!d) return null;
@@ -3085,18 +3085,28 @@ const AUDIO_DEFAULTS = { bgm: 0.35, sfx: 0.8, voice: 0.9, muted: false }; // voi
 
 const c = document.querySelector("canvas"), g = c.getContext("2d");
 const assetList = [];
+const deferredCombatImages = [];
+let deferCombatImages = true;
+function startCombatImages() {
+  deferCombatImages = false;
+  for (const start of deferredCombatImages.splice(0)) start();
+}
 function loadImage(src) {
   const im = new Image();
-  im.src = src;
   const entry = { im, src, done: false, failed: false };
   const finish = (ok) => {
     entry.done = true;
     entry.failed = !ok;
     if (!ok) console.warn("이미지 로딩 실패:", src);
   };
-  // decode(): 첫 그리기 때 디코딩으로 멈추는 현상 방지
-  im.decode ? im.decode().then(() => finish(true), () => finish(im.naturalWidth > 0)) : (im.onload = () => finish(true), im.onerror = () => finish(false));
+  const start = () => {
+    im.onload = () => finish(true);
+    im.onerror = () => finish(false);
+    im.src = src;
+    if (im.decode) im.decode().then(() => finish(true), () => finish(im.naturalWidth > 0));
+  };
   assetList.push(entry);
+  if (deferCombatImages) deferredCombatImages.push(start); else start();
   return im;
 }
 function assetsProgress() {
@@ -3158,8 +3168,9 @@ function mapImage() {
   return mapImgs[id] || (mapImgs[id] = loadImage(activeMap.background));
 }
 // 로비 그림
+deferCombatImages = false;
 const lobbyArt = {};
-for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: loadImage(v.face), full: loadImage(v.full) };
+for (const [k, v] of Object.entries(LOBBY_ART)) lobbyArt[k] = { face: {src:v.face}, full: {src:v.full} };
 </script>
   <script>/* js/engine/world.js */
 // 월드: 전역 상태, 지형/충돌, 이동
@@ -12334,6 +12345,8 @@ function drawVisionDark() {
 
 function buildTitle() {
   const T = TITLE_IMAGE;
+  el("titleBg").fetchPriority = "high";
+  el("titleArt").fetchPriority = "high";
   el("titleBg").src = T.src;
   el("titleArt").src = T.src;
   el("title").style.setProperty("--title-ar", `${T.width} / ${T.height}`);
@@ -12351,6 +12364,7 @@ function buildTitle() {
   document.body.classList.add("titleOpen");
 }
 function closeTitle() {
+  startCombatImages();
   el("title").hidden = true;
   el("titleSettingsPanel").hidden = true;
   document.body.classList.remove("titleOpen");
@@ -12725,8 +12739,14 @@ function frameError(e) { // 같은 에러가 매 프레임 쌓이지 않게 몇 
 function loop(t) {
   trackFrame(t);
   beginFrame();
+  const inMenus = document.body.classList.contains("titleOpen") || document.body.classList.contains("modeOpen") || document.body.classList.contains("lobbyOpen");
+  if (!inMenus && deferredCombatImages.length) startCombatImages();
   if (!assetsReady()) {
     last = t;
+    acc = 0;
+    if (inMenus && !document.body.classList.contains("titleOpen") && !lobbyReady) {
+      try { buildLobby(); } catch(e) { frameError(e); }
+    }
     drawLoading();
     requestAnimationFrame(loop);
     return;
@@ -13428,6 +13448,11 @@ body.summoner.summonChoose #arena #touch .petBtn[data-i="0"]{right:var(--edge)!i
 body.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--edge) + var(--pitch))!important;}
 body.summoner.summonChoose #arena #touch .petBtn[data-i="2"]{right:calc(var(--edge) + var(--pitch)*2)!important;}
 </style>
+<script>
+if (location.protocol === "https:" && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(e => console.warn("캐시 등록 실패", e));
+}
+</script>
 </body>
 </html>
 
