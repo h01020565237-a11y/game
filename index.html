@@ -1489,30 +1489,28 @@ body.raidActive #topHud{visibility:hidden}body.raidActive #bossHud{top:1.8%;widt
 #lobbyErr{white-space:normal;overflow-wrap:anywhere;color:#ffd09d!important;min-height:1.2em}
 </style><style>#raidLoadout{display:none!important}</style>
 <style id="compact-mobile-hud">
-body.mobile #arena{container-type:size;}
 /* Shared mobile geometry, including rotated portrait webviews. */
-body.mobile #touch,body.mobile.rot #touch,body.mobile.raidActive #touch {--A:min(clamp(73px,min(29.9cqh,18.2cqw),140px), 29cqh, 15cqw);--S:calc(var(--A)*.66);--s:calc(var(--A)*.58);--U:calc(var(--A)*.72);--P:calc(var(--A)*.60);--hudRight:max(3%, 6px);--hudBottom:max(5%, 6px);}
-body.mobile #touch #atk,body.mobile.raidActive #touch #atk{right:calc(var(--hudRight) + var(--A)*0)!important;bottom:calc(var(--hudBottom) + var(--A)*0)!important;left:auto!important;top:auto!important;width:calc(var(--A)*1)!important;height:calc(var(--A)*1)!important;box-sizing:border-box;}
-body.mobile #touch #summonBtn,body.mobile.raidActive #touch #summonBtn{right:calc(var(--hudRight) + var(--A)*0.16)!important;bottom:calc(var(--hudBottom) + var(--A)*1.18)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.635)!important;height:calc(var(--A)*0.635)!important;box-sizing:border-box;}
-body.mobile #touch #bearHeal,body.mobile.raidActive #touch #bearHeal{right:calc(var(--hudRight) + var(--A)*1.02)!important;bottom:calc(var(--hudBottom) + var(--A)*1.18)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.635)!important;height:calc(var(--A)*0.635)!important;box-sizing:border-box;}
-body.mobile #touch #ultBtn,body.mobile.raidActive #touch #ultBtn{right:calc(var(--hudRight) + var(--A)*1.16)!important;bottom:calc(var(--hudBottom) + var(--A)*0.06)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.6923)!important;height:calc(var(--A)*0.6923)!important;box-sizing:border-box;}
-body.mobile #touch #dashBtn,body.mobile.raidActive #touch #dashBtn{right:calc(var(--hudRight) + var(--A)*2.02)!important;bottom:calc(var(--hudBottom) + var(--A)*0.12)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.5577)!important;height:calc(var(--A)*0.5577)!important;box-sizing:border-box;}
-body.mobile #touch #pickBtn,body.mobile.raidActive #touch #pickBtn{right:calc(var(--hudRight) + var(--A)*1.96)!important;bottom:calc(var(--hudBottom) + var(--A)*0.88)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.5577)!important;height:calc(var(--A)*0.5577)!important;box-sizing:border-box;}
-body.mobile #touch #grenBtn,body.mobile.raidActive #touch #grenBtn{right:calc(var(--hudRight) + var(--A)*1.96)!important;bottom:calc(var(--hudBottom) + var(--A)*1.64)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.5577)!important;height:calc(var(--A)*0.5577)!important;box-sizing:border-box;}
-body.mobile.summoner.summonChoose #touch .petBtn[data-i="0"]{right:calc(var(--hudRight) + var(--A)*0.08)!important;bottom:calc(var(--hudBottom) + var(--A)*2.32)!important;left:auto!important;top:auto!important;width:calc(var(--A)*.577)!important;height:calc(var(--A)*.577)!important;box-sizing:border-box;}
-body.mobile.summoner.summonChoose #touch .petBtn[data-i="1"]{right:calc(var(--hudRight) + var(--A)*0.82)!important;bottom:calc(var(--hudBottom) + var(--A)*2.32)!important;left:auto!important;top:auto!important;width:calc(var(--A)*.577)!important;height:calc(var(--A)*.577)!important;box-sizing:border-box;}
-body.mobile.summoner.summonChoose #touch .petBtn[data-i="2"]{right:calc(var(--hudRight) + var(--A)*1.56)!important;bottom:calc(var(--hudBottom) + var(--A)*2.32)!important;left:auto!important;top:auto!important;width:calc(var(--A)*.577)!important;height:calc(var(--A)*.577)!important;box-sizing:border-box;}
-/* Expand touch diameter by 15%; preserve circular visual artwork. */
-body.mobile #touch button:is(.skb,#atk,#pickBtn,#grenBtn,.petBtn){clip-path:none;overflow:visible!important;}
-body.mobile #touch button:is(.skb,#atk,#pickBtn,#grenBtn,.petBtn)::before{pointer-events:auto!important;inset:-7.5%!important;}
+body.mobile #touch,body.mobile.rot #touch,body.mobile.raidActive #touch {--A:clamp(56px,min(23cqh,14cqw),108px);--S:calc(var(--A)*.66);--s:calc(var(--A)*.58);--U:calc(var(--A)*.72);--P:calc(var(--A)*.60);--hudRight:3%;--hudBottom:5%;}
+body.mobile #touch #atk,body.mobile.raidActive #touch #atk{right:calc(var(--hudRight) + var(--A)*0.0000)!important;bottom:calc(var(--hudBottom) + var(--A)*0.0000)!important;left:auto!important;top:auto!important;width:calc(var(--A)*1)!important;height:calc(var(--A)*1)!important;box-sizing:border-box;}
+body.mobile #touch #summonBtn,body.mobile.raidActive #touch #summonBtn{right:calc(var(--hudRight) + var(--A)*0.1700)!important;bottom:calc(var(--hudBottom) + var(--A)*1.1300)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.66)!important;height:calc(var(--A)*0.66)!important;box-sizing:border-box;}
+body.mobile #touch #bearHeal,body.mobile.raidActive #touch #bearHeal{right:calc(var(--hudRight) + var(--A)*1.0400)!important;bottom:calc(var(--hudBottom) + var(--A)*0.9900)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.66)!important;height:calc(var(--A)*0.66)!important;box-sizing:border-box;}
+body.mobile #touch #ultBtn,body.mobile.raidActive #touch #ultBtn{right:calc(var(--hudRight) + var(--A)*1.1200)!important;bottom:calc(var(--hudBottom) + var(--A)*0.0600)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.72)!important;height:calc(var(--A)*0.72)!important;box-sizing:border-box;}
+body.mobile #touch #dashBtn,body.mobile.raidActive #touch #dashBtn{right:calc(var(--hudRight) + var(--A)*2.0300)!important;bottom:calc(var(--hudBottom) + var(--A)*0.1300)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.58)!important;height:calc(var(--A)*0.58)!important;box-sizing:border-box;}
+body.mobile #touch #pickBtn,body.mobile.raidActive #touch #pickBtn{right:calc(var(--hudRight) + var(--A)*1.9100)!important;bottom:calc(var(--hudBottom) + var(--A)*0.9300)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.58)!important;height:calc(var(--A)*0.58)!important;box-sizing:border-box;}
+body.mobile #touch #grenBtn,body.mobile.raidActive #touch #grenBtn{right:calc(var(--hudRight) + var(--A)*1.9100)!important;bottom:calc(var(--hudBottom) + var(--A)*1.6900)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.58)!important;height:calc(var(--A)*0.58)!important;box-sizing:border-box;}
+body.mobile.summoner.summonChoose #touch .petBtn[data-i="0"]{right:calc(var(--hudRight) + var(--A)*0.2000)!important;bottom:calc(var(--hudBottom) + var(--A)*1.9700)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.6)!important;height:calc(var(--A)*0.6)!important;box-sizing:border-box;}
+body.mobile.summoner.summonChoose #touch .petBtn[data-i="1"]{right:calc(var(--hudRight) + var(--A)*1.0000)!important;bottom:calc(var(--hudBottom) + var(--A)*1.9700)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.6)!important;height:calc(var(--A)*0.6)!important;box-sizing:border-box;}
+body.mobile.summoner.summonChoose #touch .petBtn[data-i="2"]{right:calc(var(--hudRight) + var(--A)*1.8000)!important;bottom:calc(var(--hudBottom) + var(--A)*2.4500)!important;left:auto!important;top:auto!important;width:calc(var(--A)*0.6)!important;height:calc(var(--A)*0.6)!important;box-sizing:border-box;}
+/* Clip hit region to the visible circle; no invisible expanded hit targets. */
+body.mobile #touch button:is(.skb,#atk,#pickBtn,#grenBtn,.petBtn){clip-path:circle(50% at 50% 50%);}
+body.mobile #touch button:is(.skb,#atk,#pickBtn,#grenBtn,.petBtn)::before{pointer-events:none!important;inset:0!important;}
 body.mobile #touch button:is(.skb,#atk,#pickBtn,#grenBtn,.petBtn) *{pointer-events:none!important;}
 body.mobile #touch button.qa-pressed{transform:none!important;filter:brightness(1.15);}
 body.mobile #touch .skb:active{transform:none;}
 body.mobile.raidActive #touch :is(#summonBtn,#bearHeal,#ultBtn) kbd{display:none!important;}
 /* Items stay immediately left of the combat controls. */
-body.mobile.raidActive #raidItems{--A:min(clamp(73px,min(29.9cqh,18.2cqw),140px), 29cqh, 15cqw);left:auto!important;right:calc(3% + var(--A)*2.75)!important;bottom:calc(5% + var(--A)*.13)!important;transform:none!important;flex-direction:column-reverse;gap:calc(var(--A)*.22);}
+body.mobile.raidActive #raidItems{--A:clamp(56px,min(23cqh,14cqw),108px);left:auto!important;right:calc(3% + var(--A)*2.70)!important;bottom:calc(5% + var(--A)*.13)!important;transform:none!important;flex-direction:column-reverse;gap:calc(var(--A)*.22);}
 body.mobile.raidActive #raidItems button{width:calc(var(--A)*.58)!important;height:calc(var(--A)*.58)!important;box-sizing:border-box;}
-body.mobile #touch .petBtn .pet-art{clip-path:circle(43%);}
 </style>
 <style id="summoner-icon-fix">
 /* Only one frame around the skill and creature; leave layout and hit regions unchanged. */
@@ -2021,7 +2019,7 @@ const CHARACTER_INFO = {
   suit: { name: "검은 정장", role: "", skills: [["집중", "3초간 주는 피해 ×1.4 · 7초"], ["반격", "2초간 받는 피해 절반, 일부 반사 · 9초"]], passive: "15% 확률로 피해 ×1.4" },
   octo: { name: "쭈꾸미", role: "", skills: [["먹물 폭탄", "범위 450 피해와 시야 가림 · 5초"], ["촉수 함정", "밟으면 250 피해와 1.5초 기절 · 9초"]], passive: "투척 공격은 벽을 넘어감" },
   stripe: { name: "줄무늬", role: "", skills: [["은신", "3초간 적에게 보이지 않음 · 7초"], ["기습", "앞으로 돌진해 주변에 450 피해 · 9초"]], passive: "적의 등 뒤를 공격하면 피해 ×1.5" },
-  soccer: { name: "축구 선수", role: "", skills: [["드리블", "앞으로 돌진해 주변에 300 피해 · 7초"], ["강슛", "500 피해 공, 벽에 3번 튕기며 강해짐 · 9초"]], passive: "4번째 공격마다 피해 ×1.3" },
+  soccer: { name: "축구 선수", role: "", skills: [["감아차기", "곡선 관통 슈팅 400 피해 · 9초"], ["태클", "최대 2명에게 350 피해, 15% 출혈 · 7초"]], passive: "4번째 공격마다 피해 ×1.3" },
   support: { name: "정장 여성", role: "", skills: [["회복", "최대 HP 20% 즉시 회복 · 7초"], ["둔화탄", "250 피해와 2.5초 둔화 · 9초"]], passive: "매초 최대 HP 0.3% 재생" },
 };
 // 캐릭터 능력치 (로비 표시 + 게임 규칙). sight: 시야 반경(싱글·웨이브, 2026-11-25 초기값). 체력·이동은 전원 같음
@@ -2191,7 +2189,7 @@ const SKILL_DATA = {
   },
   octo: { // 상훈
     // 기본 공격(맨손일 때): 먹물 곡사 투척 — 장애물을 넘어가고 착탄 지점 소범위 피해. reload: 탄창 1발 충전 시간(공격속도)
-    basic: { name: "먹물 던지기", kind: "lob", dmg: 100, range: 220, radius: 40, flight: 0.25, reload: 0.8 },
+    basic: { name: "먹물 던지기", kind: "lob", dmg: 120, range: 260, radius: 60, flight: 0.25, reload: 0.6 },
     q: { name: "몰라 안 해", cd: 5, dmg: 450, radius: 85, range: 360, miss: 0.3, missBoss: 0.15, missDur: 3, aim: "point", preview: "circle", text: "먹물 폭탄 {dmg} 피해, {missDur}초간 공격 {miss%} 확률 MISS" },
     e: { name: "내 맘대로 할 거야", cd: 9, dmg: 250, root: 1.5, radius: 65, range: 300, armT: 3, aim: "point", preview: "circle", text: "최대 2회 충전 · 1회당 {cd}초 회복 · 연속 설치 가능. 촉수 함정({armT}초 유지), 밟으면 {dmg} 피해와 {root}초 이동불가" },
     r: { name: "다 필요 없어!", dur: 5, tick: 0.5, radius: 140, dmg: 120, push: 40, aim: "none", text: "{dur}초간 주변을 촉수로 연속 공격, {tick}초마다 {dmg} 피해와 넉백 (이동·공격 가능)" },
@@ -2204,8 +2202,8 @@ const SKILL_DATA = {
     passive: { name: "뒤끝 있어", mult: 1.5, text: "적의 등 뒤를 공격하면 피해 ×{mult}" },
   },
   soccer: { // 재한
-    q: { name: "가볍게 제쳐볼까", cd: 7, dmg: 300, radius: 60, range: 72, aim: "dir", move: true, preview: "line", width: 44, text: "드리블 돌진, 주변에 {dmg} 피해" },
-    e: { name: "감각적인 감아차기", cd: 9, dmg: 400, range: 520, bend: 120, speed: 600, aim: "dir", preview: "curve", text: "좌우로 휘는 관통 슈팅 {dmg} 피해, 벽에 맞으면 멈춤 (쏠 때마다 휘는 방향 번갈아)" },
+    q: { name: "감아차기", cd: 9, dmg: 400, range: 520, bend: 48, speed: 780, hitRadius: 32, aim: "dir", preview: "curve", text: "완만하게 휘는 관통 슈팅 {dmg} 피해, 벽에 맞으면 멈춤" },
+    e: { name: "태클", cd: 7, dmg: 350, radius: 32, range: 135, aim: "dir", move: true, preview: "line", width: 64, text: "전방 태클로 최대 2명에게 {dmg} 피해, 적중 시 15% 확률로 3초간 초당 50 출혈 피해" },
     r: { name: "내가 마무리할게", dmgFirst: 1500, dmg: 600, range: 650, speed: 900, push: 80, blastRadius: 110, blastDmg: 500, aim: "dir", preview: "line", width: 36, text: "직선 관통 슈팅: 첫 적중 {dmgFirst} 피해 + 그 자리에서 폭발 {blastDmg} (1회), 이후 관통 {dmg} 피해와 넉백. 안 맞으면 최대 거리에서 폭발" },
     passive: { name: "이 정도쯤이야", every: 4, mult: 1.3, text: "{every}번째 기본 공격마다 피해 ×{mult}" },
   },
@@ -5261,14 +5259,14 @@ function fireBossPat(a) {
         const a2 = Math.atan2(p.y - a.y, p.x - a.x);
         for (let i = 0; i < P.n; i++) {
           const v = a2 + (i - (P.n - 1) / 2) * (P.spread || 0.28);
-          mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * 300, vy: Math.sin(v) * 300, left: 560, d: P.dmg * m, a, r: P.big ? 14 : 8, color: "#d39bff", soccer: a.bossId === "soccer", slow: P.slow, blast: P.blast, boss: true });
+          mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(v) * 300, vy: Math.sin(v) * 300, left: 560, d: P.dmg * m, a, r: P.big ? 14 : 8, color: "#d39bff", slow: P.slow, blast: P.blast, boss: true });
         }
       }, r * 0.3);
       sfx("pistol", a);
       break;
     }
     case "curve":
-      for (const side of [-1, 1]) mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(ang - side * 0.7) * 280, vy: Math.sin(ang - side * 0.7) * 280, turn: side * 1.4, left: 600, d: P.dmg * m, a, r: 10, color: "#d39bff", soccer: a.bossId === "soccer", boss: true });
+      for (const side of [-1, 1]) mobShots.push({ x: a.x, y: a.y - 20, vx: Math.cos(ang - side * 0.7) * 280, vy: Math.sin(ang - side * 0.7) * 280, turn: side * 1.4, left: 600, d: P.dmg * m, a, r: 10, color: "#d39bff", boss: true });
       break;
     case "traps":
       for (const s of T.spots) hazards.push({ x: s.x, y: s.y, r: P.radius, t: 0.01, dur: 0.01, dmg: P.dmg * m, a, color: "210, 91, 124" });
@@ -5540,10 +5538,10 @@ function applyEndlessCard(c, v) {
     case "stripe_speed": p.stealthSpd = (p.stealthSpd || 1) + v; break;
     case "stripe_kill": M.killStealth = (M.killStealth || 0) + v; break;
     case "stripe_clone": D.r.count += v; break;
-    case "soccer_ball": for (const k of ["e", "r"]) D[k].dmg *= 1 + v; D.r.blastDmg *= 1 + v; break;
+    case "soccer_ball": for (const k of ["q", "r"]) D[k].dmg *= 1 + v; D.r.blastDmg *= 1 + v; break;
     case "soccer_three": D.passive.every = 3; break;
     case "soccer_tri": D.r.multi = 3; break;
-    case "soccer_curve": D.e.bend *= 1 + v; D.e.both = true; break;
+    case "soccer_curve": D.q.bend *= 1 + v; D.q.both = true; break;
     case "bear_guard": D.passive.perFoe += v; break;
     case "bear_honey": D.e.perSec += v/D.e.dur; break;
     case "bear_run": D.q.dmg = (D.q.dmg || 0) + v; break;
@@ -5660,7 +5658,7 @@ function rollDrop() {
 
 // 피해 처리 (모든 공격 공통). o: { ult 궁극기 피해(충전 제외), dot 지속 피해 }
 function hit(a, b, d, o = {}) {
-  if(b.raidBoss && singleRun?.raid && isMine(a)){const R=singleRun;if(R.finished||Date.now()>=R.deadline)return;const slot=o.raidSource||R.castSource;const allowed={suit:["slam","e"],summoner:["change","e"],octo:["gas","q"],stripe:["change","e"],soccer:["slam","e"],bear:["slam","q"],runner:["ultimate","e"],support:["ultimate","q"],fallen_support:["ultimate","e"],gyeongchan:["slam","e"]}[character];if(a===p&&allowed&&b.raidTele?.kind===allowed[0]&&slot===allowed[1]&&!(b.counterUntil>elapsed)){b.counterUntil=elapsed+15;raidRest(b,2,"COUNTER! · 받는 피해 +50%");b.counterRest=true;}d*= (b.raidRest>0?(b.counterRest?1.5:2):1)*(a===p&&o.rangedWeapon===true?1.2:1);}
+  if(b.raidBoss && singleRun?.raid && isMine(a)){const R=singleRun;if(R.finished||Date.now()>=R.deadline)return;const slot=o.raidSource||R.castSource;const allowed={suit:["slam","e"],summoner:["change","e"],octo:["gas","q"],stripe:["change","e"],soccer:["slam","e"],bear:["slam","q"],runner:["ultimate","e"],support:["ultimate","q"],fallen_support:["ultimate","q"],gyeongchan:["slam","e"]}[character];if(a===p&&allowed&&b.raidTele?.kind===allowed[0]&&slot===allowed[1]&&!(b.counterUntil>elapsed)){b.counterUntil=elapsed+15;raidRest(b,2,"COUNTER! · 받는 피해 +50%");b.counterRest=true;}d*= (b.raidRest>0?(b.counterRest?1.5:2):1)*(a===p&&o.rangedWeapon===true?1.2:1);}
   if(b===p&&singleRun?.raid&&o.raidPoison&&singleRun.deodorant>0)return;
   if (b.broken || b.gcImmune>0) return; // 이미 부서진 상자 (같은 프레임 중복 타격 → 드롭 중복 방지)
   if (b === p && (god || (character==="gyeongchan" && p.gcImmune>0))) return;
@@ -6019,7 +6017,7 @@ function attack(a, x, y) {
       const len = Math.min(B.range, Math.max(30, Math.hypot(x - a.x, y - a.y)));
       shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(a.x + Math.cos(ang) * len, 0, W), ty: clamp(a.y + Math.sin(ang) * len, 0, H), t: B.flight, flight: B.flight, octo: 3, d: dd, S: B, basic: true });
     } else { // 은숙: 직선 빛 구체 (벽에 막힘, 단일 대상)
-      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(ang) * B.speed, vy: Math.sin(ang) * B.speed, left: B.range, d: dd, range: B.range, basic: true, orb: character!=="fallen_support", fallenShot: character==="fallen_support", hitR: B.width });
+      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(ang) * B.speed, vy: Math.sin(ang) * B.speed, left: B.range, d: dd, range: B.range, basic: true, orb: true, hitR: B.width });
     }
     return;
   }
@@ -6045,7 +6043,7 @@ function attack(a, x, y) {
     const vol = a.w === 4 ? { hit: new Set(), max: WEAPON_RULES[4]?.maxTargets || 5 } : null;
     for (let i = 0; i < (a.w === 4 ? 5 : 1); i++) {
       let v = ang + (a.w === 4 ? (i - 2) * Math.PI / 12 : 0);
-      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d: d * (a === p && p.counterNow ? SKILL_DATA.suit.passive.mult : 1), shotgun: a.w === 4, pierce: a.w===5?new Set():null, vol, range: r, basic: true, rangedWeapon:true });
+      shots.push({ a, x: a.x, y: a.y, vx: Math.cos(v) * 650, vy: Math.sin(v) * 650, left: r, d: d * (a === p && p.counterNow ? SKILL_DATA.suit.passive.mult : 1), shotgun: a.w === 4, sniperHits: a.w===5?new Set():null, vol, range: r, basic: true, rangedWeapon:true });
     }
   }
   if (a === p) p.counterNow = false; // 카운터는 이번 공격 한 번만
@@ -6176,7 +6174,7 @@ function castSkill(slot, aim) {
   try{ok=impl(S,t);}finally{if(raidCast){for(const shot of shots)if(!beforeShots.has(shot)&&isMine(shot.a))shot.raidSource=slot;raidCast.castSource=oldSource;}}
   if(ok===false)return false;
   if(raidCast)raidCast.casts[slot]=(raidCast.casts[slot]||0)+1;
-  if(character==="fallen_support")p.fallenAnim={kind:slot==="q"?"e":slot==="e"?"q":slot,at:elapsed,dur:slot==="r"?.8:.48};
+  if(character==="fallen_support")p.fallenAnim={kind:slot,at:elapsed,dur:slot==="r"?.8:.48};
   if (slot === "r") {
     p.ult = 0;
     p.ultT = character==="runner" ? S.dur+S.pose : S.dur || 1;
@@ -6292,20 +6290,20 @@ const SKILL_IMPL = {
     },
   },
   soccer: {
-    q(S, t) { // 드리블 돌진
-      const [x, y] = unitTo(t);
-      faceVec(x, y);
-      for (let j = 0; j < 8; j++) move(p, x, y, S.range / 8 / 150);
-      for (const a of bots.filter((a2) => a2.hp > 0 && dist(p, a2) < S.radius)) hit(p, a, S.dmg);
+    q(S, t) { // 감아차기: 작은 곡률과 넓은 판정
+      const [x,y]=unitTo(t); faceVec(x,y);
+      const side=p.curveSide||1; p.curveSide=-side;
+      for(const sd of S.both?[side,-side]:[side]) shots.push(Object.assign(curvePath(p.x,p.y,x,y,S.range,S.bend*sd),{a:p,curve:true,u:0,speed:S.speed,d:S.dmg,hitRadius:S.hitRadius,hitSet:new Set(),soccer:true,raidSource:"q"}));
       return true;
     },
-    e(S, t) { // 감아차기: 좌우 곡선 관통 (쏠 때마다 방향 번갈아)
-      const [x, y] = unitTo(t);
-      faceVec(x, y);
-      const side = p.curveSide || 1;
-      p.curveSide = -side;
-      for (const sd of S.both ? [side, -side] : [side]) // 무한 생존 카드: 양발(좌우 동시)
-        shots.push(Object.assign(curvePath(p.x, p.y, x, y, S.range, S.bend * sd), { a: p, curve: true, u: 0, speed: S.speed, d: S.dmg, hitSet: new Set(), soccer: true }));
+    e(S,t) { // 태클: 이동 경로 최대 두 명, 중복 적중 금지
+      const [x,y]=t.dir||unitTo(t); faceVec(x,y);
+      const struck=new Set();
+      for(let j=0;j<18;j++){
+        move(p,x,y,S.range/18/150);
+        const near=bots.filter(b=>b.hp>0&&!struck.has(b)&&canHit(p,b)&&dist(p,b)<=S.radius+bodyR(b)&&clearLine(p,b)).sort((a,b)=>dist(p,a)-dist(p,b));
+        for(const b of near){if(struck.size>=2)break;struck.add(b);const hp=b.hp;hit(p,b,S.dmg,{raidSource:"e"});if(b.hp>0&&b.hp<hp&&Math.random()<.15){b.rehanBleed=3;b.rehanBleedTick=1;fx.push({x:b.x,y:b.y-35,t:.8,text:"출혈!",tcol:"#ff6575"});}fx.push({x:b.x,y:b.y,t:.25,ring:26,shock:true});}
+      }
       return true;
     },
     r(S, t) { // 내가 마무리할게: 직선 관통 + 최대 거리 폭발
@@ -6888,6 +6886,7 @@ function update(dt) {
   swapCD = Math.max(0, swapCD - dt);
   for (let b of [p, ...bots]) {
     for (let k of ["stun", "slow", "weak", "ink", "root", "miss", "bottleSlow", "bottleWeakT", "fallenWeakT", "boastFearT", "boastWeakT", "boastCharmT"]) b[k] = Math.max(0, (b[k] || 0) - dt);
+    if(b.rehanBleed>0&&b.hp>0){const step=Math.min(dt,b.rehanBleed);b.rehanBleed-=step;b.rehanBleedTick-=step;if(b.rehanBleedTick<=1e-8){b.rehanBleedTick+=1;hit(p,b,50,{dot:true,raidSource:"bleed"});}}
     if (b.burn > 0 && b.hp > 0) {
       b.burn -= dt;
       b.burnTick -= dt;
@@ -7102,9 +7101,8 @@ function update(dt) {
           break;
         }
         forEachCandidate((b) => {
-          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < 22 + bodyR(b)) {
+          if (b.max && canHit(s.a, b) && !s.hitSet.has(b) && dist(s, b) < (s.hitRadius || 22) + bodyR(b)) {
             s.hitSet.add(b);
-            if(s.soccer) fx.push({x:s.x,y:s.y,t:.22,soccerImpact:true});
             hit(s.a, b, s.d, {raidSource:s.raidSource||(s.gren?"grenade":s.octo===1?"q":s.octo===2||s.curve?"e":undefined)});
           }
         });
@@ -7153,16 +7151,16 @@ function update(dt) {
         });
         continue;
       }
-      let b = s.pierce ? minBy(hitTargets(s.a).filter(b=>b.hp>0&&!s.pierce.has(b)&&dist(s,b)<18+bodyR(b)),b=>dist(s,b)) : s.boastHeart ? minBy(bots.filter(b=>b.hp>0&&!s.boastHit.has(b)&&canHit(s.a,b)&&dist(s,b)<20+bodyR(b)),b=>dist(s,b)) : s.shotgun ? shotgunTargetNear(s.a, s) : firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
+      let b = s.sniperHits ? minBy(hitTargets(s.a).filter(b=>b.hp>0&&!s.sniperHits.has(b)&&dist(s,b)<18+bodyR(b)),b=>dist(s,b)) : s.boastHeart ? minBy(bots.filter(b=>b.hp>0&&!s.boastHit.has(b)&&canHit(s.a,b)&&dist(s,b)<20+bodyR(b)),b=>dist(s,b)) : s.shotgun ? shotgunTargetNear(s.a, s) : firstTargetNear(s.a, s, s.heart ? 20 : s.hitR || 18);
       if (b && s.vol && !s.vol.hit.has(b) && s.vol.hit.size >= s.vol.max) b = null; // 샷건 한 발 묶음: 최대 인원 넘으면 새 대상은 안 맞음
       if (b) {
         if (s.vol) s.vol.hit.add(b);
-        if(s.pierce)s.pierce.add(b);
+        if(s.sniperHits)s.sniperHits.add(b);
         hit(s.a, b, s.d * (s.shotgun ? 0.60 + 0.40 * clamp(s.left / s.range, 0, 1) : 1), { ult: s.ult, basic: s.basic, raidSource:s.raidSource, rangedWeapon:s.rangedWeapon===true });
         if(s.boastHeart){s.boastHit.add(b);if(!bossControlImmune(b)){b.stun=Math.max(b.stun||0,s.charm);b.boastCharmT=Math.max(b.boastCharmT||0,s.charm);fx.push({x:b.x,y:b.y,t:.65,text:"♥ 매혹",tcol:"#ff93cb"});}}
         if (s.slow && b.max && !bossControlImmune(b)) b.slow = Math.max(b.slow || 0, s.slow);
         if (s.fallenWeak && b.max) {b.fallenWeakT=Math.max(b.fallenWeakT||0,s.fallenWeak);fx.push({x:b.x,y:b.y,t:.4,dur:.4,fallenImpact:true});}
-        if(s.pierce&&s.pierce.size<3){s.d*=s.pierce.size===1?.7:4/7;}else s.dead = true;
+        if(s.sniperHits&&s.sniperHits.size<3){s.d*=s.sniperHits.size===1?.7:4/7;}else s.dead = true;
       }
     }
   }
@@ -7544,31 +7542,12 @@ function drawBossTele(a) {
   }
   g.restore();
 }
-function drawSoccerProjectile(s, y, r) {
-  const vx=s.vx||0, vy=s.vy||0, speed=Math.hypot(vx,vy)||1;
-  g.save();
-  const dx=vx/speed,dy=vy/speed, len=r*(s.big?5:3.5);
-  const tail=g.createLinearGradient(s.x-dx*len,y-dy*len,s.x,y);
-  tail.addColorStop(0,"#ffffff00");tail.addColorStop(1,s.big?"#ffd36dcc":"#d8f4ffbb");
-  g.strokeStyle=tail;g.lineWidth=r*.85;g.lineCap="round";g.beginPath();g.moveTo(s.x-dx*len,y-dy*len);g.lineTo(s.x,y);g.stroke();
-  g.translate(s.x,y);g.scale(r,r);
-  g.save();g.beginPath();g.arc(0,0,1,0,Math.PI*2);g.clip();
-  g.fillStyle="#f5f7fa";g.fillRect(-1,-1,2,2);
-  g.rotate(elapsed*11+(s.x+s.y)*.012);
-  function patch(x,y,size,angle){g.beginPath();for(let i=0;i<5;i++){const a=angle+i*Math.PI*2/5;const px=x+Math.cos(a)*size,py=y+Math.sin(a)*size;if(i===0)g.moveTo(px,py);else g.lineTo(px,py);}g.closePath();g.fill();}
-  g.strokeStyle="#929aa5";g.lineWidth=.055;
-  for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;g.beginPath();g.moveTo(Math.cos(a)*.36,Math.sin(a)*.36);g.lineTo(Math.cos(a)*.92,Math.sin(a)*.92);g.stroke();}
-  g.fillStyle="#222936";patch(0,0,.37,-Math.PI/2);
-  for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;patch(Math.cos(a)*.94,Math.sin(a)*.94,.32,a);}
-  g.restore();const shade=g.createRadialGradient(-.35,-.4,.05,.15,.2,1.15);shade.addColorStop(0,"#ffffff66");shade.addColorStop(.48,"#ffffff00");shade.addColorStop(1,"#101c3a88");g.fillStyle=shade;g.beginPath();g.arc(0,0,1,0,Math.PI*2);g.fill();g.strokeStyle="#273243";g.lineWidth=.1;g.stroke();g.restore();
-}
 function drawMobShots() {
   for (const s of mobShots) {
     g.fillStyle = "#0004";
     g.beginPath();
     g.ellipse(s.x, s.y + 18, s.r, s.r * 0.4, 0, 0, 7);
     g.fill();
-    if (s.soccer) { drawSoccerProjectile(s,s.y,s.r+2); continue; }
     if (s.heart) {
       drawHeart(s.x, s.y, s.r);
       continue;
@@ -7819,7 +7798,7 @@ function drawSkillPreview() {
     }
   } else if (S.preview === "curve") { // 재한 감아차기: 다음에 휘는 방향으로
     const c = curvePath(p.x, p.y, ux, uy, S.range, S.bend * (p.curveSide || 1));
-    g.lineWidth = 14;
+    g.lineWidth = (S.hitRadius || 7)*2;
     g.strokeStyle = `rgba(${col}, 0.25)`;
     g.setLineDash([]);
     g.beginPath();
@@ -8449,7 +8428,6 @@ function draw() {
     }
     // 총알: 판정은 발밑 좌표, 그림은 총구·몸통 높이(20px 위)에 맞춰 그림
     const by = s.y - 20;
-    if (s.soccer) { drawSoccerProjectile(s,by,s.big?15:11); continue; }
     if (s.orb) { // 은숙 빛의 구체
       const gr = g.createRadialGradient(s.x, by, 1, s.x, by, 12);
       gr.addColorStop(0, "#ffffff");
@@ -8485,7 +8463,6 @@ function draw() {
   g.textAlign = "center";
   for (let f of fx) {
     if (f.trail || f.debris) continue;
-    if(f.soccerImpact){g.save();const u=1-f.t/.22;g.globalAlpha=Math.max(0,1-u);g.strokeStyle="#fff0b0";g.lineWidth=2.5;g.beginPath();g.arc(f.x,f.y-20,8+u*22,0,Math.PI*2);g.stroke();g.restore();continue;}
     if (f.impact) {
       drawImpact(f);
       continue;
@@ -12336,17 +12313,19 @@ function qaStartSecretBoss(R){
 DISPLAY_NAMES.fallen_support="타락한 은숙이";
 CHARACTER_STATS.fallen_support={hp:2800,speed:1,sight:380,defense:0,attack:1};
 SKILL_DATA.fallen_support={
-  basic:{name:"암흑 마법탄",kind:"orb",dmg:110,range:250,speed:580,width:14,reload:.85},
-  q:{name:"나도 안 지켜!",cd:10,dmg:140,range:300,dur:4,aim:"none",text:"가까운 적에게 암흑탄 3발 (발당 {dmg}), {dur}초간 받는 피해 +15%"},
-  e:{name:"니들이 그럴 줄 알았어!",cd:8,dmg:300,radius:130,range:300,slow:3,aim:"point",preview:"circle",text:"지정 위치에 {dmg} 피해, 3초간 이동속도 30% 감소"},
-  r:{name:"다 죽었어!!",dmg:1000,radius:200,range:350,aim:"point",preview:"circle",text:"지정 위치에 암흑 폭발 {dmg} 피해"},
+  q:{name:"니들이 그럴 줄 알았어!",cd:8,dmg:300,radius:130,slow:3,aim:"none",text:"주변 {dmg} 피해, 3초간 이동속도 30% 감소"},
+  e:{name:"나도 안 지켜!",cd:10,dmg:400,range:300,dur:4,aim:"dir",preview:"line",width:30,text:"암흑 투사체 {dmg} 피해, {dur}초간 받는 피해 +15%"},
+  r:{name:"다 죽었어!!",dmg:1000,radius:200,aim:"none",text:"주변 암흑 폭발 {dmg} 피해"},
   passive:{name:"배신의 기억",text:"입힌 실제 피해의 3% 체력 흡수"}
 };
-CHARACTER_INFO.fallen_support={name:DISPLAY_NAMES.fallen_support,role:"원거리 마법 · 흡혈",intro:"이제 니들이 알아서 살아남아.",skills:[SKILL_DATA.fallen_support.q,SKILL_DATA.fallen_support.e].map(x=>[x.name,skillText(x)+" · "+x.cd+"초"]),ult:[SKILL_DATA.fallen_support.r.name,skillText(SKILL_DATA.fallen_support.r)],passive:skillText(SKILL_DATA.fallen_support.passive)};
+CHARACTER_INFO.fallen_support={name:DISPLAY_NAMES.fallen_support,role:"공격형 · 흡혈",intro:"이제 니들이 알아서 살아남아.",skills:[SKILL_DATA.fallen_support.q,SKILL_DATA.fallen_support.e].map(x=>[x.name,skillText(x)+" · "+x.cd+"초"]),ult:[SKILL_DATA.fallen_support.r.name,skillText(SKILL_DATA.fallen_support.r)],passive:skillText(SKILL_DATA.fallen_support.passive)};
 SKILL_IMPL.fallen_support={
-  q(S){const targets=bots.filter(b=>b.hp>0&&visible(p,b)&&dist(p,b)<=S.range&&clearLine(p,b)).sort((a,b)=>dist(p,a)-dist(p,b));const [fx0,fy0]=facingVec();for(let i=0;i<3;i++){const b=targets[i%targets.length];const ang=b?Math.atan2(b.y-p.y,b.x-p.x):Math.atan2(fy0,fx0)+(i-1)*.16;if(i===0)faceVec(Math.cos(ang),Math.sin(ang));shots.push({a:p,x:p.x,y:p.y,vx:Math.cos(ang)*570,vy:Math.sin(ang)*570,left:S.range,d:S.dmg,fallenWeak:S.dur,fallenShot:true,hitR:20});}return true;},
-  e(S,t){faceVec(...unitTo(t));for(const b of bots.filter(b=>b.hp>0&&dist(t,b)<=S.radius).sort((a,b)=>dist(t,a)-dist(t,b)).slice(0,4)){hit(p,b,S.dmg);if(!bossControlImmune(b))b.bottleSlow=Math.max(b.bottleSlow||0,S.slow);}fx.push({...t,t:.65,fallenRing:S.radius,dur:.65});return true;},
-  r(S,t){const caster=p,run=singleRun,at={x:t.x,y:t.y};faceVec(...unitTo(t));fx.push({...at,t:.55,dur:.55,fallenWindup:S.radius});caster.fallenCast={run,wave:run?.wave,phase:run?.phase,at,S,t:.55};return true;}
+  q(S){for(const b of bots.filter(b=>b.hp>0&&dist(p,b)<=S.radius).sort((a,b)=>dist(p,a)-dist(p,b)).slice(0,4)){hit(p,b,S.dmg);if(!bossControlImmune(b)) b.bottleSlow=Math.max(b.bottleSlow||0,S.slow);}fx.push({x:p.x,y:p.y,t:.65,fallenRing:S.radius,dur:.65});return true;},
+  e(S,t){const [x,y]=unitTo(t);faceVec(x,y);shots.push({a:p,x:p.x,y:p.y,vx:x*570,vy:y*570,left:S.range,d:S.dmg,fallenWeak:S.dur,fallenShot:true,hitR:20});return true;},
+  r(S){const caster=p,run=singleRun,at={x:p.x,y:p.y};
+    fx.push({...at,t:.55,dur:.55,fallenWindup:S.radius});
+    // FX and actual radius share the cast position. Cancel on death or run transition.
+    caster.fallenCast={run,wave:run?.wave,phase:run?.phase,at,S,t:.55};return true;}
 };
 ENDLESS_BOSSES.fallen_support={name:"배신의 기억",tune:{dmg:1},basic:[{k:"slam",dmg:240,radius:125,rest:1.4},{k:"barrage",n:3,dmg:160,slow:1.5},{k:"zone",radius:100,dmg:65,dur:3}],ult:[{k:"ring",n:16,dmg:110,waves:3,spin:true},{k:"slam",dmg:420,radius:190}],adds:["melee","mobile"]};
 const qaSvgIcon=(symbol,color)=>"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g"><stop stop-color="${color}"/><stop offset="1" stop-color="#18234a"/></radialGradient></defs><circle cx="48" cy="48" r="45" fill="url(#g)" stroke="#d6edff" stroke-width="3"/><text x="48" y="64" font-size="49" text-anchor="middle" fill="white">${symbol}</text></svg>`);
@@ -12360,8 +12339,8 @@ passive:hgIcon(`<path d="M35 12h26M35 84h26M38 15v17l10 12-10 13v24M58 15v17L48 
 const fallenIcon=(art)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="bg"><stop stop-color="#51236f"/><stop offset="1" stop-color="#110b25"/></radialGradient><linearGradient id="cr" x2="1" y2="1"><stop stop-color="#fff1ff"/><stop offset=".4" stop-color="#c16bff"/><stop offset="1" stop-color="#51218d"/></linearGradient></defs><circle cx="48" cy="48" r="45" fill="url(#bg)" stroke="#e0b6ff" stroke-width="3"/>${art}</svg>`);
 SKILL_ICON_SRC.fallen_support={
  passive:fallenIcon(`<path d="M48 73 23 49Q10 27 31 23Q43 20 48 34Q57 17 71 24Q89 35 72 53Z" fill="#a53dc4" stroke="#f0abff" stroke-width="3"/><path d="m50 28-10 18 12 5-8 19" fill="none" stroke="#180d2d" stroke-width="5"/><path d="M23 40Q48 19 73 40Q48 60 23 40Z" fill="#23133f" stroke="#edb9ff" stroke-width="2"/><ellipse cx="48" cy="40" rx="6" ry="11" fill="#e4a2ff"/>`),
- e:fallenIcon(`<ellipse cx="48" cy="56" rx="35" ry="21" fill="#7123ac" fill-opacity=".45" stroke="#d591ff" stroke-width="3"/><ellipse cx="48" cy="56" rx="23" ry="13" fill="none" stroke="#f0c6ff" stroke-width="4"/><path d="m48 13 9 28-9 14-9-14Z" fill="url(#cr)" stroke="#e9baff" stroke-width="2"/><path d="m30 52-15-13m51 13 15-13M48 68v15M20 69l-8 7m64-7 8 7" stroke="#b46bff" stroke-width="3" stroke-linecap="round"/>`),
- q:fallenIcon(`<path d="M13 76 45 43 27 76 52 57 39 83Z" fill="#8a42d5"/><path d="m31 62 17-36 35-13-10 39-31 23Z" fill="url(#cr)" stroke="#f3c9ff" stroke-width="2.5"/><path d="m31 62 31-26 21-23-21 39-20 23Z" fill="#6e32b1"/><path d="m13 51 24-12M51 83l15-15" stroke="#c68aff" stroke-width="3"/>`),
+ q:fallenIcon(`<ellipse cx="48" cy="56" rx="35" ry="21" fill="#7123ac" fill-opacity=".45" stroke="#d591ff" stroke-width="3"/><ellipse cx="48" cy="56" rx="23" ry="13" fill="none" stroke="#f0c6ff" stroke-width="4"/><path d="m48 13 9 28-9 14-9-14Z" fill="url(#cr)" stroke="#e9baff" stroke-width="2"/><path d="m30 52-15-13m51 13 15-13M48 68v15M20 69l-8 7m64-7 8 7" stroke="#b46bff" stroke-width="3" stroke-linecap="round"/>`),
+ e:fallenIcon(`<path d="M13 76 45 43 27 76 52 57 39 83Z" fill="#8a42d5"/><path d="m31 62 17-36 35-13-10 39-31 23Z" fill="url(#cr)" stroke="#f3c9ff" stroke-width="2.5"/><path d="m31 62 31-26 21-23-21 39-20 23Z" fill="#6e32b1"/><path d="m13 51 24-12M51 83l15-15" stroke="#c68aff" stroke-width="3"/>`),
  r:fallenIcon(`<circle cx="48" cy="49" r="32" fill="#9d3dea" fill-opacity=".25" stroke="#c97aff" stroke-width="3"/><path d="m48 15 29 51H19Zm0 67L19 32h58Z" fill="none" stroke="#d59aff" stroke-width="2.5"/><path d="m48 8 6 24 21-14-11 24 24 7-25 7 12 23-22-13-5 22-7-22-21 13 12-23-24-7 24-7-12-24 21 14Z" fill="#be61ff" fill-opacity=".65"/><path d="m48 24 13 21-13 25-13-25Z" fill="url(#cr)" stroke="#fff0ff" stroke-width="3"/>`)
 };
 sheets.fallen_support=loadImage(NEW_ART.fallen);
@@ -12769,6 +12748,7 @@ function boxerSkillHit(b,d,key,S,rolled){const hp=b.hp;hit(p,b,d,{ult:key==="r",
 function boxerDodgeChance(){return Math.min(.39,(SKILL_DATA.suit.passive.dodge||.12)+(p.punchRush?.t>0?.18:0));}
 function boxerTargets(ang,r,arc){return bots.filter(b=>b.hp>0&&canHit(p,b)&&dist(p,b)<=r+bodyR(b)&&angleDiff(Math.atan2(b.y-p.y,b.x-p.x),ang)<=arc*Math.PI/360&&clearLine(p,b)).sort((a,b)=>dist(p,a)-dist(p,b));}
 function boxerPunch(ang,side,r){p.attackAng=ang;p.aimT=.2;p.swing={kind:"melee",w:0,t:0,dur:p.punchRush?.t>0?.14:.18};fx.push({x:p.x,y:p.y,t:.16,cone:true,ang,r,half:.48});const x=p.x+Math.cos(ang)*Math.min(r,58),y=p.y+Math.sin(ang)*Math.min(r,58);fx.push({x,y:y-18,t:.28,ring:24,shock:true});for(let i=0;i<3;i++)fx.push({x:x+Math.cos(ang+(i-1)*.48)*12,y:y+Math.sin(ang+(i-1)*.48)*12-15,t:.18,ring:9});}
+SKILL_ICON_SRC.soccer={...SKILL_ICON_SRC.soccer,q:SKILL_ICON_SRC.soccer.e,e:qaSvgIcon("⚽","#268bb5")};
 SKILL_ICON_SRC.suit={...SKILL_ICON_SRC.suit,q:qaSvgIcon("🥊","#c34543"),e:qaSvgIcon("✦","#d98536"),r:qaSvgIcon("∞","#804bc9"),passive:qaSvgIcon("↔","#427bb9")};
 const releaseGearPaths=['<path d="M18 2 22 2 22 6 9 19 5 15Z" fill="#c5d9ed" stroke="#fff"/><path d="m3 12 9 9-2 2-9-9z" fill="#e8b95c"/><path d="m6 18-4 4" stroke="#bf8144" stroke-width="3" stroke-linecap="round"/>','<path d="m5 3 5 2h4l5-2 4 5-4 4-2-2v12H7V10l-2 2-4-4z" fill="#729dd7" stroke="#d0e9ff"/><path d="m9 7 3 3 3-3v10l-3 3-3-3z" fill="#adc7eb"/>','<path d="M4 2h9v10l7 3 2 4-1 3H3l-2-3 3-6z" fill="#b18c63" stroke="#f6d5a1"/><path d="M3 19h18M6 6h7M6 10h7" stroke="#4c3851" stroke-width="2"/>','<path d="M5 2c-4 6-4 11 7 16C23 13 23 8 19 2" stroke="#e8ba61" stroke-width="2.5" fill="none"/><path d="m12 13 5 4-5 6-5-6z" fill="#b48df5" stroke="#f0d4ff"/>'];
 const releaseSgRender=sgRender;sgRender=function(){releaseSgRender();[...el('sgSlots').children].forEach((b,i)=>{const it=seasonFind(seasonData.equip[sgChar]?.[i]);if(it)b.style.setProperty('--grade',SG_COLORS[it.grade]);const ico=b.querySelector('i');if(ico)ico.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+releaseGearPaths[i]+'</svg>';});};
