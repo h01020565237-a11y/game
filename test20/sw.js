@@ -1,6 +1,6 @@
 // Juyeop loading optimization, test build 20.
 // Only same-origin static game assets; never cache ranking/API or save transfers.
-const CACHE = "juyeop-test20-assets-v1";
+const CACHE = "juyeop-test20-assets-v2";
 self.addEventListener("install", event => event.waitUntil(self.skipWaiting()));
 self.addEventListener("activate", event => event.waitUntil((async()=>{
   for(const key of await caches.keys()) if(key.startsWith("juyeop-test20-assets-") && key!==CACHE) await caches.delete(key);
