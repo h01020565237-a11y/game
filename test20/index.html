@@ -9843,7 +9843,7 @@ function openLobby() {
   lobbySel = null;
   rosterPage = 0;
   lobbyDeck = deck.slice();
-  if (lobbyReady) buildLobby(); // 영입 상태가 바뀌었을 수 있으므로 타일 다시 그림
+  buildLobby(); // 로비 목록은 전투 이미지와 독립적으로 즉시 생성
   document.body.classList.add("lobbyOpen");
   el("results").hidden = true;
   el("recruitResult").hidden = true;
@@ -10346,7 +10346,7 @@ function syncResults() {
 
 // 메인 루프에서 매 프레임 호출
 function uiFrame() {
-  if (!lobbyReady && assetsReady()) buildLobby();
+  if (!lobbyReady) buildLobby();
   if (!isLobbyOpen()) updateHUD();
   syncSecretIntro();
   syncResults();
@@ -12486,7 +12486,7 @@ function drawLoading() {
   g.fillStyle = "#b6c5a1";
   g.font = "24px sans-serif";
   g.textAlign = "center";
-  g.fillText("Battle Lab 로딩 중…", VW / 2, VH / 2 - 24);
+  g.fillText("전투 리소스 로딩 중… " + Math.round(assetsProgress()*100) + "%", VW / 2, VH / 2 - 24);
   g.fillStyle = "#26332b";
   g.fillRect(VW / 2 - 160, VH / 2, 320, 14);
   g.fillStyle = "#7de36c";
@@ -12739,6 +12739,7 @@ function frameError(e) { // 같은 에러가 매 프레임 쌓이지 않게 몇 
 function loop(t) {
   trackFrame(t);
   beginFrame();
+  if (!lobbyReady && isLobbyOpen()) { try { buildLobby(); } catch(e) { frameError(e); } }
   if (!assetsReady()) {
     last = t;
     drawLoading();
