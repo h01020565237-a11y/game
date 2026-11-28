@@ -13502,4 +13502,17 @@ show('hero');
 #seasonGearPanel[data-page="hero"] #sgSlots button:nth-child(even){justify-self:end!important}
 #seasonGearPanel[data-page="hero"] #sgSlots button span{display:block!important;font-size:.85em!important;line-height:1.1!important}
 #seasonGearPanel[data-page="hero"] #sgStats{grid-area:2 / 2 / 3 / 3!important}
-</style>
+</style><style id="gear-polish-23">
+#seasonGearPanel[data-page="hero"] #sgHeroPortrait{background:radial-gradient(ellipse 22% 7% at 50% 96%,#060e1c 0%,#52739888 65%,transparent 100%),radial-gradient(ellipse,#344e70,#101d30 72%)}
+#seasonGearPanel[data-page="hero"] #sgSlots{padding:5px 9%!important}
+#seasonGearPanel[data-page="hero"] #sgSlots button.active{outline:none;box-shadow:0 2px 0 #081524;border-color:var(--grade,#54759d);background:linear-gradient(135deg,#304b71,#172b49)}
+#seasonGearPanel[data-page="hero"] #sgStats{grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:minmax(0,1fr)!important;gap:0!important;align-content:stretch!important}
+#seasonGearPanel[data-page="hero"] #sgStats>span{display:flex!important;align-items:center;justify-content:space-between;gap:.4em;border-bottom:1px solid #38516b66;padding:0 .4em;min-height:0;text-align:left}
+#seasonGearPanel[data-page="hero"] #sgStats>span:last-child{border-bottom:0}
+#seasonGearPanel[data-page="hero"] #sgStats .sgStatValue{display:inline!important;white-space:nowrap}
+#seasonGearPanel[data-page="gear"] #sgSlots button{min-height:0!important;height:clamp(28px,9cqh,48px)!important;padding:3px 5px!important;align-items:center!important;justify-content:center;gap:4px!important}
+#seasonGearPanel[data-page="gear"] #sgSlots button i{width:1.5em;height:1.5em;flex:0 0 1.5em}
+#seasonGearPanel[data-page="gear"] #sgSlots button span{width:auto!important;font-size:.85em}
+#seasonGearPanel[data-page="gear"] #sgSlots button span b{display:none!important}
+#seasonGearPanel[data-page="gear"] #sgInventory.sgIconGrid button{height:clamp(40px,16cqh,88px)}
+</style><script>document.getElementById('sgBag').textContent='장비 관리';</script>
