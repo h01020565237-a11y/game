@@ -13313,8 +13313,11 @@ body.mobile.raidActive #raidItems button{width:calc(var(--A)*.78)!important;heig
 </style>
 <style id="shop-entry-portrait-09">
 
-#lobby .lobby-cta{display:flex;align-items:center;justify-content:center;gap:clamp(18px,3cqw,28px)}
-#lobby #eoLobbyBtn{min-height:44px;padding:0 1em;white-space:nowrap}
+#lobby .lobby-cta{display:flex;align-items:center;justify-content:center;gap:clamp(12px,2.8cqw,24px);width:min(100%,1040px);min-width:0;box-sizing:border-box;flex:0 0 auto;}
+#lobby .lobby-cta > button[hidden]{display:none!important}
+#lobby #eoLobbyBtn{position:relative;flex:0 1 auto;min-width:0;min-height:0;height:clamp(32px,10cqh,48px);padding:0 clamp(8px,1.8cqw,18px);font-size:clamp(12px,3.5cqh,18px);white-space:nowrap;box-sizing:border-box;}
+#lobby #lobbyPlay{flex:0 1 auto;min-width:0;width:clamp(130px,34cqw,340px);height:clamp(36px,12cqh,66px);padding:0 clamp(8px,2cqw,24px);font-size:clamp(14px,5cqh,30px);white-space:nowrap;box-sizing:border-box;}
+#lobby #lobbyPlay::after{inset:-4px 0;pointer-events:none;}
 #lobby .char-face{width:100%;padding:0;overflow:hidden;box-sizing:border-box}
 #lobby .face-in{overflow:hidden;border-radius:5px}
 #lobby .face-in img{width:100%;height:100%;object-fit:cover;object-position:center;scale:1}
