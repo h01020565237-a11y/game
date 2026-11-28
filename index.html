@@ -2458,7 +2458,7 @@ for (const d of PET_DEX) {
 // ----- 소환수 그래픽 팩 (js/data/summon_sprites.js): 그래픽만 교체 -----
 // 소환수 번호 → 그래픽 (진화형은 기본형 그래픽, stage 만큼 조금 크게). 없으면 null → 기존 그림
 // Uploaded original companion sheets: repository root, 64px cells, 4 frames x 8 directions.
-const HYE_NEW_GFX = Object.fromEntries(Object.entries({25:"thunderi",151:"myurin",6:"bolkeron_final",9:"aquabi_final",3:"floraon_final"}).map(([dex,key])=>[dex,{key, G:{icon:key+"_icon.webp",anims:Object.fromEntries(["idle","move","attack"].map(a=>[a,key+"_"+a+".webp"]))},grow:[6,9,3].includes(Number(dex))?1.16:1}]));
+const HYE_NEW_GFX = Object.fromEntries(Object.entries({25:"thunderi",151:"myurin",6:"bolkeron_final",9:"aquabi_final",3:"floraon_final"}).map(([dex,key])=>[dex,{key, G:{icon:"./"+key+"_icon.webp?v=2",anims:Object.fromEntries(["idle","move","attack"].map(a=>[a,"./"+key+"_"+a+".webp?v=2"]))},grow:[6,9,3].includes(Number(dex))?1.16:1}]));
 const SUMMON_BY_PET = {};
 for (const k in SUMMON_GFX) if (SUMMON_GFX[k].pet !== undefined) {
   const id=SUMMON_GFX[k].pet; SUMMON_BY_PET[id]=k;
@@ -7815,7 +7815,7 @@ function summonAnimState(pt, sg) {
   let key = "idle", t = elapsed + (pt.id || 0) * 0.37, once = false;
   if (pt.atkAt !== undefined && elapsed - pt.atkAt < atkLen) (key = "attack"), (t = elapsed - pt.atkAt), (once = true);
   else if (pt.moving) key = "move";
-  const im = summonImg(sg.G.anims[key]);
+  const im = summonImg(sg.G.anims[key]) || summonImg(sg.G.anims.idle);
   if (!im) return null;
   return { im, dur: F.dur[key], t, once, row: ((pt.dir || 0) % 8 + 8) % 8, fw: F.fw, fh: F.fh, ft: F.anchor, k: F.scale * sg.grow, smooth: true };
 }
@@ -12553,11 +12553,7 @@ ENDLESS_BOSSES.fallen_support={name:"배신의 기억",tune:{dmg:1},basic:[{k:"s
 const qaSvgIcon=(symbol,color)=>"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g"><stop stop-color="${color}"/><stop offset="1" stop-color="#18234a"/></radialGradient></defs><circle cx="48" cy="48" r="45" fill="url(#g)" stroke="#d6edff" stroke-width="3"/><text x="48" y="64" font-size="49" text-anchor="middle" fill="white">${symbol}</text></svg>`);
 // Transparent glyphs: the HUD itself supplies the single button frame.
 const hgIcon = (body) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`);
-SKILL_ICON_SRC.summoner={...SKILL_ICON_SRC.summoner,
-q:hgIcon(`<g transform="rotate(23 48 48)" stroke="#d6f8d8" stroke-width="3"><path d="M42 12h13v22l11 12v29q0 8-8 8H39q-8 0-8-8V46l11-12z" fill="#28864e"/><path d="M42 12h13v9H42z" fill="#f8d080"/><path d="M32 48h33v21H32z" fill="#ecf0c9"/><path d="M48 53v11m-5-5h10" stroke="#37814d"/></g><path d="M16 35l3-8m-8 17l7-2m55 7l7-6" stroke="#ffdc80" stroke-width="4"/>`),
-e:hgIcon(`<path d="M12 33h27M8 46h22M18 59h14" stroke="#8cd6ff" stroke-width="5"/><path d="M35 29l47 19-47 20 10-20z" fill="#ffbc66" stroke="#fff0ba" stroke-width="3"/><path d="M47 48h21" stroke="#d66e39" stroke-width="5"/>`),
-r:hgIcon(`<circle cx="48" cy="48" r="28" fill="#f8f5ed" stroke="#1c2535" stroke-width="5"/><path d="M20 48a28 28 0 0 1 56 0z" fill="#ef5454"/><path d="M20 48h56" stroke="#1c2535" stroke-width="6"/><circle cx="48" cy="48" r="10" fill="#f8f5ed" stroke="#1c2535" stroke-width="5"/><path d="M76 13v10m-5-5h10M17 68v10m-5-5h10" stroke="#ffe19a" stroke-width="3"/>`),
-passive:hgIcon(`<path d="M35 12h26M35 84h26M38 15v17l10 12-10 13v24M58 15v17L48 44l10 13v24" fill="#b9ddfa" fill-opacity=".25" stroke="#e0efff" stroke-width="4"/><path d="M40 68l8-12 8 12v9H40z" fill="#eec66e"/><path d="M38 28h20" stroke="#eec66e" stroke-width="5"/>`)};
+SKILL_ICON_SRC.summoner={...SKILL_ICON_SRC.summoner,q:"./thunderi_icon.webp?v=2",e:"./myurin_icon.webp?v=2",r:hgIcon(`<circle cx="48" cy="22" r="15" fill="#ff9d45" stroke="#fff" stroke-width="2"/><circle cx="26" cy="62" r="15" fill="#42b5f5" stroke="#fff" stroke-width="2"/><circle cx="70" cy="62" r="15" fill="#8ac955" stroke="#fff" stroke-width="2"/><path d="M48 39L35 48M48 39L61 48M43 62h10" stroke="#fff" stroke-width="3"/>`)};
 const fallenIcon=(art)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="bg"><stop stop-color="#51236f"/><stop offset="1" stop-color="#110b25"/></radialGradient><linearGradient id="cr" x2="1" y2="1"><stop stop-color="#fff1ff"/><stop offset=".4" stop-color="#c16bff"/><stop offset="1" stop-color="#51218d"/></linearGradient></defs><circle cx="48" cy="48" r="45" fill="url(#bg)" stroke="#e0b6ff" stroke-width="3"/>${art}</svg>`);
 SKILL_ICON_SRC.fallen_support={
  passive:fallenIcon(`<path d="M48 73 23 49Q10 27 31 23Q43 20 48 34Q57 17 71 24Q89 35 72 53Z" fill="#a53dc4" stroke="#f0abff" stroke-width="3"/><path d="m50 28-10 18 12 5-8 19" fill="none" stroke="#180d2d" stroke-width="5"/><path d="M23 40Q48 19 73 40Q48 60 23 40Z" fill="#23133f" stroke="#edb9ff" stroke-width="2"/><ellipse cx="48" cy="40" rx="6" ry="11" fill="#e4a2ff"/>`),
