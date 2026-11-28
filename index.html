@@ -3947,6 +3947,7 @@ function drawHealRing(f) {
 // 소환사: 소환·교체·펫 기술
 
 let flight = null;
+let hyeUltFlights = [];
 let deck = [0, 3, 5], selected = 0, pet = null, summonCD = Array(mons.length).fill(0), skillCD = 0, swapCD = 0;
 const SUMMON_RANGE = 220; // 캐릭터 기준 최대 투척 거리
 // 목표 지점을 사거리 안으로 당기고, 던질 수 있는 자리인지(지형·벽·상자) 확인
@@ -4008,12 +4009,10 @@ function petTarget(pt) {
   return minBy(boxes.filter((x) => !x.broken && x.hp > 0 && dist(p, x) <= L && (!visionOn() || inPlayerVision(x))), (x) => dist(pt, x));
 }
 function hyeCompanion(id) {
-  if(pet?.id===id&&pet.hp>0)return false;
+  if(flight||(pet?.id===id&&pet.hp>0))return false;
   const q=freeSpot(clamp(p.x+40,30,W-30),clamp(p.y+30,30,H-30),16)||p;
   if(pet)fx.push({x:pet.x,y:pet.y,t:.4,recall:true});
-  const hp=petMaxHp(id);
-  pet={...actor(q.x,q.y),id,hp,max:hp,life:Infinity,owner:p,skillCD:5};
-  fx.push({x:q.x,y:q.y,t:.6,ring:40});return true;
+  pet=null; flight={x:p.x,y:p.y,tx:q.x,ty:q.y,id,t:0,hye:true}; sfx("pet_summon",p);return true;
 }
 function runPet(pt, dt) {
   pt.life -= dt;
@@ -4202,6 +4201,7 @@ function reset() {
   elapsed = 0;
   zone = 1450;
   flight = null;
+  hyeUltFlights = [];
   pet = null;
   summonCD = Array(mons.length).fill(0);
   setActiveMap(MAP_JUNGLE); // 배틀로얄·스토리는 정글 (무한 생존은 setupEndless 에서 웨이브 맵으로)
@@ -6289,7 +6289,7 @@ function skillCdLeft(slot) {
   return p.skcd ? p.skcd[slot] || 0 : 0;
 }
 function ultReady() {
-  return p.ult >= 1 && !(p.ultT > 0) && !(character === "summoner" && ultPets.length);
+  return p.ult >= 1 && !(p.ultT > 0) && !(character === "summoner" && (ultPets.length||hyeUltFlights.length));
 }
 // 상훈 삐짐: 가득 차 있으면 이번 스킬 피해 배율을 주고 소모
 function sulkMul() {
@@ -6374,14 +6374,13 @@ const SKILL_IMPL = {
     q(){return hyeCompanion(0);},
     e(){return hyeCompanion(PET_DEX.find(d=>d.dex===151).id);},
     r(S){
-      if(ultPets.length)return false;
+      if(ultPets.length||hyeUltFlights.length)return false;
       const ids=[6,9,3].map(dex=>PET_DEX.find(d=>d.dex===dex).id);
-      ultPets=ids.map((id,i)=>{
+      hyeUltFlights=ids.map((id,i)=>{
         const ang=i*Math.PI*2/3;
         const q=freeSpot(clamp(p.x+Math.cos(ang)*65,30,W-30),clamp(p.y+Math.sin(ang)*65,30,H-30),16)||p;
         const hp=Math.round(petMaxHp(id)*.65*(1+(singleRun?.mods?.petUltHp||0)));
-        fx.push({x:q.x,y:q.y,t:.6,ring:42});
-        return {...actor(q.x,q.y),id,hp,max:hp,life:S.dur,owner:p,ult:true,atkMul:.65,skillCD:2};
+        return {x:p.x,y:p.y,tx:q.x,ty:q.y,t:0,pt:{...actor(q.x,q.y),id,hp,max:hp,life:S.dur,owner:p,ult:true,atkMul:.65,skillCD:2}};
       });
       document.body.classList.remove("summonChoose");
       return true;
@@ -7039,11 +7038,13 @@ function update(dt) {
     flight.t += dt;
     if (flight.t >= 0.42) {
       let { tx: x, ty: y, id } = flight, m = mons[id];
-      pet = { ...actor(x, y), id, hp: petMaxHp(id), max: petMaxHp(id), life: petLife(), skillCD: 0 }; // 무한 생존 카드·강화 반영 (그 밖엔 기본값)
+      pet = { ...actor(x, y), id, hp: petMaxHp(id), max: petMaxHp(id), life: flight.hye?Infinity:petLife(), owner:p, skillCD: flight.hye?5:0 }; // 무한 생존 카드·강화 반영 (그 밖엔 기본값)
       fx.push({ x, y, t: 0.6, pkball: true, col: PET_LOOK[id]?.color }); // 몬스터볼이 열리며 빛과 함께 등장
       flight = null;
     }
   }
+  for(const f of hyeUltFlights){f.t+=dt;if(f.t>=.42){ultPets.push(f.pt);fx.push({x:f.tx,y:f.ty,t:.6,pkball:true,col:PET_LOOK[f.pt.id]?.color});}}
+  hyeUltFlights=hyeUltFlights.filter(f=>f.t<.42);
   nt -= dt;
   summonCD = summonCD.map((v) => Math.max(0, v - dt * (p.cdRate || 1)/(1-(p.seasonGear?.cdr||0))));
   swapCD = Math.max(0, swapCD - dt);
@@ -8654,6 +8655,7 @@ function draw() {
     g.ellipse(flight.tx, flight.ty, 20, 10, 0, 0, 7);
     g.stroke();
   }
+  for(const f of hyeUltFlights){const u=clamp(f.t/.42,0,1);ball(f.x+(f.tx-f.x)*u,f.y+(f.ty-f.y)*u-55*Math.sin(Math.PI*u),9,u*12);}
   // 수정(3.8): 데미지 숫자 글꼴이 직전 그리기 상태에 따라 달라지던 문제 → 고정
   g.font = "12px sans-serif";
   g.textAlign = "center";
