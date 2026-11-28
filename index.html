@@ -13450,4 +13450,39 @@ for(const id of ['sgInventory','sgDetailScroll']){
  box.addEventListener('click',e=>{if(performance.now()<blocked){e.preventDefault();e.stopImmediatePropagation()}},true);
 }
 })();
+</script><style id="gear-split-20">
+#seasonGearPanel #sgHeroPortrait{display:none}
+#seasonGearPanel[data-page="hero"] .sgbody{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important}
+#seasonGearPanel[data-page="hero"] #sgRight{display:grid!important;grid-template-columns: minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:6px!important}
+#seasonGearPanel[data-page="hero"] #sgSelectedHead{grid-column:2;grid-row:1}
+#seasonGearPanel[data-page="hero"] #sgHeroPortrait{display:block;grid-column:1;grid-row:1 / 4;min-height:0;width:100%;height:100%;object-fit:contain;background:radial-gradient(ellipse,#344e70,#101d30 72%);border-radius:8px}
+#seasonGearPanel[data-page="hero"] #sgStats{display:grid!important;grid-column:2;grid-row:2;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-content:center;overflow:auto;min-height:0}
+#seasonGearPanel[data-page="hero"] #sgSlots{grid-column:2;grid-row:3;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+#seasonGearPanel[data-page="hero"] :is(#sgListArea,#sgDetailArea){display:none!important}
+#seasonGearPanel[data-page="gear"] .sgbody{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+#seasonGearPanel[data-page="gear"] #sgRoster{display:none!important}
+#seasonGearPanel[data-page="gear"] #sgRight{display:grid!important;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr)!important}
+#seasonGearPanel[data-page="gear"] #sgSelectedHead{grid-column:1;grid-row:1}
+#seasonGearPanel[data-page="gear"] #sgSlots{grid-column:1;grid-row:2}
+#seasonGearPanel[data-page="gear"] #sgStats{display:none!important}
+#seasonGearPanel[data-page="gear"] #sgListArea{grid-column:1;grid-row:3}
+#seasonGearPanel[data-page="gear"] #sgDetailArea{grid-column:2;grid-row:1 / 4}
+#seasonGearPanel[data-page="gear"] #sgInventory.sgIconGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+#seasonGearPanel[data-page="hero"] #sgBackHero{display:none}
+#seasonGearPanel[data-page="gear"] #sgBackHero{display:inline-block}
+</style>
+<script>
+(function(){
+const panel=el('seasonGearPanel'),portrait=document.createElement('img');portrait.id='sgHeroPortrait';portrait.draggable=false;el('sgRight').prepend(portrait);
+const back=document.createElement('button');back.id='sgBackHero';back.textContent='〈 캐릭터';panel.querySelector('header').prepend(back);
+let page='hero';
+function show(next){page=next;panel.dataset.page=next;portrait.src=lobbyArt[sgChar]?.full?.src||'';portrait.alt=DISPLAY_NAMES[sgChar]||'';}
+const render=sgRender;sgRender=function(){render.apply(this,arguments);show(page);};
+const open=el('modeGear').onclick;el('modeGear').onclick=function(e){show('hero');return open.call(this,e);};
+back.onclick=()=>{show('hero');sgView='bag';sgNotice='';sgRender();};
+el('sgSlots').addEventListener('click',e=>{if(page==='hero'&&e.target.closest('button')){sgView='bag';show('gear');sgRender();}});
+el('sgBag').onclick=()=>{sgView='bag';sgNotice='';show('gear');sgRender();};
+el('sgCraft').onclick=()=>{sgView='craft';sgNotice='';show('gear');sgRender();};
+show('hero');
+})();
 </script>
