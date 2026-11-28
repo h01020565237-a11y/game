@@ -2313,7 +2313,7 @@ function skillText(s) {
 // 짧게 탭: 바로 발동 / 길게 누름: 이동 거리·방향·판정 범위 표시 / 끌기: 방향 바꾸기 / 떼면 발동 / 가운데로 되돌려 떼면 취소
 // range: 이동 거리(미리보기), width: 이동 경로 판정 폭, radius: 도착 지점 판정 반경
 // 새 이동형 스킬은 move: true 만 달면 같은 조작이 적용됨
-const DASH = { name: "대시", cd: 3, t: 0.1, speedMul: 4, range: 60, aim: "dir", move: true, preview: "line", width: 30, text: "짧게 빠르게 이동 (쿨타임 {cd}초)" };
+const DASH = { name: "대시", cd: 3, t: 0.10833333333333334, speedMul: 4.8, range: 78, aim: "dir", move: true, preview: "line", width: 30, text: "일반 적을 통과하며 빠르게 이동 (쿨타임 {cd}초)" };
 const STAT_CHIPS = [["dmg", "피해", ""], ["dur", "지속", "초"], ["stun", "기절", "초"], ["root", "이동불가", "초"], ["slow", "둔화", "초"], ["radius", "범위", ""], ["range", "사거리", ""], ["cd", "쿨타임", "초"]];
 function skillChips(s) {
   return STAT_CHIPS.filter(([k]) => s[k] !== undefined).map(([k, label, unit]) => `${label} ${fmtNum(s[k])}${unit}`);
@@ -3286,7 +3286,7 @@ function move(a, dx, dy, dt, stopOnImpact=false) {
   const bearCharge=a===p&&character==="bear"&&a.run>0&&!a.dash&&!a.tackle;
   const rehanCharge=a===p&&character==="soccer"&&!!a.rehanSlide;
   if(a===p&&(stopOnImpact||a.dash>0||a.tackle>0||rehanCharge||bearCharge)){
-    const stop=chargeStep(a,dx,dy,s,rehanCharge||bearCharge);
+    const stop=chargeStep(a,dx,dy,s,a.dash>0||rehanCharge||bearCharge);
     if(bearCharge){bearRunContact();if(stop)a.run=0;}
     if(stop)a.moving=false;return stop;
   }
@@ -4860,7 +4860,7 @@ function makeEnemy(kind, at, opts = {}) {
 function contactDamage(dt) {
   const C = ENDLESS.contact;
   p.contactT = Math.max(0, (p.contactT || 0) - dt);
-  if (p.contactT > 0 || p.hp <= 0 || p.jump) return;
+  if (p.contactT > 0 || p.hp <= 0 || p.jump || p.dash>0) return;
   for (const a of bots) {
     if (a.hp <= 0 || !a.mob || a.spawnT > 0 || a.stun > 0 || a.boastFearT>0 || a.stealth > 0) continue;
     if (dist(a, p) > (a.r || 16) + (p.r || 16) + 3) continue;
@@ -7130,7 +7130,7 @@ function update(dt) {
   } else if (p.dash > 0) {
     fx.push({ x: p.x, y: p.y, t: 0.18, trail: true, dir: p.dir, frame: Math.floor(p.frame) });
     let step = Math.min(dt, p.dash);
-    const stopped=move(p,p.dx,p.dy,step,true);
+    const stopped=moveRaw(p,p.dx,p.dy,DASH.range*step/DASH.t,true);
     p.dash=stopped?0:Math.max(0,p.dash-step);
   } else {
     let [ix, iy] = p.moveLock ? [p.moveLock.x, p.moveLock.y] : tackleInput();
@@ -7951,7 +7951,7 @@ function drawSkillPreview() {
   g.lineWidth = 2;
   g.setLineDash([8, 6]);
   if (S.preview === "line" && S.pathPreview) { // 실제 이동 경로(벽 충돌·미끄러짐 반영)와 도착 위치
-    const pts = simMovePath(p.x, p.y, ux, uy, S.range, (character==="soccer"&&skillAim.slot==="e")||(character==="bear"&&["q","r"].includes(skillAim.slot))), [ex, ey] = pts[pts.length - 1];
+    const pts = simMovePath(p.x, p.y, ux, uy, S.range, skillAim.slot==="dash"||(character==="soccer"&&skillAim.slot==="e")||(character==="bear"&&["q","r"].includes(skillAim.slot))), [ex, ey] = pts[pts.length - 1];
     g.lineCap = "round";
     g.lineJoin = "round";
     g.setLineDash([]);
