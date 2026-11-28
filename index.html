@@ -3257,18 +3257,48 @@ function blocked(x, y, r = 16) {
 // 정해진 거리만큼 이동 (속도 버프·둔화 영향 없음, 지형 충돌 규칙은 move 와 같음: 축마다 따로 막힘 → 벽을 타고 미끄러짐)
 // 이동형 스킬 미리보기(simMovePath)와 실제 이동이 같은 함수를 써서 경로가 정확히 일치
 // Unified swept collision for movement and movement skills.
+function bodyStepBlocked(a,x,y,r,b){
+  const limit=r+(b.r||16), next=Math.hypot(x-b.x,y-b.y), current=Math.hypot(a.x-b.x,a.y-b.y);
+  return next<limit&&next<=current+1e-7;
+}
+function playerPiercing(){
+  return p.dash>0||!!p.jump||(character==="bear"&&p.run>0&&!p.tackle)||(character==="soccer"&&!!p.rehanSlide);
+}
+function enemyPlayerBlocked(a,x,y,r){
+  return a!==p&&!a.playerPath&&p.hp>0&&!isMine(a)&&bots.includes(a)&&!a.charge&&!(a.dashLeft>0)&&!a.waveDash&&bodyStepBlocked(a,x,y,r,p);
+}
 function solidBossAt(a,x,y,r){
   if(a!==p&&!a.playerPath)return false;
-  return bots.some(b=>b!==a&&b.hp>0&&bossControlImmune(b)&&Math.hypot(x-b.x,y-b.y)<r+(b.r||16));
+  return bots.some(b=>b!==a&&b.hp>0&&bossControlImmune(b)&&bodyStepBlocked(a,x,y,r,b));
 }
-// Player body collision; only approved skill paths may pass ordinary enemies.
 function solidEnemyAt(a,x,y,r,passEnemies=false){
   if(passEnemies||(a!==p&&!a.playerPath))return false;
-  return bots.some(b=>b!==a&&b.hp>0&&!bossControlImmune(b)&&canHit(p,b)&&
-    Math.hypot(x-b.x,y-b.y)<r+(b.r||16)&&
-    Math.hypot(x-b.x,y-b.y)<=Math.hypot(a.x-b.x,a.y-b.y)+1e-7);
+  return bots.some(b=>b!==a&&b.hp>0&&!bossControlImmune(b)&&canHit(p,b)&&bodyStepBlocked(a,x,y,r,b));
 }
-function movementFree(a,x,y,r=a.r||16,passEnemies=false){return x>=r+2&&y>=r+2&&x<=W-r-2&&y<=H-r-2&&!terrain(x,y,r)&&!blocked(x,y,r)&&!nearBox(x,y,r+14)&&!solidBossAt(a,x,y,r)&&!solidEnemyAt(a,x,y,r,passEnemies);}
+function playerBodyRecovery(){
+  if(!p||p.hp<=0||playerPiercing())return;
+  const r=p.r||16, live=bots.filter(b=>b.hp>0&&!isMine(b));
+  const overlap=(x,y)=>{let sum=0;for(const b of live){const depth=r+(b.r||16)-Math.hypot(x-b.x,y-b.y);if(depth>0)sum+=depth*depth;}return sum;};
+  const start=overlap(p.x,p.y);if(start<.0625)return;
+  const clear=(x,y)=>x>=r+2&&y>=r+2&&x<=W-r-2&&y<=H-r-2&&!terrain(x,y,r)&&!blocked(x,y,r)&&!nearBox(x,y,r+14);
+  const ox=p.x,oy=p.y, dirs=Array.from({length:32},(_,i)=>[Math.cos(i*Math.PI/16),Math.sin(i*Math.PI/16),true]);
+  let best=null,bestScore=start;
+  for(let d=2;d<=96;d+=2){
+    let exit=null;
+    for(const v of dirs){
+      if(!v[2])continue;
+      const x=ox+v[0]*d,y=oy+v[1]*d;
+      if(!clear(x,y)){v[2]=false;continue;}
+      const score=overlap(x,y);
+      if(d<=6&&score<bestScore-1e-7){bestScore=score;best={x,y};}
+      if(score<.000001){exit=v;break;}
+    }
+    if(exit){const step=Math.min(d,6);p.x=ox+exit[0]*step;p.y=oy+exit[1]*step;return;}
+    if(!dirs.some(v=>v[2]))break;
+  }
+  if(best){p.x=best.x;p.y=best.y;}
+}
+function movementFree(a,x,y,r=a.r||16,passEnemies=false){return x>=r+2&&y>=r+2&&x<=W-r-2&&y<=H-r-2&&!terrain(x,y,r)&&!blocked(x,y,r)&&!nearBox(x,y,r+14)&&!solidBossAt(a,x,y,r)&&!solidEnemyAt(a,x,y,r,passEnemies)&&!enemyPlayerBlocked(a,x,y,r);}
 function moveRaw(a,dx,dy,d,passEnemies=false){const n=Math.hypot(dx,dy);if(!n||d<=0)return false;return chargeStep(a,dx/n,dy/n,d,passEnemies);}
 const MOVE_STEP=4;
 function simMovePath(x0,y0,dx,dy,len,passEnemies=false){const t={x:x0,y:y0,r:p.r||16,playerPath:true},pts=[[x0,y0]];for(let d=0;d<len;d+=MOVE_STEP){const stop=moveRaw(t,dx,dy,Math.min(MOVE_STEP,len-d),passEnemies);pts.push([t.x,t.y]);if(stop)break;}return pts;}
@@ -4513,7 +4543,7 @@ function separate(a) {
     const dx = a.x - b.x, dy = a.y - b.y, dd = Math.hypot(dx, dy), min = (a.r || MOB_TYPES[a.mob]?.r || 16) + (b.r || MOB_TYPES[b.mob]?.r || 16);
     if (dd > 0.01 && dd < min) {
       const k = (min - dd) / dd * 0.25, x = a.x + dx * k, y = a.y + dy * k, r = a.r || 16;
-      if (!terrain(x, y, r) && !blocked(x, y, r) && !nearBox(x, y, r + 14)) { // 밀려도 벽·상자 안으로 안 들어감
+      if (!terrain(x, y, r) && !blocked(x, y, r) && !nearBox(x, y, r + 14) && !enemyPlayerBlocked(a,x,y,r)) { // 밀려도 벽·상자·플레이어 안으로 안 들어감
         a.x = x;
         a.y = y;
       }
@@ -7381,7 +7411,7 @@ function update(dt) {
   }
   if (!(p.run > 0)) p.runHits=null;
   if (!(p.tackle > 0)) p.tackleHits=null;
-  if(singleRun?.raid)ygBossSeparate();
+  playerBodyRecovery(); // 모든 모드의 몸체 겹침 복구 (관통 스킬 진행 중 제외)
   if(singleRun?.raid && (p.hp<=0 || singleRun.boss.hp<=0 || singleRun.timer<=0))raidFinish();
   if (p.hp <= 0 || singleRun?.failReason) over = "패배"; // 영입 미션: 보호 대상 쓰러짐·시간 초과도 실패
   else if (singleRun) {
