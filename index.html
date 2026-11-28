@@ -2223,10 +2223,10 @@ const SKILL_DATA = {
     passive: { name: "위빙", dodge: .12, mult: 1, text: "직접 공격을 {dodge%} 확률로 회피. 지속 피해와 레이드 전멸기 제외" },
   },
   summoner: { // 현곤
-    q: { name: "딱 한잔", cd: 14, dur: 6, guard: 0, speed: 1.15, aim: "none", text: "6초 폭주: 근접 공격, 공격력 +25%, 이동속도 +15%, 받는 피해 +10%" },
-    e: { name: "겁쟁이!!", cd: 7, dur: 4, radius: 90, range: 260, aim: "point", preview: "circle", text: "평상시 뒤로 회피하며 사격, 폭주 중 전방 돌진 및 범위 피해" },
-    r: { name: "너로 정했다!", dur: 10, aim: "none", text: "덱에서 1마리를 골라 최대 {dur}초간 소환. 체력 +50%, 체력 0이면 소멸" },
-    passive: { name: "술이 깨면", speed: 1, take: 1, text: "폭주 중 기본 공격 적중마다 종료 시 궁극기 3% 추가 충전 (최대 30%)" },
+    q: { name: "썬더리 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 5초마다 범위 전격 및 감전. 뮤린과 교체 가능" },
+    e: { name: "뮤린 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 5초마다 직선 관통 공격. 썬더리와 교체 가능" },
+    r: { name: "너희로 정했다!", dur: 10, aim: "none", text: "화염·물·식물 최종 진화형 3마리를 동시에 10초간 소환. 기존 동행 소환수 유지" },
+    passive: { name: "동행 소환사", speed: 1, take: 1, text: "일반 동행 소환수 1마리와 궁극기 소환수 3마리까지 동시 유지" },
   },
   support: { // 은숙
     // 기본 공격(맨손일 때): 빛의 구체 직선 발사 — 단일 대상, 장애물에 막힘
@@ -2438,6 +2438,11 @@ const BASE_PET_COUNT = 8;
   }
   PET_DEX.forEach((d, i) => (d.id = i));
 })();
+// 현곤 동행 및 최종 진화형 공개용 표시와 임시 밸런스
+mons[0][0]="썬더리"; PET_SKILLS[0]={name:"뇌전 폭발",dmg:320,radius:135,targets:99,stun:1,text:"원형 범위 피해 및 감전"};
+const hyePsychic=PET_DEX.find(d=>d.dex===151).id;
+mons[hyePsychic][0]="뮤린"; mons[hyePsychic][4]=900; mons[hyePsychic][2]=150; PET_SKILLS[hyePsychic]={name:"사이코 빔",dmg:420,line:360,width:44,text:"직선 관통 피해"};
+for(const [dex,name,patch] of [[6,"볼케론 · 최종형",{radius:130,targets:4}],[9,"아쿠비 · 최종형",{targets:3}],[3,"플로라온 · 최종형",{radius:125,targets:4}]]){const id=PET_DEX.find(d=>d.dex===dex).id;mons[id][0]=name;Object.assign(PET_SKILLS[id],patch);}
 const PET_LEGEND_IDS = PET_DEX.filter((d) => d.kind === "legend").map((d) => d.id);
 
 // 그림 (불러오기 실패·없음 → null → 아이콘 사용)
@@ -3998,6 +4003,14 @@ function petTarget(pt) {
   // 적이 없으면 보물상자도 부숨 (2026-11-25 버그: 포켓몬이 상자를 안 때림). 반경·시야 규칙 같음
   return minBy(boxes.filter((x) => !x.broken && x.hp > 0 && dist(p, x) <= L && (!visionOn() || inPlayerVision(x))), (x) => dist(pt, x));
 }
+function hyeCompanion(id) {
+  if(pet?.id===id&&pet.hp>0)return false;
+  const q=freeSpot(clamp(p.x+40,30,W-30),clamp(p.y+30,30,H-30),16)||p;
+  if(pet)fx.push({x:pet.x,y:pet.y,t:.4,recall:true});
+  const hp=petMaxHp(id);
+  pet={...actor(q.x,q.y),id,hp,max:hp,life:Infinity,owner:p,skillCD:5};
+  fx.push({x:q.x,y:q.y,t:.6,ring:40});return true;
+}
 function runPet(pt, dt) {
   pt.life -= dt;
   pt.pose = Math.max(0, (pt.pose || 0) - dt);
@@ -4112,7 +4125,7 @@ function petSkillEffect(pet, S, enemies) {
     for (const b of bots) {
       if (b.hp <= 0 || b.stealth > 0) continue;
       const rx = b.x - pet.x, ry = b.y - pet.y, along = rx * ux + ry * uy, off = Math.abs(rx * uy - ry * ux);
-      if (along > 0 && along < S.line && off < S.width / 2) hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
+      if (along > 0 && along < S.line && off < S.width / 2 && clearLine(pet,b)) hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
     }
     fx.push({ x: pet.x, y: pet.y, t: 0.35, cone: true, ang, r: S.line, half: 0.08 });
     pet.pose = 0.35;
@@ -6044,7 +6057,7 @@ function clearLine(a, b) {
 function basicOf(a) {
   if (a !== p || a.w !== 0) return null;
   const D = SKILL_DATA[character];
-  if(character==="summoner")return p.hyeGuardT>0?null:{name:"몬스터볼",kind:"orb",dmg:220,range:260,speed:650,width:18,reload:.85};
+  if(character==="summoner")return null;
   return D && D.basic || null;
 }
 function attackRange(a) {
@@ -6271,7 +6284,7 @@ function skillCdLeft(slot) {
   return p.skcd ? p.skcd[slot] || 0 : 0;
 }
 function ultReady() {
-  return p.ult >= 1 && !(p.ultT > 0) && !(character === "summoner" && (pet || flight || ultPets.length));
+  return p.ult >= 1 && !(p.ultT > 0) && !(character === "summoner" && ultPets.length);
 }
 // 상훈 삐짐: 가득 차 있으면 이번 스킬 피해 배율을 주고 소모
 function sulkMul() {
@@ -6287,7 +6300,7 @@ function castSkill(slot, aim) {
   if (slot === "dash") return castDash(aim);
   const S0 = skillOf(slot), S = slot === "r" && !singleRun && S0?.pvp ? { ...S0, ...S0.pvp } : S0; // 배틀로얄 전용 궁극기 수치(있으면)
   if (!S) return false;
-  if (character === "summoner" && slot === "r" && !p.pickUlt) { if (!ultReady()) return false; document.body.classList.toggle("summonChoose"); return false; }
+
   if (slot === "r" ? !ultReady() : skillCdLeft(slot) > 0) return false;
   // 이동형 스킬: 공통 방향 규칙 (자동 조준 없음). 그 밖의 스킬: 자동 조준
   const t = S.move ? moveAim(slot, aim) : S.aim === "none" ? null : clampAim(slot, aim || autoAimPoint(slot));
@@ -6300,8 +6313,7 @@ function castSkill(slot, aim) {
   if(ok===false)return false;
   let skillMotionKey=null, skillMotionDir=faceDir(p);
   if(character==="summoner"){
-    if(slot==="q")skillMotionKey="summoner-q-drink";
-    if(slot==="e")skillMotionKey=p.hyeGuardT>0?"summoner-e-rush":"summoner-e-retreat";
+    if(slot==="q"||slot==="e")skillMotionKey="summoner-r-summon";
     if(slot==="r"){
       skillMotionKey="summoner-r-summon";
       const target=p.pickUltPoint||ultPets[0];
@@ -6354,26 +6366,18 @@ const SKILL_IMPL = {
     r(S,t){if(p.rush||p.punchRush)return false;const [x,y]=unitTo(t);faceVec(x,y);p.punchRush={t:S.dur,tick:0,ang:Math.atan2(y,x),S,count:0,downRolled:new Set()};return true;},
   },
   summoner: {
-    q(S) {
-      p.hyeGuardT = S.dur; p.drunkHits=0;
-      fx.push({x:p.x,y:p.y,t:.65,ring:48});
-      return true;
-    },
-    e(S,t) {
-      if (!t) return false;
-      const [x,y] = unitTo(t); faceVec(x,y);
-      if(p.hyeGuardT>0){for(let i=0;i<12;i++)if(move(p,x,y,.065,true))break;for(const b of hitTargets(p))if(dist(p,b)<=S.radius+(b.raidBoss?bodyR(b):0)&&clearLine(p,b))hit(p,b,420,{raidSource:"e"});fx.push({x:p.x,y:p.y,t:.35,ring:90});}else{for(let i=0;i<8;i++)if(move(p,-x,-y,.07,true))break;shots.push({a:p,x:p.x,y:p.y,vx:x*700,vy:y*700,left:330,d:330,range:330,raidSource:"e"});}
-      return true;
-    },
-    r(S) {
-      if (pet || ultPets.length || flight) return false;
-      const id = deck[selected], target = p.pickUltPoint || autoSummonSpot(), q = summonPoint(target.x,target.y);
-      if (!mons[id] || !q.ok) return false;
-      const base = PET_DEX[id]?.base ?? id;
-      const mul = [1.65,1.55,1.7,1.7,1.55,1.05,1.45,1.85][base] || 1.2;
-      const hp = Math.round(petMaxHp(id)*1.5*(1+(singleRun?.mods?.petUltHp||0)));
-      ultPets = [{...actor(q.x,q.y),id,hp,max:hp,life:10,owner:p,atkMul:mul,ult:true,skillCD:0}];
-      fx.push({x:q.x,y:q.y,t:.6,pkball:true,col:PET_LOOK[id]?.color});
+    q(){return hyeCompanion(0);},
+    e(){return hyeCompanion(PET_DEX.find(d=>d.dex===151).id);},
+    r(S){
+      if(ultPets.length)return false;
+      const ids=[6,9,3].map(dex=>PET_DEX.find(d=>d.dex===dex).id);
+      ultPets=ids.map((id,i)=>{
+        const ang=i*Math.PI*2/3;
+        const q=freeSpot(clamp(p.x+Math.cos(ang)*65,30,W-30),clamp(p.y+Math.sin(ang)*65,30,H-30),16)||p;
+        const hp=Math.round(petMaxHp(id)*.8*(1+(singleRun?.mods?.petUltHp||0)));
+        fx.push({x:q.x,y:q.y,t:.6,ring:42});
+        return {...actor(q.x,q.y),id,hp,max:hp,life:S.dur,owner:p,ult:true,skillCD:0};
+      });
       document.body.classList.remove("summonChoose");
       return true;
     },
@@ -8572,7 +8576,7 @@ function draw() {
   ygDraw();
   drawBlades();
   for (const c of clones) drawClone(c);
-  setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + pet.life.toFixed(1) + "초" : "미소환"}`);
+  setText("petHUD", `선택: ${mons[deck[selected]][0]} | Q ${summonCD[deck[selected]].toFixed(1)}초 | E ${swapCD.toFixed(1)}초 | 자동 기술 ${(pet?.skillCD || 0).toFixed(1)}초 | 덱 CD ${deck.map((id, i) => `${i + 1}:${summonCD[id].toFixed(1)}`).join(" / ")} | ${pet ? "소환 유지 " + (Number.isFinite(pet.life)?pet.life.toFixed(1)+"초":"체력 유지") : "미소환"}`);
   if (singleRun && !vis) drawMobShots();
   for (let s of shots) {
     if(s.ygShot){g.save();g.translate(s.x,s.y-12);g.rotate(Math.atan2(s.vy,s.vx));g.strokeStyle='#ffd99a';g.lineWidth=2;g.beginPath();g.moveTo(-23,0);g.lineTo(15,0);g.stroke();for(let i=0;i<3;i++){g.fillStyle='#d57928';g.fillRect(-8+i*7,-5,6,10);g.strokeStyle='#ffdb76';g.strokeRect(-8+i*7,-5,6,10);}g.restore();continue;}
