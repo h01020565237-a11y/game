@@ -9,7 +9,7 @@ window.addEventListener("unhandledrejection",e=>show(e.reason?.message||e.reason
 window.addEventListener("DOMContentLoaded",()=>{
 panel=document.createElement("div");panel.style.cssText="position:fixed;top:4px;left:4px;z-index:2147483647;background:#000d;color:#fff;font:12px monospace;padding:5px;white-space:pre-wrap;max-width:90%;pointer-events:none";
 document.body.append(panel);
-setInterval(()=>{try{panel.textContent="TEST22 UI | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
+setInterval(()=>{try{panel.textContent="TEST23 UI | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
 });
 })();
 </script>
@@ -13458,11 +13458,17 @@ body.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--ed
 body.summoner.summonChoose #arena #touch .petBtn[data-i="2"]{right:calc(var(--edge) + var(--pitch)*2)!important;}
 </style>
 <style id="combat-visibility-test21">
-body.mobile #arena #touch{--big:min(28.8cqh,17.6cqw,144px);--small:min(16.2cqh,9cqw,77.4px);--gap:min(2.5cqh,12px);--edge:2%;--floor:3%;}
+body.mobile #arena #touch{--big:min(25.92cqh,15.84cqw,129.6px);--small:min(16.2cqh,9cqw,77.4px);--gap:min(2.5cqh,12px);--edge:2%;--floor:3%;}
 body.mobile #arena #touch #atk{opacity:.42!important;transition:opacity .12s ease;}
 body.mobile #arena #touch #atk:active,body.mobile #arena #touch #atk.is-held{opacity:.95!important;}
-body.mobile #arena #touch :is(#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn){opacity:.62;}
-body.mobile #arena #touch :is(#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn):active{opacity:1;}
+body.mobile #arena #touch :is(#summonBtn,#bearHeal,#dashBtn){opacity:1;}
+body.mobile #arena #touch :is(#summonBtn,#bearHeal,#dashBtn).cooling{opacity:.55;}
+body.mobile #arena #touch #ultBtn{opacity:.65;}
+body.mobile #arena #touch #ultBtn:is(.ready,.active){opacity:1;}
+body.mobile #arena #touch #pickBtn.show{opacity:1;}
+body.mobile #arena #touch #grenBtn:not(.empty){opacity:1;}
+body.mobile #arena #touch #grenBtn:not(.empty).cooling{opacity:.55;}
+body.mobile #arena #touch #mv{width:min(38.7cqh,22.5cqw,180px)!important;}
 body.mobile #arena #touch .stick#mv{opacity:.28;}
 body.mobile #arena #touch .stick#mv.on{opacity:.75;}
 </style>
