@@ -12716,14 +12716,14 @@ function gcDrawFurniture(b,g0=g){const g=g0;const {x,y,fw:w,fh:h,kind}=b;g.save(
  if(kind==='chair'){g.fillStyle=b.fixed?'#626c74':'#9a6c42';g.fillRect(-w/2,-h/2-12,w,10);g.strokeStyle='#59493e';g.strokeRect(-w/2,-h/2-12,w,10);}if(kind==='lectern'){g.fillStyle='#987146';g.fillRect(-w/2+7,-h/2+10,w-14,h-16);g.fillStyle='#ebd3b1';g.font='bold 12px sans-serif';g.textAlign='center';g.fillText('교탁',0,4);}
  if(b.fixed){g.fillStyle='#e1e8eb';g.fillRect(-5,-3,10,6);g.strokeStyle='#4f5b63';g.strokeRect(-5,-3,10,6);}else if(b.hp<b.initialHp){g.strokeStyle='#644631';g.lineWidth=2;g.beginPath();g.moveTo(-w*.27,-h*.32);g.lineTo(0,0);g.lineTo(-3,h*.28);g.moveTo(0,0);g.lineTo(w*.28,-h*.1);g.stroke();}
  g.restore();if(!b.fixed&&b.hp<b.initialHp)bar(x,y-h/2-14,b.hp,b.initialHp);}
-function gcBossStrike(a,r,d,stun=0){for(const b of boxes.slice())if(b.school&&b.hp>0&&dist(a,b)<=r+Math.max(b.fw,b.fh)/2&&clearLine(a,b))hit(a,b,d);if(p.hp>0&&dist(a,p)<=r&&clearLine(a,p)){hit(a,p,d);if(stun)p.stun=Math.max(p.stun||0,stun);}fx.push({x:a.x,y:a.y,t:.4,ring:r});}
+function gcBossStrike(a,r,d,stun=0){for(const b of boxes.slice())if(b.school&&b.hp>0&&dist(a,b)<=r+Math.max(b.fw,b.fh)/2&&clearLine(a,b))hit(a,b,d);if(p.hp>0&&dist(a,p)<=r&&clearLine(a,p)){hit(a,p,d);if(stun){p.stun=Math.max(p.stun||0,stun);fx.push({x:p.x,y:p.y-42,t:stun,text:'기절 '+stun.toFixed(1)+'초',tcol:'#ffe17a'});}}fx.push({x:a.x,y:a.y,t:.4,ring:r});}
 function gcBossMove(a,dt){
  const pRoom=p.y<531;let target=p;
  if((pRoom&&a.y>504)||(!pRoom&&a.y<558)){const door=[222,938].sort((x,y)=>(Math.abs(a.x-x)+Math.abs(p.x-x))-(Math.abs(a.x-y)+Math.abs(p.x-y)))[0];target={x:door,y:pRoom?490:572};}
  return steer(a,target.x,target.y,dt);
 }
 function gcBossAI(a,dt){const ph=bossPhase(a);a.gcCD=Math.max(0,(a.gcCD||0)-dt/(singleRun?.story&&!singleRun.raid?1.15:1));a.dir=(Math.round(Math.atan2(p.x-a.x,a.y-p.y)/(Math.PI/4))+8)%8;
- if(a.gcImmune>0){a.gcImmune=Math.max(0,a.gcImmune-dt);a.stun=0;gcBossMove(a,dt*1.3);if(!a.gcImmune){a.tele=null;gcBossStrike(a,160,900,1);a.gcCD=2.2;singleRun.banner='경찬: 속았지?';singleRun.bannerT=1.4;}else a.tele={P:{k:'slam',radius:160},x:a.x,y:a.y,t:a.gcImmune,dur:3,ang:0};return;}
+ if(a.gcImmune>0){a.gcImmune=Math.max(0,a.gcImmune-dt);a.stun=0;if(dist(a,p)>77)gcBossMove(a,dt*1.3);else {a.moving=false;}if(!a.gcImmune){a.tele=null;gcBossStrike(a,160,900,1);a.gcCD=2.2;singleRun.banner='경찬: 속았지?';singleRun.bannerT=1.4;}else a.tele={P:{k:'slam',radius:160},x:a.x,y:a.y,t:a.gcImmune,dur:3,ang:0};return;}
  if(a.gcCast){const c=a.gcCast;a.moving=false;c.t-=dt;if(c.t<=0){a.gcCast=null;a.tele=null;gcBossStrike(a,c.r,c.dmg,c.stun);a.atkAnim=.3;a.gcCD=ph===2?1.0:1.6;}else a.tele.t=c.t;return;}
  if(ph>0&&!a.gcUltUsed){a.gcUltUsed=true;a.gcImmune=3;singleRun.banner='경찬: 나 항복! 항복!!';singleRun.bannerT=2;return;}
  const d=dist(a,p);if(d>77){const moved=gcBossMove(a,dt);if(!moved&&a.gcCD<=0){const b=boxes.filter(b=>b.school&&dist(a,b)<95&&clearLine(a,b)).sort((x,y)=>dist(a,x)-dist(a,y))[0];if(b){hit(a,b,350);a.gcCD=.9;}}}
