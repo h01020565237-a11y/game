@@ -1561,7 +1561,7 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
   <div id="rotateHint">휴대폰을 가로로 돌려 주세요 ↻</div>
   <h2>Battle Lab</h2>
   <div id="menuPanel">
-  <div id="help">WASD 이동 · Space 대시 · 좌클릭 공격 · 아이템 자동 획득 · F 무기 교체 · G/우클릭 수류탄 · Esc 캐릭터 선택 · Q 소환 · E 포켓몬 교체 · 1~3 포켓몬 선택 · R 재시작</div>
+  <div id="help">WASD 이동 · Space 대시 · 좌클릭 공격 · 아이템 자동 획득 · F 무기 교체 · Esc 캐릭터 선택 · Q 소환 · E 포켓몬 교체 · 1~3 포켓몬 선택 · R 재시작</div>
   <div>
     <label>캐릭터
       <select id="character">
@@ -1595,7 +1595,6 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
       <button id="bearHeal" class="skb" style="display:none" aria-label="스킬 2"><i class="sk-ico" aria-hidden="true"></i><span class="cdt"></span><span id="tentChargeHud" hidden></span><kbd>E</kbd></button>
       <button id="ultBtn" class="skb ult" aria-label="궁극기"><i class="sk-ico" aria-hidden="true"></i><span id="ultLabel" class="cdt">0%</span><kbd>X</kbd></button>
       <button id="pickBtn" aria-label="무기 교체" aria-hidden="true"><i class="w-ico" aria-hidden="true"></i><b class="swap-arrow" aria-hidden="true">⇄</b><span id="pickName" class="nm"></span><kbd>F</kbd></button>
-      <button id="grenBtn" aria-label="수류탄"><i class="w-ico" aria-hidden="true"></i><span id="grenCd" class="cdt"></span><span id="grenCount" class="cnt">0</span><kbd>G</kbd></button>
       <div id="passiveChip" class="passive-chip" aria-label="패시브"><i class="sk-ico" aria-hidden="true"></i><span class="pv-txt"><b id="passiveName"></b><small id="passiveState">패시브</small></span></div>
       <button class="petBtn" data-i="0" aria-label="포켓몬 1"></button>
       <button class="petBtn" data-i="1" aria-label="포켓몬 2"></button>
@@ -1621,7 +1620,6 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
     <div id="weaponHud">
       <span id="weaponIcon" aria-hidden="true"></span>
       <span class="wtext"><b id="weaponName">맨손</b><span id="ammoPips">●●●</span></span>
-      <span id="grenHud">수류탄 0/3</span>
       <span id="gearHud" hidden></span>
     </div>
 
@@ -1967,7 +1965,6 @@ const DROP_TABLE = [
   { type: LOOT.weapon, id: 3, weight: 10 }, // 권총
   { type: LOOT.weapon, id: 4, weight: 10 }, // 산탄총
   { type: LOOT.weapon, id: 5, weight: 10 }, // 저격총
-  { type: LOOT.grenade, weight: 28 },
   { type: LOOT.heal, weight: 22 },
   { type: LOOT.accessory, weight: 50, accessory: true }, // 비활성 (예전: 상자의 50%)
 ];
@@ -5019,7 +5016,6 @@ function endEndlessWave(boss) {
   hazards = [];
   for (const l of loot.slice()) {
     if (l.type === LOOT.heal) healActor(p, p.max * (l.amount ?? HEAL.ratio));
-    else if (l.type === LOOT.grenade) p.grenades = Math.min(GRENADE.max, (p.grenades || 0) + 1);
     else if (l.type === LOOT.weapon && !p.w) p.w = l.id;
   }
   loot = [];
@@ -5777,7 +5773,6 @@ onkeydown = (e) => {
       }
     }
   }
-  if (e.code === "KeyG" && !over && !e.repeat) throwGrenade(p, mouse.x, mouse.y);
   if (e.code === "Escape") return; // Esc = 일시정지 메뉴 (js/ui/lobby.js)
   if (e.code === "KeyR" && !singleRun?.raid) reset();
   if (e.code === "KeyF" && !over) pickup(p, isSwapLoot);
@@ -5806,7 +5801,6 @@ c.onmousedown = (e) => {
   // 터치 모드에서는 캔버스 탭이 호환 마우스 이벤트로 공격을 일으키지 않게 무시
   if (document.body.classList.contains("mobile")) return;
   if (e.button === 0) mouse.down = true;
-  if (e.button === 2 && !over) throwGrenade(p, mouse.x, mouse.y); // 오른쪽 클릭: 수류탄
 };
 onmouseup = () => mouse.down = false;
 c.oncontextmenu = (e) => e.preventDefault();
@@ -5820,7 +5814,7 @@ function hasGear(a, id) {
 }
 // 상자 드롭: DROP_TABLE 가중치 추첨
 function rollDrop() {
-  const table = DROP_TABLE.filter((e) => (!e.accessory || FEATURES.accessories) && Number.isFinite(e.weight) && e.weight > 0 && (e.type === LOOT.heal || e.type === LOOT.grenade || (e.type === LOOT.weapon && MAIN_WEAPONS.includes(e.id)) || (e.type === LOOT.accessory && FEATURES.accessories && gear.length > 0)));
+  const table = DROP_TABLE.filter((e) => (!e.accessory || FEATURES.accessories) && Number.isFinite(e.weight) && e.weight > 0 && (e.type === LOOT.heal || (e.type === LOOT.weapon && MAIN_WEAPONS.includes(e.id)) || (e.type === LOOT.accessory && FEATURES.accessories && gear.length > 0)));
   if (!table.length) return { type: LOOT.heal };
   let r = Math.random() * table.reduce((s, e) => s + e.weight, 0);
   for (const e of table) {
@@ -5960,6 +5954,7 @@ function hit(a, b, d, o = {}) {
 }
 // 아이템 떨어뜨리기: 모두 수명(CHEST_RULES.lootLife)을 가짐 → 안 주우면 사라짐
 function dropLoot(l) {
+  if(l.type===LOOT.grenade||(l.type===LOOT.weapon&&!MAIN_WEAPONS.includes(l.id)))return null;
   l.life = CHEST_RULES.lootLife;
   loot.push(l);
   return l;
@@ -5968,7 +5963,7 @@ function dropLoot(l) {
 function isFreeLoot(a, l) {
   if (l.type === 9) return a===p && !!singleRun?.raid && (l.id===4||singleRun.items.includes(null));
   if (l.type === LOOT.weapon) return !a.w;
-  if (l.type === LOOT.grenade) return (a.grenades || 0) < GRENADE.max;
+  if (l.type === LOOT.grenade) return false;
   if (l.type === LOOT.heal) return a.hp < a.max;
   return FEATURES.accessories && !a.gear.includes(l.id) && a.gear.length < 3;
 }
@@ -6002,7 +5997,7 @@ function pickup(a, pred = isUsefulLoot) {
     a.reloadTarget = a.ammo < AMMO.max ? reloadTime(a) : 0;
     a.reload = progress * a.reloadTarget;
   } else if (l.type === LOOT.grenade) {
-    a.grenades = Math.min(GRENADE.max, (a.grenades || 0) + GRENADE.perPickup);
+    loot=loot.filter(x=>x!==l);return;
   } else if (l.type === LOOT.heal) {
     const amt = a.max * (l.amount ?? HEAL.ratio); // 무한 생존 처치 드롭은 10% (l.amount)
     if (a === p) healActor(a, amt);
@@ -6132,27 +6127,8 @@ function updateAmmo(a, dt) {
   }
 }
 // 수류탄 투척 (소모품): 기존 수류탄 판정 그대로 (0.8초 후 반경 90, 피해 500, 벽을 넘어감)
-function throwGrenade(a, x, y) {
-  if(a===p&&character==="gyeongchan"&&p.gcImmune>0)return false;
-  if (a===p && singleRun?.secretBoss && singleRun.phase==="intro") return;
-  if (a.stun > 0 || (a.grenades || 0) < 1 || (a.grenCD || 0) > 0) return false;
-  let [, d, , r] = weapons[GRENADE.weaponId];
-  if (a === p) d *= p.weaponMul || 1;
-  d *= hasGear(a, 2) ? 1.15 : 1;
-  const ang = Math.atan2(y - a.y, x - a.x), len = Math.min(r, Math.hypot(x - a.x, y - a.y));
-  a.grenades--;
-  a.grenCD = GRENADE.gap;
-  a.reveal = Math.max(a.reveal || 0, BUSH_RULES.attackReveal);
-  if (a === p) p.stealth = 0;
-  a.attackAng = ang;
-  a.aimT = 0.35;
-  if(a===p&&!p.rehanSlide)a.skillMotion=null;
-  a.swing = { kind: "throw", w: GRENADE.weaponId, t: 0, dur: WEAPON_FEEL[GRENADE.weaponId].dur };
-  shots.push({ a, x: a.x, y: a.y, sx: a.x, sy: a.y, tx: clamp(a.x + Math.cos(ang) * len, 0, W), ty: clamp(a.y + Math.sin(ang) * len, 0, H), t: GRENADE.fuse, d, gren: true });
-  sfx("grenade_throw", a);
-  if(a===p)qaFlash("grenBtn");
-  return true;
-}
+function throwGrenade(){return false;}
+
 function attack(a, x, y) {
   if(a===p&&p.rehanSlide)return false;
   if(a===p&&character==="gyeongchan"&&p.gcImmune>0)return false;
@@ -7233,9 +7209,6 @@ function update(dt) {
       }
     }
     // 수류탄: 대상이 벽 뒤에 있거나 가끔, 투척 거리 안이면 던짐 (플레이어와 같은 규칙: 최대 3개, 자동 충전 없음)
-    if (a.grenades > 0 && b && b.max && (a.grenT || 0) <= elapsed && dist(a, b) > 90 && dist(a, b) < weapons[GRENADE.weaponId][3] && (!clearLine(a, b) || Math.random() < 0.02)) {
-      if (throwGrenade(a, b.x, b.y)) a.grenT = elapsed + 3 + Math.random() * 2;
-    }
     if (l && dist(a, l) < 250) {
       steer(a, l.x, l.y, dt);
       pickup(a);
@@ -8538,7 +8511,7 @@ function draw() {
     if(l.taken)continue;
     if(l.type===9){raidDrawLoot(l);continue;}
     if (l.life !== undefined && l.life < CHEST_RULES.blink && Math.floor(elapsed * 8) % 2) continue; // 사라지기 직전 깜빡임
-    const icon = l.type === LOOT.weapon ? weaponIcons[l.id] : l.type === LOOT.grenade ? weaponIcons[GRENADE.weaponId] : null;
+    const icon = l.type === LOOT.weapon ? weaponIcons[l.id] : null;
     if (l.type === LOOT.heal) drawMedkit(l.x, l.y + Math.sin(elapsed * 3 + l.x) * 2);
     else if (icon && icon.naturalWidth) {
       // 무기 아이콘: 바닥 그림자 + 살짝 떠 있는 움직임
@@ -8896,7 +8869,7 @@ function draw() {
     g.fillStyle = "#0007";
     g.fillRect(0, 0, VW, VH);
   }
-  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} ${FEATURES.accessories ? "| 장비 " + (p.gear.map((i) => gear[i]).join(", ") || "없음") + " " : ""}| 수류탄 ${p.grenades}/${GRENADE.max} | 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
+  setText("hud", `HP ${Math.max(0, Math.round(p.hp))}/${p.max} | 무기 ${weapons[p.w][0]} ${"●".repeat(p.ammo)}${"○".repeat(Math.max(0, AMMO.max - p.ammo))} ${FEATURES.accessories ? "| 장비 " + (p.gear.map((i) => gear[i]).join(", ") || "없음") + " " : ""}| 생존 ${bots.filter((a) => a.hp > 0).length + (p.hp > 0 ? 1 : 0)} | 대시 ${p.dashCD > 0 ? p.dashCD.toFixed(1) + "초" : "준비 완료"} | 무적 ${god ? "ON" : "OFF"} | AI ${freeze ? "정지" : "활성"}`);
   const SD = SKILL_DATA[character];
   setText("msg", nt > 0 ? notice : character === "summoner" ? "Q 딱 한잔 · E 겁쟁이!! · X 너로 정했다!" : `${SD.q.name} ${p.skcd.q.toFixed(1)}초 | ${SD.e.name} ${character==="octo"?tentChargeLabel()+" · ":""}${p.skcd.e.toFixed(1)}초 | 궁극기 ${Math.floor(p.ult * 100)}%${character === "runner" ? " | 허세 " + Math.floor(p.energy) + "%" : ""}`);
 }
@@ -9730,13 +9703,6 @@ function touchHUD() {
     atkBtn.dataset.w = basicOf(p)?.name || weapons[p.w][0];
   }
   setText("atkAmmo", ammoText(p));
-  setText("grenCount", String(p.grenades || 0));
-  const gOn = (p.grenades || 0) > 0;
-  if (grenBtn._on !== gOn) {
-    grenBtn._on = gOn;
-    grenBtn.classList.toggle("empty", !gOn);
-    grenBtn.setAttribute("aria-disabled", String(!gOn));
-  }
   if (character !== "summoner" || !ultReady()) document.body.classList.remove("summonChoose");
   if (character === "summoner") for (let i = 0; i < 3; i++) {
     const id=deck[i],btn=petBtns[i],live=ultPets.some(pt=>pt.id===id),wait=ultReady()?0:1;
@@ -9780,7 +9746,6 @@ function touchHUD() {
   const rt = p.reloadTarget || reloadTime(p), empty = p.ammo !== undefined && p.ammo < 1;
   ringBtn(atkBtn, empty ? Math.max(0, rt - (p.reload || 0)) : p.cd > 0.05 ? p.cd : 0, empty ? rt : gap, "", "atkCd");
   // 수류탄: 별도 쿨타임 링 + 수량, 0개면 비활성
-  ringBtn(grenBtn, gOn ? p.grenCD || 0 : 0, GRENADE.gap, "", "grenCd");
   // 패시브: 조작 버튼이 아닌 상태 표시
   syncPassiveChip(D);
   // 무기 교체 버튼: 바꿀 수 있는 무기 위에 있을 때만 (금빛 팝 등장 / 페이드 사라짐). 자리는 고정이라 다른 버튼이 안 흔들림
@@ -9838,41 +9803,8 @@ for (const ev of ["touchstart", "touchmove"]) {
 // 수류탄 버튼 (소모품, 최대 3개)
 // - 탭: 가장 가까운 적에게 자동 조준 투척 (적이 없으면 바라보는 방향 최대 거리)
 // - 끌기: 방향과 거리를 직접 조준 (화면에 낙하 지점과 폭발 범위 표시), 손을 떼면 투척, 가운데로 되돌리면 취소
-const grenBtn = document.querySelector("#grenBtn");
-grenBtn.style.setProperty("--gicon", weaponIcons[GRENADE.weaponId] ? `url("${weaponIcons[GRENADE.weaponId].src}")` : "none"); // 수류탄 아이콘 (사용해도 장착 무기는 그대로)
-let grenPress = null, grenAim = null;
-grenBtn.onpointerdown = (e) => {
-  e.preventDefault();
-  if (over || grenPress || !(p.grenades > 0)) return; // 수류탄이 없으면 버튼 비활성
-  grenBtn.setPointerCapture(e.pointerId);
-  grenPress = { id: e.pointerId, x: e.clientX, y: e.clientY };
-  grenAim = null;
-};
-grenBtn.onpointermove = (e) => {
-  if (grenPress?.id !== e.pointerId) return;
-  let [dx, dy] = toLocal(e.clientX - grenPress.x, e.clientY - grenPress.y), m = Math.hypot(dx, dy);
-  if (m > AIM_DEAD || grenAim) {
-    const R = grenBtn.offsetWidth * 1.6;
-    grenAim = m < 1 ? { x: 0, y: 0, mag: 0, cancel: true } : { x: dx / m, y: dy / m, mag: clamp(m / R, 0.2, 1), cancel: m <= AIM_DEAD };
-  }
-};
-function releaseGrenade(fire) {
-  if (!grenPress) return;
-  if (fire && !over) {
-    const r = weapons[GRENADE.weaponId][3];
-    if (grenAim) {
-      if (!grenAim.cancel) throwGrenade(p, p.x + grenAim.x * r * grenAim.mag, p.y + grenAim.y * r * grenAim.mag);
-    } else {
-      const b = minBy(targets(p).filter((t) => t.max && dist(p, t) <= r), (t) => dist(p, t));
-      const a = b ? Math.atan2(b.y - p.y, b.x - p.x) : dirToAngle(p.dir);
-      throwGrenade(p, b ? b.x : p.x + Math.cos(a) * r, b ? b.y : p.y + Math.sin(a) * r);
-    }
-  }
-  grenPress = null;
-  grenAim = null;
-}
-grenBtn.onpointerup = (e) => grenPress?.id === e.pointerId && releaseGrenade(true);
-grenBtn.onpointercancel = grenBtn.onlostpointercapture = () => releaseGrenade(false);
+let grenAim=null;
+function releaseGrenade(){grenAim=null;}
 </script>
   <script>/* js/ui/lobby.js */
 // 로비(캐릭터 선택), 전투 HUD, 결과 화면, 사운드 설정
@@ -10296,7 +10228,6 @@ function updateHUD() {
   }
   setText("weaponName", basicOf(p)?.name || weapons[p.w][0]); // 상훈·은숙 맨손 = 고유 원거리 기본 공격
   setText("ammoPips", "●".repeat(p.ammo) + "○".repeat(Math.max(0, AMMO.max - p.ammo)));
-  setText("grenHud", "수류탄 " + (p.grenades || 0) + "/" + GRENADE.max);
   // 액세서리 UI: 기능이 꺼져 있으면 숨김
   const gh = el("gearHud");
   if (gh._on !== FEATURES.accessories) {
@@ -12862,7 +12793,7 @@ function raidEnterBattle(k){
   closeLobby();
 }
 function startRaid(k){if(!canPlay(k))return;const v=raidState();if(v.attempts>=RAID_LIMIT||v.damage>=RAID_MAX){el('lobbyErr').textContent=v.damage>=RAID_MAX?'토벌 완료!':'오늘 도전 기회를 모두 사용했어. 한국 시간 자정에 초기화돼.';return;} deck=lobbyDeck.slice();singleRun={id:'jichan_raid',raid:true,qaOnly:ROSTER.testMode,weapon:0};el('singlePanel').hidden=true;document.querySelector('#character').value=k;raidEnterBattle(k);}
-function raidSetup(){const R=singleRun;let previous=raidConsume(R.qaOnly);if(!previous){raidHide();lobbyMode='raid';openLobby();return;}const hp=R.qaOnly?RAID_MAX-previous.damage:R.serverStart.startedHP;Object.assign(R,{m:{zone:false},phase:'raid',wave:1,timer:RAID_DURATION,items:[null,null],deodorant:0,energy:0,fan:0,gas:[],drops:12,previous,startedHP:hp,deadline:Date.now()+RAID_DURATION*1000,banner:'지찬이 레이드 시작!',bannerT:2,finished:false,aim:null,damageBy:{basic:0,q:0,e:0,r:0,grenade:0,pet:0,other:0},casts:{q:0,e:0,r:0}});setActiveMap(RAID_MAP);p.x=560;p.y=550;p.w=R.weapon;p.ammo=AMMO.max;p.grenades=1;bots=[];boxes=[];loot=[];shots=[];mobShots=[];hazards=[];boxRespawns=[];
+function raidSetup(){const R=singleRun;let previous=raidConsume(R.qaOnly);if(!previous){raidHide();lobbyMode='raid';openLobby();return;}const hp=R.qaOnly?RAID_MAX-previous.damage:R.serverStart.startedHP;Object.assign(R,{m:{zone:false},phase:'raid',wave:1,timer:RAID_DURATION,items:[null,null],deodorant:0,energy:0,fan:0,gas:[],drops:12,previous,startedHP:hp,deadline:Date.now()+RAID_DURATION*1000,banner:'지찬이 레이드 시작!',bannerT:2,finished:false,aim:null,damageBy:{basic:0,q:0,e:0,r:0,pet:0,other:0},casts:{q:0,e:0,r:0}});setActiveMap(RAID_MAP);p.x=560;p.y=550;p.w=R.weapon;p.ammo=AMMO.max;p.grenades=0;bots=[];boxes=[];loot=[];shots=[];mobShots=[];hazards=[];boxRespawns=[];
  const b=Object.assign(actor(560,355),{raidBoss:true,mob:'boss',hp,max:RAID_MAX,r:63,spd:.5,visual:'suit',look:{scale:2,aura:1},spawnT:0,deadT:0,raidRest:0,raidCD:1.2,raidPattern:0,raidCC:0,raidTele:null});R.boss=b;bots.push(b);
  for(const [x,y] of [[158,155],[313,160],[810,160],[955,155],[155,365],[960,365],[160,590],[340,640],[780,640],[960,590],[350,410],[770,410]])boxes.push({x,y,hp:500,raidBox:true,school:true});
  resetNav();document.body.classList.add('raidActive');el('raidInfo').hidden=el('raidItems').hidden=false;el('resOnline').hidden=true;raidHud();}
@@ -12931,7 +12862,7 @@ addEventListener('keydown',e=>{if(!e.repeat&&singleRun?.raid&&!over&&['Digit4','
 <script>
 
 function raidDamageSource(a,o={}){return o.raidSource||(o.ult||a?.ult||a?.clone?'r':a!==p?'pet':singleRun?.castSource|| (o.basic?'basic':'other'));}
-function renderRaidBreakdown(R){const root=el('raidBreakdown');root.hidden=false;el('results').classList.add('raidResult');const total=R.dealt||0,by=R.damageBy||{};const labels={basic:'기본 공격',q:'Q · '+(SKILL_DATA[character]?.q?.name||'1번 스킬'),e:'E · '+(SKILL_DATA[character]?.e?.name||'2번 스킬'),r:'R · '+(SKILL_DATA[character]?.r?.name||'궁극기'),grenade:'수류탄',pet:'일반 소환수',other:'기타'};root.replaceChildren();const title=document.createElement('b');title.textContent='피해량 상세 · 보스에게 실제로 입힌 피해';root.append(title);for(const [k,label] of Object.entries(labels)){const n=by[k]||0;if(['pet','other'].includes(k)&&!n)continue;const row=document.createElement('div');row.className='raid-stat-row';const name=document.createElement('span');name.textContent=label+(R.casts&&k in R.casts?' · '+R.casts[k]+'회 사용':'');const bar=document.createElement('i');const fill=document.createElement('em');fill.style.width=(total?Math.min(100,n/total*100):0)+'%';bar.append(fill);const num=document.createElement('b');num.textContent=Math.round(n).toLocaleString()+' ('+(total?n/total*100:0).toFixed(1)+'%)';row.append(name,bar,num);root.append(row);}}
+function renderRaidBreakdown(R){const root=el('raidBreakdown');root.hidden=false;el('results').classList.add('raidResult');const total=R.dealt||0,by=R.damageBy||{};const labels={basic:'기본 공격',q:'Q · '+(SKILL_DATA[character]?.q?.name||'1번 스킬'),e:'E · '+(SKILL_DATA[character]?.e?.name||'2번 스킬'),r:'R · '+(SKILL_DATA[character]?.r?.name||'궁극기'),pet:'일반 소환수',other:'기타'};root.replaceChildren();const title=document.createElement('b');title.textContent='피해량 상세 · 보스에게 실제로 입힌 피해';root.append(title);for(const [k,label] of Object.entries(labels)){const n=by[k]||0;if(['pet','other'].includes(k)&&!n)continue;const row=document.createElement('div');row.className='raid-stat-row';const name=document.createElement('span');name.textContent=label+(R.casts&&k in R.casts?' · '+R.casts[k]+'회 사용':'');const bar=document.createElement('i');const fill=document.createElement('em');fill.style.width=(total?Math.min(100,n/total*100):0)+'%';bar.append(fill);const num=document.createElement('b');num.textContent=Math.round(n).toLocaleString()+' ('+(total?n/total*100:0).toFixed(1)+'%)';row.append(name,bar,num);root.append(row);}}
 const MODE_LAUNCH_ART={"single": "assets/ui/image-004.webp", "wave": "assets/ui/image-005.webp", "pvp": "assets/ui/image-006.webp"};let modeChoice='single';const modeLabels={single:['STORY','스토리 모드','추억의 학교에서 친구들과의 이야기를 만나고 새로운 동료를 영입하세요.','스토리 미션'],wave:['ENDLESS','무한 웨이브','끝없이 밀려오는 적을 돌파하고 장비를 모아 더 높은 웨이브에 도전하세요.','캐릭터 선택'],raid:['WORLD RAID','지찬','권총·샷건·저격총 피해 +20% · 제작 재료 획득','레이드 준비'],pvp:['COMING SOON','PvP','친구들과 실력을 겨루는 대전 콘텐츠를 준비 중입니다.','준비 중']};
 function appendModeExtraButton(root,label,fn,disabled=false){const wrap=document.createElement('div');wrap.className='mode-extra-btn';wrap.style.gridColumn='1 / -1';const btn=document.createElement('button');btn.type='button';btn.className='btn '+(disabled?'btn-ghost':'btn-gold');btn.textContent=label;btn.disabled=!!disabled;if(fn)btn.onclick=fn;btn.style.width='100%';wrap.append(btn);root.append(wrap);}
 function modePreview(k){modeChoice=k;for(const id of ['modeSingle','modeWave','raidEntry','modePvp']){const b=el(id);b.classList.toggle('selected',b.dataset.mode===k);b.setAttribute('aria-pressed',String(b.dataset.mode===k));}const a=modeLabels[k];el('modeKicker').textContent=a[0];el('modeHead').textContent=a[1];el('modeDesc').textContent=a[2];el('modeGo').textContent=a[3];el('modeGo').disabled=k==='pvp';el('modeGear').hidden=k==='pvp';el('modeHeroArt').src=k==='raid'?raidAttackArt.src:MODE_LAUNCH_ART[k];const v=raidState();el('modeRaidHP').hidden=k!=='raid';el('modeRaidFill').style.width=(100*(RAID_MAX-v.damage)/RAID_MAX)+'%';el('modeRaidNum').textContent=(RAID_MAX-v.damage).toLocaleString()+' / '+RAID_MAX.toLocaleString();const d=el('modeDetails');d.replaceChildren();const rows=k==='raid'?[['오늘의 도전',Math.max(0,RAID_LIMIT-v.attempts)+'/3'],['제한 시간','03:00'],['나의 누적 피해',v.damage.toLocaleString()]]:k==='single'?[['영입 완료',singleSave.recruited.filter(x=>x!=='fallen_support').length+'/9'],['주요 보상','캐릭터 영입'],['진행 방식','싱글 미션']]:k==='wave'?[['시즌 2 개인 최고','W'+Math.max(0,...Object.values(seasonData.best).map(r=>r.wave||0))],['주요 보상','장비 · 재화'],['성장 방식','강화 카드']]:[['콘텐츠 상태','준비 중'],['플레이 방식','대전 예정']];for(const [key,val] of rows){const c=document.createElement('div');const sm=document.createElement('small');sm.textContent=key;const b=document.createElement('b');b.textContent=val;c.append(sm,b);d.append(c);}const rank=el('modeLocalRank');rank.hidden=!['wave','raid'].includes(k);rank.disabled=false;rank.textContent=k==='raid'?'기여도':'시즌 1 랭킹';rank.onclick=k==='wave'?()=>{sfx('ui_click');openRanking('all');}:k==='raid'?()=>{sfx('ui_click');openRaidContrib();}:null;el('raidContrib').hidden=true;el('modeScreenTitle').textContent=k==='raid'?'⚔ 월드 레이드':k==='wave'?'⚔ 무한 웨이브':k==='single'?'▣ 스토리 모드':'PvP';el('modeScreenTitle').closest('.mode-new').dataset.activeMode=k;if(k==='raid'){el('modeRaidNum').textContent=(RAID_MAX-v.damage).toLocaleString()+' / '+RAID_MAX.toLocaleString()+' ('+(100*(RAID_MAX-v.damage)/RAID_MAX).toFixed(1)+'%)';el('modeGo').textContent='레이드 도전';el('modeKicker').textContent='월드 레이드';}el('modeGuide').textContent=k==='raid'?'공략 안내':'모드 안내';}
