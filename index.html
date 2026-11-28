@@ -1890,8 +1890,9 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
             <div class="stat"><span>생존 시간</span><b id="resTime">0:00</b></div>
           </div>
         </div>
-        <div id="seasonReward" hidden></div><div id="raidBreakdown" hidden></div><div id="resOnline" class="res-online" hidden><span id="resOnlineText"></span><button id="resResend" class="btn btn-ghost" type="button" hidden>다시 보내기</button><button id="resRankBtn" class="btn btn-gold" type="button" hidden>🏆 랭킹 보기</button></div>
+        <div id="seasonReward" hidden></div><div id="raidBreakdown" hidden></div><div id="resOnline" class="res-online" hidden><span id="resOnlineText"></span><button id="resResend" class="btn btn-ghost" type="button" hidden>다시 보내기</button></div>
         <div class="res-btns">
+          <button id="resRankBtn" class="btn btn-gold" type="button" hidden>🏆 랭킹 보기</button>
           <button id="overBtn" class="btn btn-blue">다시 하기</button>
           <button id="resLobby" class="btn btn-gold">로비로</button>
         </div>
@@ -13415,6 +13416,26 @@ body.summoner.summonChoose #arena #touch .petBtn[data-i]{width:var(--small)!impo
 body.summoner.summonChoose #arena #touch .petBtn[data-i="0"]{right:var(--edge)!important;}
 body.summoner.summonChoose #arena #touch .petBtn[data-i="1"]{right:calc(var(--edge) + var(--pitch))!important;}
 body.summoner.summonChoose #arena #touch .petBtn[data-i="2"]{right:calc(var(--edge) + var(--pitch)*2)!important;}
+</style>
+<style id="result-layout-fix">
+#eoLobbyBtn,#eoResultBtn{box-shadow:0 2px 0 #392415!important;text-shadow:none!important;background:#67442b!important;}
+#results .res-card{max-height:96%;min-height:0;overflow-y:auto;overflow-x:hidden;justify-content:flex-start;box-sizing:border-box;}
+#results .res-card > *{flex-shrink:0;min-width:0;}
+#results .res-title{position:static;align-self:stretch;text-align:center;line-height:1.2;margin:0;}
+#results .res-body{flex-shrink:0;min-height:min-content;}
+#results #seasonReward{position:static;align-self:stretch;width:100%;box-sizing:border-box;max-height:none;overflow:visible;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:5px 10px;}
+#results #seasonReward[hidden],#results .res-btns > button[hidden]{display:none!important;}
+#results #seasonReward .reward-summary,#results #seasonReward .reward-items{min-width:0;flex-wrap:wrap;}
+#results #resOnline{position:static;width:100%;box-sizing:border-box;line-height:1.25;text-align:center;}
+#results .res-btns{width:100%;justify-content:center;align-items:center;gap:clamp(5px,1.5cqw,12px);flex-wrap:wrap;}
+#results .res-btns button{min-width:0;white-space:nowrap;box-sizing:border-box;font-size:clamp(10px,3.2cqh,16px);padding:clamp(5px,1.5cqh,9px) clamp(8px,2cqw,18px);}
+#results.raidResult .res-card{padding:clamp(6px,1.6cqh,14px);gap:clamp(3px,1cqh,8px);}
+#results.raidResult .res-title{font-size:clamp(16px,5cqh,28px);}
+#results.raidResult .res-stats .stat b{font-size:clamp(15px,5.2cqh,27px);line-height:1.15;}
+#results.raidResult .res-stats .stat span{font-size:clamp(9px,2.6cqh,14px);}
+#results.raidResult #raidBreakdown{padding:4px 7px;gap:2px;}
+#results.raidResult #seasonReward{padding:4px 7px;font-size:clamp(9px,2.7cqh,14px);}
+#results.raidResult #resOnline{font-size:clamp(9px,2.7cqh,14px);}
 </style>
 </body>
 </html>
