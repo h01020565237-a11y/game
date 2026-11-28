@@ -10314,6 +10314,10 @@ function syncResults() {
     r.hidden = true;
     return;
   }
+  // 이미 영입한 미션 재클리어: 결과·컷신 없이 싱글 목록으로 복귀. 최초 히든 영입은 유지.
+  if(singleRun&&!singleRun.qaOnly&&((over==="미션 성공"&&singleRun.replayRecruit)||(over==="히든 성공"&&!singleRun.secretNew))){
+    lobbyMode="single";openLobby();openSinglePanel();return;
+  }
   // 쓰러지는 순간을 잠깐 보여 준 뒤 결과 표시
   const show = () => {
     if (!over) return;
