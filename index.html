@@ -4368,8 +4368,16 @@ function endSingle() {
   mobShots = [];
   restoreEndlessSkills(); // 무한 생존 카드로 바뀐 스킬 수치를 원래대로
 }
+function isRecruitReplay(run,save){
+  if(!run)return false;
+  const mission=run.story||STORY_MISSIONS[run.id]||WAVE_MISSIONS[run.id];
+  return !!(mission&&(save.cleared[run.id]||save.recruited.includes(mission.reward)));
+}
 function setupWaveRun() {
   if(singleRun.raid)return raidSetup();
+  singleRun.replayRecruit=isRecruitReplay(singleRun,singleSave);
+  singleRun.granted=false; // 다시 하기에서도 새 판의 클리어 횟수는 정상 기록
+
   if (singleRun.endless) return setupEndless(); // 무한 생존 (js/game/endless.js)
   const m = WAVE_MISSIONS[singleRun.id];
   Object.assign(singleRun, {
@@ -10319,15 +10327,15 @@ function syncResults() {
     el("resChar").classList.remove("secretPortrait");
     el("resChar").src = lobbyArt[character].face.src;
     el("resName").textContent = DISPLAY_NAMES[character];
-    if (singleRun?.m && over === "미션 성공" && !singleRun.qaOnly) return showRecruitResult(); // 영입 성공: 다음 스토리 안내 화면 (js/ui/single.js)
+    if (singleRun?.m && over === "미션 성공" && !singleRun.qaOnly && !singleRun.replayRecruit) return showRecruitResult(); // 영입 성공: 다음 스토리 안내 화면 (js/ui/single.js)
     if (singleRun?.m) showSingleResult();
     else restoreResultLabels();
     r.hidden = false;
   };
   // 싱글 미션 성공: 영입 저장 → 컷신 → 결과
-  if(singleRun?.id===GC_MISSION&&over==="미션 성공"){
+  if(singleRun?.id===GC_MISSION&&over==="미션 성공"&&!singleRun.replayRecruit){
     const R=singleRun;r.hidden=true;playCutscene(R.id,()=>{if(singleRun===R&&over==="미션 성공")showRecruitResult();});
-  } else if (singleRun?.m && over === "미션 성공" && !singleRun.qaOnly) setTimeout(() => over === "미션 성공" && onMissionClear(show), 900);
+  } else if (singleRun?.m && over === "미션 성공" && !singleRun.qaOnly && !singleRun.replayRecruit) setTimeout(() => over === "미션 성공" && onMissionClear(show), 900);
   else if(over==="히든 성공" && singleRun?.secretNew){const R=singleRun;setTimeout(()=>{if(singleRun===R && over==="히든 성공")showSecretRecruit(show);},1400);}
   else setTimeout(show, 700);
 }
@@ -11059,7 +11067,7 @@ function showSingleResult() {
   if (singleRun.story) return showStoryResult();
   if (singleRun.endless) return showEndlessResult();
   const R = singleRun, win = over === "미션 성공";
-  el("resTitle").textContent = win ? R.qaOnly ? "QA 테스트 성공 (영입 미반영)" : `${DISPLAY_NAMES[R.m.reward]} 영입 성공!` : "미션 실패";
+  el("resTitle").textContent = win ? R.qaOnly ? "QA 테스트 성공 (영입 미반영)" : R.replayRecruit ? "미션 재클리어!" : `${DISPLAY_NAMES[R.m.reward]} 영입 성공!` : "미션 실패";
   el("resTitle").classList.toggle("lose", !win);
   el("resRank").previousElementSibling.textContent = "웨이브";
   el("resRank").textContent = `${win ? R.m.waves.length : Math.max(0, R.wave)}/${R.m.waves.length}`;
@@ -11156,12 +11164,12 @@ el("csSkip").onclick = () => {
 function showStoryResult() {
   const R = singleRun, win = over === "미션 성공", S = R.story;
   if(over==="히든 성공") {
-    el("resTitle").textContent=R.qaOnly?"히든 보스 QA 성공 (영입 미반영)":"타락한 은숙이 영입 완료!";el("resTitle").classList.remove("lose");
+    el("resTitle").textContent=R.qaOnly?"히든 보스 QA 성공 (영입 미반영)":R.secretNew?"타락한 은숙이 영입 완료!":"히든 보스 재클리어!";el("resTitle").classList.remove("lose");
     el("resChar").classList.add("secretPortrait");el("resChar").src=lobbyArt.fallen_support.face.src;el("resName").textContent="타락한 은숙이";
     el("resRank").previousElementSibling.textContent="히든 업적";el("resRank").textContent="친구를 버린 자";
     el("overBtn").textContent="다시 도전";return;
   }
-  el("resTitle").textContent = win ? R.qaOnly ? "QA 테스트 성공 (영입 미반영)" : `${DISPLAY_NAMES[S.reward]} 영입 성공!` : R.secretBoss ? "히든 보스전 실패" : "미션 실패";
+  el("resTitle").textContent = win ? R.qaOnly ? "QA 테스트 성공 (영입 미반영)" : R.replayRecruit ? "미션 재클리어!" : `${DISPLAY_NAMES[S.reward]} 영입 성공!` : R.secretBoss ? "히든 보스전 실패" : "미션 실패";
   el("resTitle").classList.toggle("lose", !win);
   el("resRank").previousElementSibling.textContent = win ? "단계" : "실패 이유";
   el("resRank").textContent = win ? `${S.stages.length}/${S.stages.length}` : R.failReason || (p.hp <= 0 ? "쓰러짐" : "") || `${Math.max(1, R.wave)}/${S.stages.length}단계`;
