@@ -2457,6 +2457,8 @@ for (const d of PET_DEX) {
 }
 // ----- 소환수 그래픽 팩 (js/data/summon_sprites.js): 그래픽만 교체 -----
 // 소환수 번호 → 그래픽 (진화형은 기본형 그래픽, stage 만큼 조금 크게). 없으면 null → 기존 그림
+// Uploaded original companion sheets: repository root, 64px cells, 4 frames x 8 directions.
+const HYE_NEW_GFX = Object.fromEntries(Object.entries({25:"thunderi",151:"myurin",6:"bolkeron_final",9:"aquabi_final",3:"floraon_final"}).map(([dex,key])=>[dex,{key, G:{icon:key+"_icon.webp",anims:Object.fromEntries(["idle","move","attack"].map(a=>[a,key+"_"+a+".webp"]))},grow:[6,9,3].includes(Number(dex))?1.16:1}]));
 const SUMMON_BY_PET = {};
 for (const k in SUMMON_GFX) if (SUMMON_GFX[k].pet !== undefined) {
   const id=SUMMON_GFX[k].pet; SUMMON_BY_PET[id]=k;
@@ -2472,9 +2474,11 @@ function summonImg(src) { // 불러온 그림만 돌려줌 (공개 빌드처럼 
   return im.complete && im.naturalWidth ? im : null;
 }
 for (const k in SUMMON_GFX) for (const src of [SUMMON_GFX[k].icon, ...Object.values(SUMMON_GFX[k].anims)]) summonImg(src); // 미리 불러오기
+for (const {G} of Object.values(HYE_NEW_GFX)) for (const src of [G.icon,...Object.values(G.anims)]) summonImg(src);
 function summonGfx(id) {
   const d = PET_DEX[id];
   if (!d) return null;
+  if (HYE_NEW_GFX[d.dex]) return HYE_NEW_GFX[d.dex];
   const key = SUMMON_BY_PET[d.kind === "evo" ? d.base : id];
   if (!key) return null;
   return { key, G: SUMMON_GFX[key], grow: 1 + (d.kind === "evo" ? (d.stage || 1) * SUMMON_FRAME.evoGrow : 0) };
@@ -4128,6 +4132,7 @@ function petSkillEffect(pet, S, enemies) {
       if (along > 0 && along < S.line && off < S.width / 2 && clearLine(pet,b)) hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
     }
     fx.push({ x: pet.x, y: pet.y, t: 0.35, cone: true, ang, r: S.line, half: 0.08 });
+    pet.dir = angleToDir(ang); pet.atkAt = elapsed;
     pet.pose = 0.35;
     return;
   }
