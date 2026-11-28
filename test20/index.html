@@ -9,7 +9,7 @@ window.addEventListener("unhandledrejection",e=>show(e.reason?.message||e.reason
 window.addEventListener("DOMContentLoaded",()=>{
 panel=document.createElement("div");panel.style.cssText="position:fixed;top:4px;left:4px;z-index:2147483647;background:#000d;color:#fff;font:12px monospace;padding:5px;white-space:pre-wrap;max-width:90%;pointer-events:none";
 document.body.append(panel);
-setInterval(()=>{try{panel.textContent="TEST23 UI | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
+setInterval(()=>{try{panel.textContent="TEST24 GRAPHICS | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
 });
 })();
 </script>
@@ -7696,7 +7696,7 @@ function drawMob(a) {
     g.drawImage(sh, fx0, fy0, 96, 96, x, y, w, w);
   }
   g.restore();
-  if (a.hp > 0 && appear >= 1 && a.mob !== "boss") bar(a.x, y - 6, a.hp, a.max); // 보스 체력은 화면 위 큰 막대
+  if (a.hp > 0 && appear >= 1 && a.mob !== "boss") bar(a.x, y - 6, a.hp, a.max, true); // 보스 체력은 화면 위 큰 막대
   drawFallenDebuff(a,y-15);drawBoastDebuff(a,y-15);
 }
 // 시트가 아직 안 불러와졌을 때 대신 그리는 간단한 모양
@@ -8333,11 +8333,14 @@ function renderActor(a, k) {
   }
   return false;
 }
-function bar(x, y, hp, max) {
-  g.fillStyle = "#26332b";
-  g.fillRect(x - 23, y, 46, 6);
-  g.fillStyle = "#7de36c";
-  g.fillRect(x - 23, y, 46 * clamp(hp / max, 0, 1), 6);
+function bar(x, y, hp, max, enemy=false) {
+  const f=clamp(hp / max,0,1);
+  g.fillStyle="#202938";
+  g.fillRect(x-25,y-1,50,9);
+  g.fillStyle=enemy?"#ff6468":"#83ed55";
+  g.fillRect(x-23,y+1,46*f,5);
+  g.fillStyle=enemy?"#ffb0a3":"#c5ff97";
+  g.fillRect(x-23,y+1,46*f,1);
 }
 // 탄창 표시: HP 바 아래 3칸, 충전 중인 칸은 차오르는 정도만큼 표시
 function ammoBar(x, y, a) {
@@ -8406,7 +8409,7 @@ function draw() {
   const [shx, shy] = shakeOffset();
   g.translate(-camX + shx, -camY + shy);
   // 성능: 맵 전체(2472×1392) 대신 카메라에 보이는 영역만 그림
-  g.fillStyle = "#789b65";
+  g.fillStyle = "#8ab975";
   g.fillRect(camX, camY, VW, VH);
   const mapImg = activeMap===GC_SCHOOL?null:mapImage();
   if(activeMap===GC_SCHOOL){const bg=gcSchoolStatic();g.drawImage(bg,0,0);}
@@ -8418,6 +8421,11 @@ function draw() {
     g.fillStyle = "#5b6470";
     for (const [x, y, w, h] of walls) g.fillRect(x, y, w, h);
   }
+  // 밝은 저대비 배경: 전투 오브젝트와 경고 표시에는 적용하지 않는다.
+  g.save();
+  g.fillStyle="rgba(255,245,207,0.13)";
+  g.fillRect(camX,camY,VW,VH);
+  g.restore();
   if (summonAim && p.hp > 0) drawSummonAim();
   drawUltGround();
   drawSkillPreview();
@@ -8558,10 +8566,14 @@ function draw() {
       if(!(a.stealth>0))drawInkMissStatus(a);
       continue;
     }
-    g.fillStyle = a === p ? "#337ddc" : "#b84949";
-    g.beginPath();
-    g.ellipse(a.x, a.y + 8, 20, 10, 0, 0, 7);
-    g.fill();
+    g.save();
+    g.fillStyle="#202c3a55";
+    g.beginPath();g.ellipse(a.x+3,a.y+10,23,11,0,0,7);g.fill();
+    g.fillStyle=a===p?"#328ee7aa":"#ed5454aa";
+    g.strokeStyle=a===p?"#8deaff":"#ffaaa0";
+    g.lineWidth=2;
+    g.beginPath();g.ellipse(a.x,a.y+7,20,9,0,0,7);g.fill();g.stroke();
+    g.restore();
     g.save();
     if (a === p && (p.stealth > 0 || inBush(p))) g.globalAlpha = 0.5;
     if (a === p && p.weave > 0) g.globalAlpha = .85; // 위빙 중
@@ -8580,13 +8592,15 @@ function draw() {
       g.font = "22px sans-serif";
       g.fillText("🍯", a.x + 24, a.y - 20);
     }
-    bar(a.x, a.y - 54, a.hp, a.max);
+    bar(a.x, a.y - 54, a.hp, a.max, a!==p);
     if(a!==p)drawInkMissStatus(a);
     if (a === p) ammoBar(a.x, a.y - 47, a);
     g.fillStyle = "white";
     g.font = "12px sans-serif";
     g.textAlign = "center";
-    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual], a.x, a.y + 28); // 이름만 (장착 무기 이름은 2026-11-25 요청으로 제거, 무기는 공격 버튼·HUD 아이콘)
+    g.save();g.font="bold 12px sans-serif";g.lineJoin="round";g.lineWidth=3;g.strokeStyle="#202938";
+    g.strokeText(DISPLAY_NAMES[a === p ? character : a.visual],a.x,a.y+28);
+    g.fillText(DISPLAY_NAMES[a === p ? character : a.visual], a.x, a.y + 28);g.restore(); // 이름만 (장착 무기 이름은 2026-11-25 요청으로 제거, 무기는 공격 버튼·HUD 아이콘)
   }
   for (const pt of [...(pet ? [pet] : []), ...ultPets]) drawPetActor(pt);
   drawBoastMembers();
