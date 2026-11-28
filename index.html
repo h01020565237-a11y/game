@@ -2223,8 +2223,8 @@ const SKILL_DATA = {
     passive: { name: "위빙", dodge: .12, mult: 1, text: "직접 공격을 {dodge%} 확률로 회피. 지속 피해와 레이드 전멸기 제외" },
   },
   summoner: { // 현곤
-    q: { name: "썬더리 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 5초마다 범위 전격 및 감전. 뮤린과 교체 가능" },
-    e: { name: "뮤린 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 5초마다 직선 관통 공격. 썬더리와 교체 가능" },
+    q: { name: "썬더리 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 기본 공격 5회 적중마다 범위 전격 및 감전. 사망·교체 후 15초 재소환 대기" },
+    e: { name: "뮤린 소환", cd: 15, aim: "none", text: "체력이 소진될 때까지 동행. 기본 공격 5회 적중마다 직선 관통 공격. 사망·교체 후 15초 재소환 대기" },
     r: { name: "너희로 정했다!", dur: 10, aim: "none", text: "화염·물·식물 최종 진화형 3마리를 동시에 10초간 소환. 기존 동행 소환수 유지" },
     passive: { name: "동행 소환사", speed: 1, take: 1, text: "일반 동행 소환수 1마리와 궁극기 소환수 3마리까지 동시 유지" },
   },
@@ -4008,10 +4008,12 @@ function petTarget(pt) {
   // 적이 없으면 보물상자도 부숨 (2026-11-25 버그: 포켓몬이 상자를 안 때림). 반경·시야 규칙 같음
   return minBy(boxes.filter((x) => !x.broken && x.hp > 0 && dist(p, x) <= L && (!visionOn() || inPlayerVision(x))), (x) => dist(pt, x));
 }
+function hyeSlot(id){return id===0?"q":id===hyePsychic?"e":null;}
+function hyeStartCooldown(id){const slot=hyeSlot(id);if(slot&&p.skcd)p.skcd[slot]=SKILL_DATA.summoner[slot].cd;}
 function hyeCompanion(id) {
   if(flight||(pet?.id===id&&pet.hp>0))return false;
   const q=freeSpot(clamp(p.x+40,30,W-30),clamp(p.y+30,30,H-30),16)||p;
-  if(pet)fx.push({x:pet.x,y:pet.y,t:.4,recall:true});
+  if(pet){fx.push({x:pet.x,y:pet.y,t:.4,recall:true});hyeStartCooldown(pet.id);}
   pet=null; flight={x:p.x,y:p.y,tx:q.x,ty:q.y,id,t:0,hye:true}; sfx("pet_summon",p);return true;
 }
 function runPet(pt, dt) {
@@ -4031,7 +4033,8 @@ function runPet(pt, dt) {
     petSeparate(pt);
     return;
   }
-  command(pt);
+  if(character!=="summoner")command(pt);
+  else if((pt.basicHits||0)>=5){pt.skillCD=0;if(command(pt))pt.basicHits=0;}
   const b = petTarget(pt);
   if (b) {
     if (dist(pt, b) > m[3] || blocked((pt.x + b.x) / 2, (pt.y + b.y) / 2, 2)) {
@@ -4075,8 +4078,9 @@ function petPendingHit(pt, dt) {
   pt.pendingHit = null;
   const b = H.b;
   if (b.hp <= 0 || dist(pt, b) > mons[pt.id][3] + 40) return;
-  hit(pt, b, H.d, { ult: !!pt.ult });
+  const result=hit(pt, b, H.d, { ult: !!pt.ult });
   petAttackFx(pt, b, false);
+  if(character==="summoner"&&b.mob&&result!=="inkMiss"){pt.basicHits=Math.min(5,(pt.basicHits||0)+1);if(pt.basicHits>=5){pt.skillCD=0;if(command(pt))pt.basicHits=0;}}
 }
 // 현곤 바로 옆·다른 포켓몬과 겹치지 않게 살짝 밀어냄 (벽 안으로는 안 밀림)
 function petSeparate(pt) {
@@ -4107,12 +4111,13 @@ function command(pt = pet) {
   const id = pet.id, S = PET_SKILLS[id], reach = S.radius || PET_RULES.range;
   let enemies = bots.filter((b) => b.hp > 0 && visible(pet, b) && dist(p, b) <= PET_AI.leash && dist(pet, b) < reach && !blocked((pet.x + b.x) / 2, (pet.y + b.y) / 2, 2)).sort((a, b) => dist(pet, a) - dist(pet, b));
   if (!enemies.length) return;
-  if (S.minFoes && enemies.length < S.minFoes && pet.life > 7) return;
+  if (character!=="summoner" && S.minFoes && enemies.length < S.minFoes && pet.life > 7) return;
   pet.skillCD = PET_RULES.skillCD;
   sfx("pet_skill", pet);
   fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: S.name });
   petSkillEffect(pet, S, enemies);
   fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
+  return true;
 }
 // 포켓몬 기술 효과 (기본·진화·전설 공통). 뮤: 회복 + 무작위 기본 기술
 function petSkillEffect(pet, S, enemies) {
@@ -6287,6 +6292,7 @@ function tentChargeSync(){
 }
 function tentChargeLabel(){return `${p.tentCharges??2}/2`;}
 function skillCdLeft(slot) {
+  if(character==="summoner"&&(slot==="q"||slot==="e")&&(hyeSlot(pet?.id)===slot&&pet.hp>0||flight?.hye&&hyeSlot(flight.id)===slot))return SKILL_DATA.summoner[slot].cd;
   if(character==="octo"&&slot==="e"){tentChargeSync();return p.tentCharges>0?0:p.skcd.e;}
   if (slot === "r") return p.ult >= 1 ? 0 : 1 - p.ult;
   return p.skcd ? p.skcd[slot] || 0 : 0;
@@ -6354,7 +6360,7 @@ function castSkill(slot, aim) {
     fx.push({ x: p.x, y: p.y - 80, t: 1, text: S.name, tcol: "#ffd23f", big: true });
     shake(5);
   } else {
-    if(character==="octo" && slot==="e"){p.tentCharges--;if(p.tentCharges===1&&p.skcd.e<=0)p.skcd.e=S.cd;}else p.skcd[slot] = S.cd;
+    if(character==="octo" && slot==="e"){p.tentCharges--;if(p.tentCharges===1&&p.skcd.e<=0)p.skcd.e=S.cd;}else if(character!=="summoner")p.skcd[slot] = S.cd;
     fx.push({ x: p.x, y: p.y, t: 0.65, text: S.name });
   }
   qaFlash(slot==="r"?"ultBtn":slot==="q"?"summonBtn":"bearHeal");
@@ -7068,6 +7074,7 @@ function update(dt) {
     if (pet.life <= 0 || pet.hp <= 0) {
       fx.push({ x: pet.x, y: pet.y, t: 0.55, recall: true, red: true });
       sfx("pet_return", pet);
+      if(character==="summoner")hyeStartCooldown(pet.id);
       pet = null;
     }
   }
@@ -9142,7 +9149,7 @@ function petTipModelById(id, key) {
     title: `${m[1]} ${m[0]} · ${S.name}`,
     desc: skillText(S),
     chips: [...skillChips({ ...S, dmg: S.dmg && Math.round(S.dmg * petSkillMul(id)) }), `공격력 ${Math.round(m[2] * petMul(id, "atk"))}`, `체력 ${Math.round(petMaxHp(id)*1.5)}`, `소환 최대 10초`, `궁극기 게이지 100%`],
-    foot: `기술은 ${fmtNum(PET_RULES.skillCD)}초마다 자동 사용`,
+    foot: `기본 공격 5회 적중마다 특수 기술 자동 사용`,
   };
 }
 
@@ -9710,8 +9717,9 @@ function touchHUD() {
   const D = SKILL_DATA[character];
   ringBtn(el("dashBtn"), p.dashCD || 0, DASH_CD_MAX());
   if (D) {
-    ringBtn(sb, p.skcd?.q || 0, D.q.cd, "");
+    ringBtn(sb, skillCdLeft("q"), D.q.cd, "");
     ringBtn(el("bearHeal"), skillCdLeft("e"), D.e.cd);
+    if(character==="summoner"){for(const [slot,btn] of [["q",sb],["e",el("bearHeal")]]){const active=(pet?.hp>0&&hyeSlot(pet.id)===slot)||(flight?.hye&&hyeSlot(flight.id)===slot);if(active){const c=btn.querySelector(".cdt");if(c){c.textContent="소환 중";c._t="소환 중";}}}}
     if(character==="octo"){const c=el("bearHeal").querySelector(".cdt");if(c){c.textContent="";c._t="";}}
     const tc=el("tentChargeHud");tc.hidden=character!=="octo";
     if(character==="octo"){const count=tentChargeLabel(), time=p.tentCharges<2&&p.skcd.e>0?(p.skcd.e/((p.cdRate||1)/(1-(p.seasonGear?.cdr||0)))).toFixed(1)+"초":"";if(tc.dataset.count!==count||tc.dataset.time!==time){tc.dataset.count=count;tc.dataset.time=time;tc.replaceChildren();const a=document.createElement("span");a.textContent=count;tc.append(a);if(time){const b=document.createElement("span");b.textContent=time;tc.append(b);}}}
@@ -10027,60 +10035,7 @@ function renderLobbyInfo() {
 }
 
 // 소환사: 포켓몬 8마리 중 3마리를 눌러서 고름 (고른 순서 = 1·2·3번 슬롯)
-function renderDeckPicker() {
-  const dk = el("lobbyDeck");
-  dk.innerHTML = "";
-  dk.hidden = lobbySel !== "summoner";
-  if (lobbySel !== "summoner") return;
-  const head = document.createElement("div");
-  head.className = "deck-head";
-  head.textContent = `포켓몬 3마리 선택 (${lobbyDeck.length}/3)`;
-  dk.append(head);
-  const grid = document.createElement("div");
-  grid.className = "mon-grid";
-  mons.slice(0, BASE_PET_COUNT).forEach((m, j) => { // 기본 8종만 (진화·전설은 무한 생존 전용)
-    const b = document.createElement("button");
-    const slot = lobbyDeck.indexOf(j);
-    b.className = "mon-tile" + (slot >= 0 ? " sel" : "");
-    b.style.setProperty("--mon", PET_LOOK[j].color);
-    b.setAttribute("aria-pressed", String(slot >= 0));
-    b.setAttribute("aria-label", m[0]);
-    const icon = document.createElement("span");
-    icon.className = "mon-icon";
-    if (PET_LOOK[j].img) {
-      const im = document.createElement("img");
-      im.src = PET_LOOK[j].img;
-      im.alt = "";
-      icon.append(im);
-    } else icon.textContent = m[1];
-    const name = document.createElement("span");
-    name.className = "mon-name";
-    name.textContent = m[0];
-    b.append(icon, name);
-    if (slot >= 0) {
-      const badge = document.createElement("b");
-      badge.className = "mon-slot";
-      badge.textContent = String(slot + 1);
-      b.append(badge);
-    }
-    SkillTip.attach(b, () => petTipModelById(j)); // 길게 누르기(PC는 마우스 올리기)로 효과 설명
-    b.onclick = () => {
-      if (SkillTip.used(b)) return; // 설명만 본 경우 선택을 바꾸지 않음
-      SkillTip.hide();
-      const at = lobbyDeck.indexOf(j);
-      if (at >= 0) lobbyDeck.splice(at, 1); // 다시 누르면 빼기
-      else {
-        if (lobbyDeck.length >= 3) lobbyDeck.shift(); // 3마리가 차 있으면 가장 먼저 고른 것과 교체
-        lobbyDeck.push(j);
-      }
-      el("lobbyErr").textContent = "";
-      sfx("ui_click");
-      renderDeckPicker();
-    };
-    grid.append(b);
-  });
-  dk.append(grid);
-}
+function renderDeckPicker() {const dk=el("lobbyDeck");dk.innerHTML="";dk.hidden=true;}
 
 el("lobbyStart").onclick = () => {
   if (!canPlay(lobbySel)) {
