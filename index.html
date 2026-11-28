@@ -2737,8 +2737,8 @@ const STORY_MISSIONS = {
   gyeongsu: {
     reward: "stripe", players: ["octo"], title: "그림자 속의 경수", sub: "은신·기습 대응 + 분신 구별 보스", target: "6~8분", scaleW: 6,
     stages: [
-      { label: "1단계", time: 80, count: 30, kinds: ["assassin", "melee"], tips: [[0.5, "은신한 적이 다가오면 머리 위에 빨간 ! — 위치는 안 알려줘요"], [7, "상훈 기본 공격: 먹물 곡사 — 벽 너머로도 던질 수 있어요"], [20, "E 촉수 함정: 은신 적이 올 길목에 깔아 두기"]] },
-      { label: "2단계", time: 110, count: 44, kinds: ["assassin", "ranged", "mobile", "support"], tips: [[0.5, "지원형 적은 동료를 회복 — 먼저 처치"], [12, "Q 먹물 폭탄: 맞은 적은 공격이 빗나가요(MISS)"]] },
+      { label: "1단계", time: 80, count: 24, kinds: ["assassin", "melee"], tips: [[0.5, "은신한 적이 다가오면 머리 위에 빨간 ! — 위치는 안 알려줘요"], [7, "상훈 기본 공격: 먹물 곡사 — 벽 너머로도 던질 수 있어요"], [20, "E 촉수 함정: 은신 적이 올 길목에 깔아 두기"]] },
+      { label: "2단계", time: 110, count: 36, kinds: ["assassin", "ranged", "mobile", "support"], tips: [[0.5, "지원형 적은 동료를 회복 — 먼저 처치"], [12, "Q 먹물 폭탄: 맞은 적은 공격이 빗나가요(MISS)"]] },
       { label: "보스", boss: "stripe", hp: 24000, tips: [[0.5, "그림자 암살자: 사라졌다가 등 뒤에서 나타나요 — ! 가 뜨면 바로 이동"], [12, "분신 중 진짜는 하나 — 공격받으면 사라지는 쪽이 가짜"]] },
     ],
   },
@@ -4879,7 +4879,7 @@ function makeEnemy(kind, at, opts = {}) {
     visual: base.visual, seed: Math.random() * 100, look: { scale: (base.scale || 1) * (elite ? E.scale : 1), aura: elite ? E.aura : 0.55 },
     specialT: 1 + Math.random() * 2, owner: null, summoner: opts.summoner || null, pk: base.pk,
   });
-  if(R.story&&!R.raid){a.hp*=.75;a.max*=.75;a.spd*=.90;}
+  if(R.story&&!R.raid){a.hp*=.75;a.max*=.75;a.spd*=.90;if(R.id==="gyeongsu"){a.hp*=.80;a.max*=.80;a.spd*=.90;}}
   a.waveAI = waveMobDifficulty(R); if(CURSE_DEFS[kind]) a.curseKind=kind;
   if(a.waveAI?.flank && (kind==="melee"||kind==="mobile") && Math.random()<.4) a.flankSide=Math.random()<.5?-1:1;
   if (kind === "assassin") a.stealth = 99;
@@ -5825,7 +5825,7 @@ function rollDrop() {
 
 // 피해 처리 (모든 공격 공통). o: { ult 궁극기 피해(충전 제외), dot 지속 피해 }
 function hit(a, b, d, o = {}) {
-  if(singleRun&&!singleRun.raid&&(singleRun.story||!singleRun.endless)&&a?.mob&&!isMine(a)&&isMine(b)) d*=(a.mob==="boss"||a.bossId)? .75:.70;
+  if(singleRun&&!singleRun.raid&&(singleRun.story||!singleRun.endless)&&a?.mob&&!isMine(a)&&isMine(b)){const boss=a.mob==="boss"||a.bossId;d*=boss?.75:.70;if(singleRun.story&&singleRun.id==="gyeongsu"&&!boss)d*=.85;}
   if(a===p&&character==="yungon"&&p.ygBuff>0)d*=1.15;
   if(b===p&&a!==p&&singleRun?.ygRage)d*=[1,1.2,1.5,2][singleRun.ygRage];
   if(b.raidBoss && singleRun?.raid && isMine(a)){const R=singleRun;if(R.finished||Date.now()>=R.deadline)return;const slot=o.raidSource||R.castSource;const allowed={suit:["slam","e"],summoner:["change","e"],octo:["gas","q"],stripe:["change","e"],soccer:["slam","e"],bear:["slam","q"],runner:["ultimate","e"],support:["ultimate","q"],fallen_support:["ultimate","q"],gyeongchan:["slam","e"]}[character];if(a===p&&allowed&&b.raidTele?.kind===allowed[0]&&slot===allowed[1]&&!(b.counterUntil>elapsed)){b.counterUntil=elapsed+15;raidRest(b,2,"COUNTER! · 받는 피해 +50%");b.counterRest=true;}d*= (b.raidRest>0?(b.counterRest?1.5:2):1)*(a===p&&o.rangedWeapon===true?1.2:1);}
@@ -11907,6 +11907,7 @@ function storyBossSetup(a) {
   const st = singleRun.spec.stage, hp = storyVal(st.hp);
   if (hp) a.hp = a.max = hp;
   a.hp*=.80;a.max*=.80;
+  if(singleRun.id==="gyeongsu"){a.hp*=5/6;a.max*=5/6;}
   if(singleRun.id===GC_MISSION){a.r=16;a.spd=.98;a.look={scale:1.15,aura:0};a.gcCD=1;}
 }
 // 마지막 단계면 미션 성공
