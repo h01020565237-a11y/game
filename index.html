@@ -2453,7 +2453,7 @@ const BASE_PET_COUNT = 8;
 mons[0][0]="썬더리"; mons[0][2]=95; PET_SKILLS[0]={name:"뇌전 폭발",dmg:210,radius:120,targets:6,stun:.65,text:"최대 6명 범위 피해 및 감전"};
 const hyePsychic=PET_DEX.find(d=>d.dex===151).id;
 mons[hyePsychic][0]="뮤린"; mons[hyePsychic][4]=750; mons[hyePsychic][2]=90; PET_SKILLS[hyePsychic]={name:"사이코 빔",dmg:280,line:320,width:40,text:"직선 관통 피해"};
-for(const [dex,name,patch] of [[6,"볼케론 · 최종형",{radius:130,targets:4}],[9,"아쿠비 · 최종형",{targets:3}],[3,"플로라온 · 최종형",{radius:125,targets:4}]]){const id=PET_DEX.find(d=>d.dex===dex).id;mons[id][0]=name;Object.assign(PET_SKILLS[id],patch);}
+for(const [dex,name,patch] of [[6,"볼케론 · 최종형",{name:"화염 방사",radius:130,targets:4,burn:2,statusChance:.5,coneArc:100,text:"화염 방사 피해, 적마다 50% 확률로 2초 화상"}],[9,"아쿠비 · 최종형",{name:"물대포",radius:220,targets:3,push:45,statusChance:.4,coneArc:40,text:"물대포 피해, 적마다 40% 확률로 45 거리 밀어내기"}],[3,"플로라온 · 최종형",{name:"덩굴 속박",radius:125,targets:4,stun:0,root:1,statusChance:.3,text:"덩굴 공격 피해, 적마다 30% 확률로 1초 속박"}]]){const id=PET_DEX.find(d=>d.dex===dex).id;mons[id][0]=name;Object.assign(PET_SKILLS[id],patch);}
 const PET_LEGEND_IDS = PET_DEX.filter((d) => d.kind === "legend").map((d) => d.id);
 
 // 그림 (불러오기 실패·없음 → null → 아이콘 사용)
@@ -4120,12 +4120,12 @@ function drawHyeSpecial(f){
   for(let j=0;j<9;j++){const v=j*2*Math.PI/9+u*.8;g.beginPath();g.moveTo(0,0);for(let k=1;k<=6;k++){const z=r*k/6*Math.min(1,u*4),b=v+Math.sin(j*13+k*7+Math.floor(u*12))*.15;g.lineTo(Math.cos(b)*z,Math.sin(b)*z);}g.strokeStyle="#ffcd38";g.lineWidth=6*(1-u)+1;g.stroke();g.strokeStyle="#fff8cc";g.lineWidth=1.8;g.stroke();}
  }else{
   const color=f.hyeSpecial==="fire"?"#ff8b28":f.hyeSpecial==="water"?"#47c9ff":"#8de65d",rr=r*Math.min(1,u*2.4);
-  for(let j=0;j<14;j++){const v=j*2*Math.PI/14+u*1.7,z=rr*(.7+.22*Math.sin(j*3));g.save();g.translate(Math.cos(v)*z,Math.sin(v)*z);g.rotate(v+1);
+  for(let j=0;j<14;j++){const v=f.arc?f.ang+((j%7)/6-.5)*f.arc*Math.PI/180:j*2*Math.PI/14+u*1.7,z=rr*(.35+.6*((j*.37+u)%1));g.save();g.translate(Math.cos(v)*z,Math.sin(v)*z);g.rotate(v+1);
    if(f.hyeSpecial==="fire"){g.fillStyle=color;g.beginPath();g.moveTo(-7,6);g.quadraticCurveTo(-13,-5,0,-22);g.quadraticCurveTo(14,-2,7,6);g.fill();g.fillStyle="#fff2a0";g.beginPath();g.ellipse(0,0,3,7,0,0,7);g.fill();}
    else if(f.hyeSpecial==="water"){g.fillStyle=color;g.beginPath();g.moveTo(0,-15);g.quadraticCurveTo(15,4,0,8);g.quadraticCurveTo(-12,4,0,-15);g.fill();g.fillStyle="#d7f8ff";g.beginPath();g.arc(-2,0,2,0,7);g.fill();}
    else{g.fillStyle=color;g.beginPath();g.moveTo(0,-15);g.quadraticCurveTo(15,-9,0,11);g.quadraticCurveTo(-13,-1,0,-15);g.fill();g.strokeStyle="#357d39";g.lineWidth=1.5;g.beginPath();g.moveTo(0,8);g.lineTo(0,-12);g.stroke();}
    g.restore();}
-  g.strokeStyle=color;g.lineWidth=3*(1-u)+1;g.beginPath();g.ellipse(0,6,rr,rr*.8,0,0,7);g.stroke();
+  g.strokeStyle=color;g.lineWidth=3*(1-u)+1;g.beginPath();if(f.arc)g.arc(0,0,rr,f.ang-f.arc*Math.PI/360,f.ang+f.arc*Math.PI/360);else g.ellipse(0,6,rr,rr*.8,0,0,7);g.stroke();
  }g.restore();
 }
 function petAttackFx(pt, b, strong) {
@@ -4172,24 +4172,29 @@ function petSkillEffect(pet, S, enemies) {
   }
   pet.atkAt = elapsed;
   const element=({25:"electric",6:"fire",9:"water",3:"plant"})[PET_DEX[id]?.dex];
-  if(element)fx.push({x:pet.x,y:pet.y,t:.65,dur:.65,hyeSpecial:element,r:S.radius||PET_RULES.range,tx:enemies[0].x,ty:enemies[0].y});
+  const aimAng=Math.atan2(enemies[0].y-pet.y,enemies[0].x-pet.x);
+  if(S.coneArc){enemies=enemies.filter(b=>angleDiff(Math.atan2(b.y-pet.y,b.x-pet.x),aimAng)<=S.coneArc*Math.PI/360&&clearLine(pet,b));pet.dir=angleToDir(aimAng);}
+  if(element)fx.push({x:pet.x,y:pet.y,t:.65,dur:.65,hyeSpecial:element,r:S.radius||PET_RULES.range,ang:aimAng,arc:S.coneArc});
   for (let b of enemies.slice(0, S.targets || 1)) {
     petAttackFx(pet, b, true);
     pet.pose = 0.35;
     hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
-    if (S.stun && !bossControlImmune(b)) b.stun = S.stun;
+    const proc=S.statusChance==null||Math.random()<S.statusChance;
+    if(proc&&b.hp>0&&S.statusChance!=null){const msg=S.burn?"화상":S.push?"밀어내기":"속박";if(S.burn||!bossControlImmune(b))fx.push({x:b.x,y:b.y-32,t:.65,text:msg,tcol:S.burn?"#ffae60":S.push?"#7bd7ff":"#a5ec75"});}
+    if(proc&&S.root&&!bossControlImmune(b))b.root=Math.max(b.root||0,S.root);
+    if (proc && S.stun && !bossControlImmune(b)) b.stun = S.stun;
     if (S.slow && !bossControlImmune(b)) b.slow = S.slow;
     if (S.weak) b.weak = S.weak;
-    if (S.burn) {
+    if (proc && S.burn) {
       b.burn = S.burn;
       b.burnDps = S.burnDps * mul;
       b.burnBy = pet; // 화상 피해도 포켓몬(=현곤) 피해로 집계·충전
       b.burnTick = 0;
     }
-    if (S.push && !bossControlImmune(b)) {
+    if (proc && S.push && !bossControlImmune(b)) {
       let dx = b.x - pet.x, dy = b.y - pet.y, n = Math.hypot(dx, dy) || 1;
-      for (let i = 0; i < S.push / 10; i++) {
-        let x = clamp(b.x + dx / n * 10, 18, W - 18), y = clamp(b.y + dy / n * 10, 18, H - 18);
+      for (let i = 0; i < S.push; i+=10) {
+        const step=Math.min(10,S.push-i);let x = clamp(b.x + dx / n * step, 18, W - 18), y = clamp(b.y + dy / n * step, 18, H - 18);
         if (terrain(x, y) || blocked(x, y) || boxes.some((q) => dist({ x, y }, q) < 30)) break;
         b.x = x;
         b.y = y;
@@ -13408,7 +13413,7 @@ body.mobile.raidActive #raidItems button{width:calc(var(--A)*.78)!important;heig
 </script>
 <style id="combat-controls-17">
 /* Use the actual battle overlay dimensions, including rotated mobile screens. */
-#touch{container-type:size;--big: min(36cqh,22cqw,180px);--small:min(18cqh,10cqw,86px);--gap:min(2.5cqh,12px);--pitch:calc(var(--small) + var(--gap));--edge:3%;--floor:5%;}
+#touch{container-type:size;--big: min(24cqh,15cqw,120px);--small:min(13cqh,7.5cqw,62px);--gap:min(1.8cqh,9px);--pitch:calc(var(--small) + var(--gap));--edge:3%;--floor:5%;}
 body.mobile #touch,body.mobile.rot #touch,body.mobile.raidActive #touch{--A:var(--small);--pitch:calc(var(--small) + var(--gap));}
 body #arena #touch #atk{width:var(--big)!important;height:var(--big)!important;right:var(--edge)!important;bottom:var(--floor)!important;left:auto!important;top:auto!important;box-sizing:border-box;}
 body #arena #touch :is(#summonBtn,#bearHeal,#ultBtn,#dashBtn,#pickBtn,#grenBtn){width:var(--small)!important;height:var(--small)!important;left:auto!important;top:auto!important;box-sizing:border-box;}
@@ -13418,7 +13423,7 @@ body #arena #touch #grenBtn{right:calc(var(--edge) + var(--pitch)*2)!important;b
 body #arena #touch #pickBtn{right:calc(var(--edge) + var(--pitch)*3)!important;bottom:calc(var(--floor) + var(--big) + var(--gap))!important;}
 body #arena #touch #dashBtn{right:calc(var(--edge) + var(--big) + var(--gap))!important;bottom:var(--floor)!important;}
 body #arena #touch #ultBtn{right:calc(var(--edge) + var(--big) + var(--gap) + var(--pitch))!important;bottom:var(--floor)!important;}
-body.mobile #arena #touch #mv{width:min(43cqh,25cqw,200px)!important;box-sizing:border-box;left:5%;bottom:8%;}
+body.mobile #arena #touch #mv{width:min(31cqh,19cqw,145px)!important;box-sizing:border-box;left:5%;bottom:8%;}
 body.mobile #arena #touch .stick#mv{opacity:.45;pointer-events:auto;}
 body.mobile #arena #touch .stick#mv.on{opacity:1;}
 body.mobile #arena #touch #mv i{width:48%;}
