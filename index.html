@@ -1036,12 +1036,12 @@ body.modeOpen #lobby { visibility: hidden; }
 .roster-dots i.on { background: var(--bl-gold); }
 .roster-dots small { color: #cfe1ff; font-size: clamp(10px, 2.8cqh, 12px); margin-left: 4px; }
 .roster-count { margin-left: auto; color: #ffd27a; font-size: clamp(11px, 3.2cqh, 15px); }
-/* 미영입 캐릭터를 누르면: 영입 조건만 (왼쪽 목록 아래쪽에 겹쳐 표시, 4초 뒤 사라짐) */
+/* 미영입 안내: 로비 좌표 기준으로 선택 초상화 옆에 표시 */
 #lobby .ci-locked {
-  position: absolute; left: clamp(8px, 2cqh, 18px); bottom: calc(clamp(8px, 2cqh, 18px) + clamp(18px, 5cqh, 26px));
-  width: calc(50% - clamp(16px, 3cqh, 30px)); box-sizing: border-box; z-index: 4;
-  display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: center;
-  background: #0d1636f2; border: 2px solid #ffb0a8; border-radius: 12px; padding: 6px 10px; text-align: left;
+  position: absolute; left: 0; top: 0; bottom: auto;
+  width: min(260px, 42%); box-sizing: border-box; z-index: 20;
+  display: grid; grid-template-columns: auto minmax(0,1fr); gap: 2px 8px; align-items: center;
+  background: #0d1636f5; border: 2px solid #ffb0a8; border-radius: 12px; padding: 6px 10px; text-align: left; pointer-events: none; overflow-wrap: anywhere;
 }
 #lobby .ci-locked[hidden] { display: none; }
 #lobby .ci-locked.pop { animation: bl-pop .2s ease-out; }
@@ -9908,7 +9908,7 @@ function charTile(k) {
   b.onclick = () => {
     sfx("ui_click");
     if (preview || !canPlay(k)) { // 미영입: 선택·상세 열람 불가, 영입 조건만 보여 줌
-      showRosterLock(k);
+      showRosterLock(k, b);
       return;
     }
     lobbySel = k;
@@ -9919,25 +9919,53 @@ function charTile(k) {
   return b;
 }
 let rosterToastT = 0;
-function showRosterLock(k) {
+let rosterToastAnchor = null;
+function hideRosterLock() {
+  clearTimeout(rosterToastT);
+  rosterToastAnchor = null;
+  el("ciLocked").hidden = true;
+  for (const x of el("charGrid").querySelectorAll(".char-tile.peek")) x.classList.remove("peek");
+}
+document.addEventListener("pointerdown", e => {
+  if (rosterToastAnchor && !rosterToastAnchor.contains(e.target)) hideRosterLock();
+}, true);
+window.addEventListener("resize", hideRosterLock);
+function showRosterLock(k, anchor) {
+  hideRosterLock();
+  rosterToastAnchor = anchor;
   const t = el("ciLocked");
   t.innerHTML = `<i>${LOCK_SVG}</i><b>??? · 미영입 캐릭터</b><span></span>`;
   t.querySelector("span").textContent = k===YUNGON_PREVIEW_ID?"어딘가에서 새로운 만남이 기다리고 있습니다.":k==="fallen_support"?"모든 친구를 반드시 지켜야만 하는 걸까? 누군가의 간절한 외침을 외면해 보세요. 단, 당신은 무사해야 합니다.":lockReason(k).replaceAll(DISPLAY_NAMES[k], "???");
-  t.hidden = false;
+  const host = el("lobby");
+  host.appendChild(t);
   t.classList.remove("pop");
-  void t.offsetWidth;
+  t.hidden = false;
+  // Convert viewport coordinates into the lobby's local axes, including rotated mobile layout.
+  const probes = [[0,0],[100,0],[0,100]].map(([x,y]) => {
+    const p = document.createElement("div");
+    p.style.cssText = "position:absolute;pointer-events:none;width:0;height:0;left:"+x+"px;top:"+y+"px";
+    host.appendChild(p); return p;
+  });
+  const [o,px,py] = probes.map(p => p.getBoundingClientRect());
+  probes.forEach(p=>p.remove());
+  const ax=(px.x-o.x)/100, ay=(px.y-o.y)/100, bx=(py.x-o.x)/100, by=(py.y-o.y)/100;
+  const det=ax*by-ay*bx;
+  const rect=anchor.querySelector(".char-face").getBoundingClientRect();
+  const points=[[rect.left,rect.top],[rect.right,rect.top],[rect.left,rect.bottom],[rect.right,rect.bottom]].map(([x,y])=>[(by*(x-o.x)-bx*(y-o.y))/det,(-ay*(x-o.x)+ax*(y-o.y))/det]);
+  const left=Math.min(...points.map(p=>p[0])), right=Math.max(...points.map(p=>p[0]));
+  const cy=(Math.min(...points.map(p=>p[1]))+Math.max(...points.map(p=>p[1])))/2;
+  const w=t.offsetWidth,h=t.offsetHeight,gap=8;
+  const x=right+gap+w<=host.clientWidth-6?right+gap:left-gap-w;
+  t.style.left=clamp(x,6,Math.max(6,host.clientWidth-w-6))+"px";
+  t.style.top=clamp(cy-h/2,6,Math.max(6,host.clientHeight-h-6))+"px";
   t.classList.add("pop");
   for (const x of el("charGrid").querySelectorAll(".char-tile")) x.classList.toggle("peek", x.dataset.k === k);
-  clearTimeout(rosterToastT);
-  rosterToastT = setTimeout(() => {
-    t.hidden = true;
-    for (const x of el("charGrid").querySelectorAll(".char-tile.peek")) x.classList.remove("peek");
-  }, k==="fallen_support"||k===YUNGON_PREVIEW_ID?10000:4000);
+  rosterToastT = setTimeout(hideRosterLock, 3000);
 }
 function setRosterPage(i, instant) {
   const n = rosterPages();
   rosterPage = clamp(i, 0, n - 1);
-  el("ciLocked").hidden = true;
+  hideRosterLock();
   const track = el("charGrid");
   track.style.transition = instant ? "none" : "";
   track.style.transform = `translateX(${-rosterPage * 100 / n}%)`;
