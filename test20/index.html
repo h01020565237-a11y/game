@@ -9,7 +9,7 @@ window.addEventListener("unhandledrejection",e=>show(e.reason?.message||e.reason
 window.addEventListener("DOMContentLoaded",()=>{
 panel=document.createElement("div");panel.style.cssText="position:fixed;top:4px;left:4px;z-index:2147483647;background:#000d;color:#fff;font:12px monospace;padding:5px;white-space:pre-wrap;max-width:90%;pointer-events:none";
 document.body.append(panel);
-setInterval(()=>{try{panel.textContent="TEST21 UI | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
+setInterval(()=>{try{panel.textContent="TEST22 UI | 목록 "+document.querySelectorAll("#charGrid .char-tile").length+"개 | 이미지 "+assetList.filter(e=>e.done).length+"/"+assetList.length+"\n"+lines.slice(-4).join("\n");}catch(e){show(e.message)}},1000);
 });
 })();
 </script>
@@ -13471,6 +13471,16 @@ if (location.protocol === "https:" && "serviceWorker" in navigator) {
   navigator.serviceWorker.register(new URL("sw.js",location.href),{scope:new URL("./",location.href).pathname}).catch(e => console.warn("캐시 등록 실패", e));
 }
 </script>
+<style id="pause-fit-test22">
+#arena #pauseMenu .pause-card{box-sizing:border-box;max-width:94%;max-height:94%;min-width:0;padding-inline:clamp(12px,3cqw,24px);overflow-x:hidden;}
+#arena #pauseMenu .pause-view{box-sizing:border-box;width:100%;min-width:0;max-width:100%;padding:2px 3px 9px;overflow-x:hidden;flex-shrink:0;}
+#arena #pauseMenu .pbtn{box-sizing:border-box;margin:0!important;width:100%;max-width:100%;min-width:0;flex-shrink:0;grid-template-columns:minmax(0,30%) 2px minmax(0,1fr);}
+#arena #pauseMenu .pbtn.small{grid-template-columns:minmax(0,1fr);}
+#arena #pauseMenu .pbtn>span{min-width:0;padding-inline:4px;white-space:normal;}
+#arena #pauseMenu .pause-row{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;min-width:0;}
+#arena #pauseMenu .pause-opt label{grid-template-columns:minmax(0,5.6em) minmax(0,1fr) 2.4em;gap:6px;}
+#arena #pauseMenu .pause-opt input{min-width:0;box-sizing:border-box;}
+</style>
 </body>
 </html>
 
