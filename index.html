@@ -9935,7 +9935,7 @@ function showRosterLock(k, anchor) {
   rosterToastAnchor = anchor;
   const t = el("ciLocked");
   t.innerHTML = `<i>${LOCK_SVG}</i><b>??? · 미영입 캐릭터</b><span></span>`;
-  t.querySelector("span").textContent = k===YUNGON_PREVIEW_ID?"어딘가에서 새로운 만남이 기다리고 있습니다.":k==="fallen_support"?"모든 친구를 반드시 지켜야만 하는 걸까? 누군가의 간절한 외침을 외면해 보세요. 단, 당신은 무사해야 합니다.":lockReason(k).replaceAll(DISPLAY_NAMES[k], "???");
+  t.querySelector("span").textContent = k===YUNGON_PREVIEW_ID?"달빛이 비치는 밤, 술 한잔하고 가시는 건 어떠세요?":k==="fallen_support"?"모든 친구를 반드시 지켜야만 하는 걸까? 누군가의 간절한 외침을 외면해 보세요. 단, 당신은 무사해야 합니다.":lockReason(k).replaceAll(DISPLAY_NAMES[k], "???");
   const host = el("lobby");
   host.appendChild(t);
   t.classList.remove("pop");
