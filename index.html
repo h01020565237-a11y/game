@@ -1520,7 +1520,7 @@ body.mobile.raidActive #raidItems button{width:calc(var(--A)*.58)!important;heig
 </style>
 <style id="summoner-icon-fix">
 /* Only one frame around the skill and creature; leave layout and hit regions unchanged. */
-body.summoner #touch :is(#summonBtn,#bearHeal,#ultBtn) .sk-ico{background-size:84%;}
+body.summoner #touch :is(#summonBtn,#bearHeal,#ultBtn) .sk-ico{background-size:90%;}
 body.summoner #touch #passiveChip .sk-ico{background-size:90%;}
 body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidden;isolation:isolate;}
 #touch .petBtn .pet-art.summon-icon{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:cover;transform:scale(1.17);border-radius:50%;z-index:0;}
@@ -2439,9 +2439,9 @@ const BASE_PET_COUNT = 8;
   PET_DEX.forEach((d, i) => (d.id = i));
 })();
 // 현곤 동행 및 최종 진화형 공개용 표시와 임시 밸런스
-mons[0][0]="썬더리"; PET_SKILLS[0]={name:"뇌전 폭발",dmg:320,radius:135,targets:99,stun:1,text:"원형 범위 피해 및 감전"};
+mons[0][0]="썬더리"; mons[0][2]=95; PET_SKILLS[0]={name:"뇌전 폭발",dmg:210,radius:120,targets:6,stun:.65,text:"최대 6명 범위 피해 및 감전"};
 const hyePsychic=PET_DEX.find(d=>d.dex===151).id;
-mons[hyePsychic][0]="뮤린"; mons[hyePsychic][4]=900; mons[hyePsychic][2]=150; PET_SKILLS[hyePsychic]={name:"사이코 빔",dmg:420,line:360,width:44,text:"직선 관통 피해"};
+mons[hyePsychic][0]="뮤린"; mons[hyePsychic][4]=750; mons[hyePsychic][2]=90; PET_SKILLS[hyePsychic]={name:"사이코 빔",dmg:280,line:320,width:40,text:"직선 관통 피해"};
 for(const [dex,name,patch] of [[6,"볼케론 · 최종형",{radius:130,targets:4}],[9,"아쿠비 · 최종형",{targets:3}],[3,"플로라온 · 최종형",{radius:125,targets:4}]]){const id=PET_DEX.find(d=>d.dex===dex).id;mons[id][0]=name;Object.assign(PET_SKILLS[id],patch);}
 const PET_LEGEND_IDS = PET_DEX.filter((d) => d.kind === "legend").map((d) => d.id);
 
@@ -4047,7 +4047,7 @@ function runPet(pt, dt) {
       pt.moving = false;
       pt.dir = (Math.round(Math.atan2(b.x - pt.x, pt.y - b.y) / (Math.PI / 4)) + 8) % 8;
       if (pt.cd <= 0) {
-        pt.cd = 0.8 * (pt.ult && singleRun?.endless && singleRun.mods.petHaste || 1) / petMul(pt.id, "aspd"); // 무한 생존 카드: 공격 속도
+        pt.cd = 1.25 * (pt.ult && singleRun?.endless && singleRun.mods.petHaste || 1) / petMul(pt.id, "aspd"); // 무한 생존 카드: 공격 속도
         pt.pose = 0.25;
         pt.atkAt = elapsed; // 공격 애니메이션 시작
         pt.pendingHit = { b, t: petHitDelay(pt.id), d: m[2] * petMul(pt.id, "atk") };
@@ -4920,7 +4920,7 @@ function updateEndless(dt) {
     if(a.boastFearT>0){boastFlee(a,dt);continue;}
     if(a.waveDash && waveDashTick(a,dt)) continue;
     if (a.hunt && R.ward && R.ward.hp > 0) wardAI(a, dt); // 영입 미션: 보호 대상을 노리는 적
-    else if (playerHidden() && !a.tele && !a.channel && !a.charge) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
+    else if (playerHidden() && !a.tele && !a.channel && !a.charge && !petList().some(t=>t.hp>0&&visible(a,t)&&dist(a,t)<155)) searchGhost(a, dt); // 은신: 실제 위치 추적 안 함
     else if (a.bossId) endlessBossAI(a, dt);
     else if(a.curseKind) curseAI(a,dt);
     else if (!qaPetEnemy(a,dt)) enemyAI(a, dt);
@@ -6379,9 +6379,9 @@ const SKILL_IMPL = {
       ultPets=ids.map((id,i)=>{
         const ang=i*Math.PI*2/3;
         const q=freeSpot(clamp(p.x+Math.cos(ang)*65,30,W-30),clamp(p.y+Math.sin(ang)*65,30,H-30),16)||p;
-        const hp=Math.round(petMaxHp(id)*.8*(1+(singleRun?.mods?.petUltHp||0)));
+        const hp=Math.round(petMaxHp(id)*.65*(1+(singleRun?.mods?.petUltHp||0)));
         fx.push({x:q.x,y:q.y,t:.6,ring:42});
-        return {...actor(q.x,q.y),id,hp,max:hp,life:S.dur,owner:p,ult:true,skillCD:0};
+        return {...actor(q.x,q.y),id,hp,max:hp,life:S.dur,owner:p,ult:true,atkMul:.65,skillCD:2};
       });
       document.body.classList.remove("summonChoose");
       return true;
@@ -12491,12 +12491,28 @@ function drawLoading() {
 // QA hidden event: existing assets re-used temporarily, separate character ID and save.
 function qaProtectWard(R){if(R){R.wardNeglect=0;R.wardWarn=0;R.wardLastProtect=elapsed;}}
 function qaPetEnemy(a,dt){
-  if(!["melee","mobile","tank","assassin","minion"].includes(a.mob))return false;
-  const pt=minBy(ultPets.filter(t=>t.hp>0&&dist(a,t)<Math.min(145,dist(a,p))&&clearLine(a,t)),t=>dist(a,t));
+  const T=ENEMY_TYPES[a.mob];
+  if(!T||a.bossId||a.curseKind)return false;
+  const ranged=["ranged","thrower","support","summoner","pk_pika","pk_char","pk_squirt"].includes(a.mob);
+  const range=T.range||34, limit=ranged?Math.max(180,range):155;
+  const pt=minBy(petList().filter(t=>t.hp>0&&visible(a,t)&&dist(a,t)<limit&&(!visible(a,p)||dist(a,t)<dist(a,p)*.90)),t=>dist(a,t));
   if(!pt)return false;
-  const T=ENEMY_TYPES[a.mob];a.atkT-=dt*(singleRun?.ygRage?[1,1,1.1,1.25][singleRun.ygRage]:1);
-  if(dist(a,pt)>(T.range||34)+16)steer(a,pt.x,pt.y,dt);
-  else{a.moving=false;faceTo(a,pt.x,pt.y);if(a.atkT<=0){a.atkT=waveEnemyCD(a,T.cd||1.2);a.atkAnim=.3;hit(a,pt,a.dmg||T.dmg);}}
+  // Preserve healer and summoner support behavior by using normal AI between attacks.
+  if((a.mob==="support"||a.mob==="summoner")&&a.specialT<=0)return false;
+  a.atkT-=dt*(singleRun?.ygRage?[1,1,1.1,1.25][singleRun.ygRage]:1);
+  a.specialT-=dt;
+  const clear=ranged?enemyShotClear(a,pt):clearLine(a,pt);
+  if(dist(a,pt)>range+(ranged?0:16)||!clear)steer(a,pt.x,pt.y,dt);
+  else{
+    a.moving=false;faceTo(a,pt.x,pt.y);
+    if(a.atkT<=0){
+      a.atkT=waveEnemyCD(a,T.cd||1.2);a.atkAnim=.3;
+      if(a.mob==="thrower"||T.attack==="flame")hazards.push({x:pt.x,y:pt.y,r:T.lob?.radius||55,t:T.lob?.tele||.7,dur:T.lob?.tele||.7,dmg:a.dmg,a,color:"200, 90, 255"});
+      else if(ranged){const ang=Math.atan2(pt.y-a.y,pt.x-a.x),spd=T.shot||220;mobShots.push({x:a.x,y:a.y-14,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,left:range+80,d:a.dmg,a,r:7,color:"#c77dff"});}
+      else if(a.mob==="tank")hazards.push({x:a.x,y:a.y,r:55,t:.45,dur:.45,dmg:a.dmg,a,color:"255, 120, 80"});
+      else hit(a,pt,a.dmg||T.dmg);
+    }
+  }
   separate(a);return true;
 }
 function qaStartSecretBoss(R){
@@ -12553,7 +12569,7 @@ ENDLESS_BOSSES.fallen_support={name:"배신의 기억",tune:{dmg:1},basic:[{k:"s
 const qaSvgIcon=(symbol,color)=>"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="g"><stop stop-color="${color}"/><stop offset="1" stop-color="#18234a"/></radialGradient></defs><circle cx="48" cy="48" r="45" fill="url(#g)" stroke="#d6edff" stroke-width="3"/><text x="48" y="64" font-size="49" text-anchor="middle" fill="white">${symbol}</text></svg>`);
 // Transparent glyphs: the HUD itself supplies the single button frame.
 const hgIcon = (body) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`);
-SKILL_ICON_SRC.summoner={...SKILL_ICON_SRC.summoner,q:"./thunderi_icon.webp?v=2",e:"./myurin_icon.webp?v=2",r:hgIcon(`<circle cx="48" cy="22" r="15" fill="#ff9d45" stroke="#fff" stroke-width="2"/><circle cx="26" cy="62" r="15" fill="#42b5f5" stroke="#fff" stroke-width="2"/><circle cx="70" cy="62" r="15" fill="#8ac955" stroke="#fff" stroke-width="2"/><path d="M48 39L35 48M48 39L61 48M43 62h10" stroke="#fff" stroke-width="3"/>`)};
+SKILL_ICON_SRC.summoner={...SKILL_ICON_SRC.summoner,q:"./thunderi_icon.webp?v=3",e:"./myurin_icon.webp?v=3",r:hgIcon(`<circle cx="48" cy="22" r="15" fill="#ff9d45" stroke="#fff" stroke-width="2"/><circle cx="26" cy="62" r="15" fill="#42b5f5" stroke="#fff" stroke-width="2"/><circle cx="70" cy="62" r="15" fill="#8ac955" stroke="#fff" stroke-width="2"/><path d="M48 39L35 48M48 39L61 48M43 62h10" stroke="#fff" stroke-width="3"/>`)};
 const fallenIcon=(art)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><defs><radialGradient id="bg"><stop stop-color="#51236f"/><stop offset="1" stop-color="#110b25"/></radialGradient><linearGradient id="cr" x2="1" y2="1"><stop stop-color="#fff1ff"/><stop offset=".4" stop-color="#c16bff"/><stop offset="1" stop-color="#51218d"/></linearGradient></defs><circle cx="48" cy="48" r="45" fill="url(#bg)" stroke="#e0b6ff" stroke-width="3"/>${art}</svg>`);
 SKILL_ICON_SRC.fallen_support={
  passive:fallenIcon(`<path d="M48 73 23 49Q10 27 31 23Q43 20 48 34Q57 17 71 24Q89 35 72 53Z" fill="#a53dc4" stroke="#f0abff" stroke-width="3"/><path d="m50 28-10 18 12 5-8 19" fill="none" stroke="#180d2d" stroke-width="5"/><path d="M23 40Q48 19 73 40Q48 60 23 40Z" fill="#23133f" stroke="#edb9ff" stroke-width="2"/><ellipse cx="48" cy="40" rx="6" ry="11" fill="#e4a2ff"/>`),
