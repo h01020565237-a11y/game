@@ -1545,7 +1545,18 @@ body.summoner.summonChoose #touch .petBtn{display:block!important;overflow:hidde
 #eodalbam #eoModal[data-layout="odds"] h2{font-size:1.2em;margin:0;line-height:1.25;text-align:center}
 #eodalbam #eoModal[data-layout="odds"] #eoModalText{white-space:normal;margin:0;line-height:1.2;display:grid;gap:clamp(3px,.8cqh,7px);min-height:0;overflow:auto}
 #eodalbam .eoOddsGroup{border:1px solid #a57a4877;border-radius:6px;padding:.35em .55em;background:#26190f66}#eodalbam .eoOddsGroup h3{font-size:1em;color:#ffdb92;margin:0 0 .25em;line-height:1.2}#eodalbam .eoOddsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:1.1em;row-gap:.18em}#eodalbam .eoOddsItem{display:flex;align-items:baseline;justify-content:space-between;gap:.35em;border-bottom:1px solid #ffffff12;padding:.12em 0;min-width:0}#eodalbam .eoOddsItem span{white-space:nowrap}#eodalbam .eoOddsItem b{color:#ffd58b;font-variant-numeric:tabular-nums;white-space:nowrap}#eodalbam #eoModal[data-layout="odds"] #eoModalClose{align-self:center;min-height:clamp(28px,6.5cqh,42px);min-width:100px;padding:.25em 1.3em;font-size:1em;flex-shrink:0}
-</style></head>
+</style><style id="pause-overflow-fix-v3">
+#pauseMenu .pause-card{box-sizing:border-box;min-width:0;max-width:calc(100% - 24px);overflow-x:hidden;padding-inline:clamp(12px,3cqw,24px);}
+#pauseMenu .pause-view{max-width:100%;min-width:0;overflow-x:hidden;box-sizing:border-box;padding:5px 6px 9px;}
+#pauseMenu .pbtn,body.mobile #pauseMenu .pbtn{box-sizing:border-box;width:100%;max-width:100%;min-width:0;flex-shrink:0;grid-template-columns:minmax(0,30%) 2px minmax(0,1fr);}
+#pauseMenu .pbtn.small{grid-template-columns:minmax(0,1fr);}
+#pauseMenu .pbtn>span{min-width:0;white-space:normal;padding-inline:4px;}
+#pauseMenu .pbtn:focus-visible{outline-offset:-5px;}
+#pauseMenu .pause-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+#pauseMenu .pause-opt label{grid-template-columns:minmax(0,5.6em) minmax(0,1fr) minmax(0,2.4em);gap:6px;}
+#pauseMenu .pause-opt input{min-width:0;max-width:100%;}
+</style>
+</head>
 <body class="lobbyOpen">
   <div id="rotateHint">휴대폰을 가로로 돌려 주세요 ↻</div>
   <h2>Battle Lab</h2>
@@ -4098,6 +4109,25 @@ function petElement(id) {
   const D = PET_DEX[id], base = D.base ?? (D.kind === "legend" ? -1 : id);
   return PET_ELEMENTS[base] || PET_ELEMENTS.legend;
 }
+function drawHyeSpecial(f){
+ const u=clamp(1-f.t/f.dur,0,1),a=Math.min(1,(1-u)*2.8),r=f.r||120;
+ g.save();g.translate(f.x,f.y-8);g.globalAlpha=a;g.lineCap="round";g.lineJoin="round";
+ if(f.hyeSpecial==="psychic"){
+  g.rotate(f.ang);const L=r*Math.min(1,u*6),w=f.width||40;
+  for(const [c,k] of [["#8c38d9",1],["#e998ff",.55],["#fff4ff",.16]]){g.strokeStyle=c;g.lineWidth=w*k*(1-u*.55);g.beginPath();g.moveTo(0,0);g.lineTo(L,0);g.stroke();}
+  for(let j=0;j<5;j++){const x=L*((j+u*2)%5)/5;g.strokeStyle="#e8baff";g.lineWidth=2;g.beginPath();g.ellipse(x,0,5,w*(.5+.22*Math.sin(j+u*8)),0,0,7);g.stroke();}
+ }else if(f.hyeSpecial==="electric"){
+  for(let j=0;j<9;j++){const v=j*2*Math.PI/9+u*.8;g.beginPath();g.moveTo(0,0);for(let k=1;k<=6;k++){const z=r*k/6*Math.min(1,u*4),b=v+Math.sin(j*13+k*7+Math.floor(u*12))*.15;g.lineTo(Math.cos(b)*z,Math.sin(b)*z);}g.strokeStyle="#ffcd38";g.lineWidth=6*(1-u)+1;g.stroke();g.strokeStyle="#fff8cc";g.lineWidth=1.8;g.stroke();}
+ }else{
+  const color=f.hyeSpecial==="fire"?"#ff8b28":f.hyeSpecial==="water"?"#47c9ff":"#8de65d",rr=r*Math.min(1,u*2.4);
+  for(let j=0;j<14;j++){const v=j*2*Math.PI/14+u*1.7,z=rr*(.7+.22*Math.sin(j*3));g.save();g.translate(Math.cos(v)*z,Math.sin(v)*z);g.rotate(v+1);
+   if(f.hyeSpecial==="fire"){g.fillStyle=color;g.beginPath();g.moveTo(-7,6);g.quadraticCurveTo(-13,-5,0,-22);g.quadraticCurveTo(14,-2,7,6);g.fill();g.fillStyle="#fff2a0";g.beginPath();g.ellipse(0,0,3,7,0,0,7);g.fill();}
+   else if(f.hyeSpecial==="water"){g.fillStyle=color;g.beginPath();g.moveTo(0,-15);g.quadraticCurveTo(15,4,0,8);g.quadraticCurveTo(-12,4,0,-15);g.fill();g.fillStyle="#d7f8ff";g.beginPath();g.arc(-2,0,2,0,7);g.fill();}
+   else{g.fillStyle=color;g.beginPath();g.moveTo(0,-15);g.quadraticCurveTo(15,-9,0,11);g.quadraticCurveTo(-13,-1,0,-15);g.fill();g.strokeStyle="#357d39";g.lineWidth=1.5;g.beginPath();g.moveTo(0,8);g.lineTo(0,-12);g.stroke();}
+   g.restore();}
+  g.strokeStyle=color;g.lineWidth=3*(1-u)+1;g.beginPath();g.ellipse(0,6,rr,rr*.8,0,0,7);g.stroke();
+ }g.restore();
+}
 function petAttackFx(pt, b, strong) {
   const E = petElement(pt.id);
   if (E.fx === "bolt") fx.push({ x: b.x, y: b.y, sx: pt.x, sy: pt.y, t: strong ? 0.48 : 0.24, bolt: true, strong });
@@ -4116,7 +4146,7 @@ function command(pt = pet) {
   sfx("pet_skill", pet);
   fx.push({ x: pet.x, y: pet.y - 30, t: 0.65, text: S.name });
   petSkillEffect(pet, S, enemies);
-  fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
+  if(character!=="summoner")fx.push({ x: pet.x, y: pet.y, t: 0.35, ring: reach });
   return true;
 }
 // 포켓몬 기술 효과 (기본·진화·전설 공통). 뮤: 회복 + 무작위 기본 기술
@@ -4135,12 +4165,14 @@ function petSkillEffect(pet, S, enemies) {
       const rx = b.x - pet.x, ry = b.y - pet.y, along = rx * ux + ry * uy, off = Math.abs(rx * uy - ry * ux);
       if (along > 0 && along < S.line && off < S.width / 2 && clearLine(pet,b)) hit(pet, b, S.dmg * mul, { ult: !!pet.ult });
     }
-    fx.push({ x: pet.x, y: pet.y, t: 0.35, cone: true, ang, r: S.line, half: 0.08 });
+    fx.push({x:pet.x,y:pet.y,t:.48,dur:.48,hyeSpecial:"psychic",ang,r:S.line,width:S.width});
     pet.dir = angleToDir(ang); pet.atkAt = elapsed;
     pet.pose = 0.35;
     return;
   }
   pet.atkAt = elapsed;
+  const element=({25:"electric",6:"fire",9:"water",3:"plant"})[PET_DEX[id]?.dex];
+  if(element)fx.push({x:pet.x,y:pet.y,t:.65,dur:.65,hyeSpecial:element,r:S.radius||PET_RULES.range,tx:enemies[0].x,ty:enemies[0].y});
   for (let b of enemies.slice(0, S.targets || 1)) {
     petAttackFx(pet, b, true);
     pet.pose = 0.35;
@@ -8760,6 +8792,7 @@ function draw() {
       g.restore();
       continue;
     }
+    if(f.hyeSpecial){drawHyeSpecial(f);continue;}
     if (f.elem) { // 포켓몬 공격: 불꽃(부채꼴 불씨) / 물줄기(굵은 선 + 물방울) / 그 밖은 색 광선
       const u = 1 - f.t / f.dur, a0 = Math.atan2(f.y - f.sy, f.x - f.sx), L = Math.hypot(f.x - f.sx, f.y - f.sy);
       g.save();
