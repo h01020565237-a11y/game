@@ -3822,6 +3822,10 @@ function activeSkillMotion(a,k) {
   if(!a.skillMotion||a.skillMotion.character!==k)return null;
   if(["suit-r-dempsey","octo-r-tentacles"].includes(a.skillMotion.key)&&!live)return null;
   const m=a.skillMotion, S=SKILL_MOTION_DATA[m.key], im=skillMotionSheets[m.key];
+  if(k==="bear"&&m.key==="bear-r-jump"&&p.jump&&S&&im?.naturalWidth){
+    const phase=Math.min(.999,Math.max(0,p.jump.t/p.jump.S.jumpT));
+    return {m:{...m,at:elapsed-phase*S.dur},S,im};
+  }
   if(!S||!im?.naturalWidth||elapsed-m.at>=S.dur||elapsed<m.at)return null;
   return {m,S,im};
 }
@@ -6730,15 +6734,19 @@ function updateSkills(dt) {
   if (p.jump) {
     const J = p.jump, S = J.S;
     J.t += dt;
-    let u = Math.min(1,J.t/S.jumpT);
-    const nx=J.sx+(J.tx-J.sx)*u,ny=J.sy+(J.ty-J.sy)*u;
-    if(moveRaw(p,nx-p.x,ny-p.y,Math.hypot(nx-p.x,ny-p.y),true))u=1;
-    p.jumpZ = Math.sin(Math.PI * u) * 70;
+    const u = Math.min(1,J.t/S.jumpT);
+    // A blocked horizontal path stops travel, not the airborne animation.
+    if(!J.travelStopped){
+      const nx=J.sx+(J.tx-J.sx)*u,ny=J.sy+(J.ty-J.sy)*u;
+      if(moveRaw(p,nx-p.x,ny-p.y,Math.hypot(nx-p.x,ny-p.y),true)){
+        J.travelStopped=true;J.tx=p.x;J.ty=p.y;
+      }
+    }
+    p.jumpZ = Math.sin(Math.PI * u) * 95;
     if (u >= 1) {
       p.jump = null;
       p.jumpZ = 0;
-      // 착지 지점이 막혀 있으면 출발점으로 (벽·물 속 착지 방지)
-      // swept motion already stops at the last valid point
+      // 충돌 시 마지막 유효 위치에서 점프 시간이 끝난 뒤 착지
       for (const b of bots) if (b.hp > 0 && dist(p, b) <= S.radius+bodyR(b)&&clearLine(p,b)) {
         hit(p, b, dist(p, b) <= (S.inner ?? S.radius)+bodyR(b) ? S.dmg : S.dmgEdge ?? S.dmg, { ult: true }); // 중심부 / 외곽
         if(!bossControlImmune(b)) b.stun = Math.max(b.stun || 0, S.stun);
@@ -8606,10 +8614,14 @@ function draw() {
       if(!(a.stealth>0))drawInkMissStatus(a);
       continue;
     }
-    g.fillStyle = a === p ? "#337ddc" : "#b84949";
-    g.beginPath();
-    g.ellipse(a.x, a.y + 8, 20, 10, 0, 0, 7);
-    g.fill();
+    if(a===p&&p.jump){
+      const h=Math.max(0,Math.min(1,(p.jumpZ||0)/95));
+      g.save();g.fillStyle="rgba(20,24,36,"+(.5-.23*h)+")";
+      g.beginPath();g.ellipse(a.x,a.y+8,20*(1-.3*h),10*(1-.3*h),0,0,7);g.fill();g.restore();
+    }else{
+      g.fillStyle = a === p ? "#337ddc" : "#b84949";
+      g.beginPath();g.ellipse(a.x, a.y + 8, 20, 10, 0, 0, 7);g.fill();
+    }
     g.save();
     if (a === p && (p.stealth > 0 || inBush(p))) g.globalAlpha = 0.5;
     if (a === p && p.weave > 0) g.globalAlpha = .85; // 위빙 중
