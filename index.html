@@ -13485,4 +13485,13 @@ el('sgBag').onclick=()=>{sgView='bag';sgNotice='';show('gear');sgRender();};
 el('sgCraft').onclick=()=>{sgView='craft';sgNotice='';show('gear');sgRender();};
 show('hero');
 })();
-</script>
+</script><style id="gear-hero-21">
+#seasonGearPanel[data-page="hero"] #sgRight{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important;position:relative}
+#seasonGearPanel[data-page="hero"] #sgHeroPortrait{grid-row:1 / 3;padding:0 20%;box-sizing:border-box}
+#seasonGearPanel[data-page="hero"] #sgStats{grid-row:2!important;align-content:start!important;grid-auto-rows:minmax(2.1em,auto);padding:.5em!important;overflow-y:auto!important;gap:.35em!important}
+#seasonGearPanel[data-page="hero"] #sgSlots{position:absolute;left:1%;top:12%;bottom:12%;width:51%;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr));align-items:center;pointer-events:none;gap:0!important}
+#seasonGearPanel[data-page="hero"] #sgSlots button{pointer-events:auto;display:flex!important;flex-direction:column!important;justify-content:center;align-items:center!important;width:clamp(44px,15cqh,84px);height:clamp(44px,15cqh,84px);min-height:0!important;padding:3px!important;text-align:center;font-size:.75em}
+#seasonGearPanel[data-page="hero"] #sgSlots button:nth-child(even){justify-self:end}
+#seasonGearPanel[data-page="hero"] #sgSlots button span{text-align:center}
+#seasonGearPanel[data-page="hero"] #sgSlots button i{flex:0 0 auto;width:1.8em;height:1.8em}
+</style>
